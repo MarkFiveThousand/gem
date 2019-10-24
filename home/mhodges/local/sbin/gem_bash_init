@@ -1,0 +1,155 @@
+#!/bin/bash
+
+#
+# File: gem_bash_init
+#
+# Configure user-specific environment and startup programs.
+# 
+
+function gem_bash_init_Main()
+{
+    # =========================================================================
+    # How to run a Windows .bat file in mingw64 mintty terminal. Important for
+    # building for Android under mingw64.
+    # =========================================================================
+    # Source: http://sourceforge.net/p/mingw/bugs/1902/
+    # Source: http://ss64.com/nt/cmd.html
+    # cmd //C mark.bat
+
+
+    # =========================================================================
+    # Path & Environment Variables
+    # =========================================================================
+
+    # Git command line needs to know which editor you use:
+    export EDITOR=code
+
+    # File listing colors
+    export LS_COLORS="rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=01;05;37;41:su=37;41:sg=30;43:ca=30;41:tw=3;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*xz=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.jpg=01;35:*.jpeg=01;35:*.gif=01;35:*.bmp=1;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.axv=01;35:*.anx=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=01;36:*.au=01;36:*.flac=01;36:*.mid=01;36:*.midi=01;36:*.mka=01;36:*.mp3=01;36:*.mpc=01;36:*.ogg=01;36:*.ra=01;36:*.wav=01;36:*.axa=01;36:*.oga=1;36:*.spx=01;36:*.xspf=01;36:"
+
+    # Rainbow Prompt
+    export PS1="\[$(tput bold)\]\[$(tput setaf 1)\][\[$(tput setaf 3)\]\u\[$(tput setaf 2)\]@\[$(tput setaf 4)\]\h \[$(tput setaf 5)\]\W\[$(tput setaf 1)\]]\[$(tput setaf 7)\]\$ \[$(tput sgr0)\]"
+
+
+    # =========================================================================
+    # Mount Shares
+    # =========================================================================
+
+#    source gem_mountall
+
+
+    # =========================================================================
+    # Android SDK
+    # =========================================================================
+
+    if [[ ${gem_uname_kernel_name} == *"MINGW64"* || ${gem_uname_kernel_name} == *"CYGWIN"* ]]; then
+
+        export gem_fullpath_android=$(cygpath "c:\android")
+        export gem_fullpath_android_sdk=${gem_fullpath_android}/sdk-tools-windows-4333796
+        export gem_fullpath_android_sdk_platform_tools=${gem_fullpath_android_sdk}/platform-tools_r28.0.1-windows/platform-tools
+        export gem_fullpath_android_sdk_tools=${gem_fullpath_android_sdk}/tools
+        export ANDROID_SDK=${gem_fullpath_android_sdk}
+
+    elif [[ ${gem_uname_kernel_name} == "Linux" ]]; then
+
+        export gem_fullpath_android=${HOME}/android
+        export gem_fullpath_android_sdk=${gem_fullpath_android}/Sdk
+        export gem_fullpath_android_sdk_platform_tools=${gem_fullpath_android_sdk}/platform-tools
+        export gem_fullpath_android_sdk_tools=${gem_fullpath_android_sdk}/tools
+        export ANDROID_SDK=${gem_fullpath_android_sdk}
+
+    else
+        echo "$BASH_SOURCE(${LINENO}) ERROR: GEM_OS_HOST_BUILD value of \"${GEM_OS_HOST_BUILD}\" not supported.  Aborting script." && return 0
+    fi
+
+    # Validate android sdk directories.
+    if [[ ! -d ${gem_fullpath_android_sdk} ]]; then
+        echo "$BASH_SOURCE(${LINENO}) WARNING: Android SDK directory does not exist: \${gem_fullpath_android_sdk}=${gem_fullpath_android_sdk}"
+    else
+        if [[ ! -d ${gem_fullpath_android_sdk_platform_tools} ]]; then
+            echo "$BASH_SOURCE(${LINENO}) WARNING: Android SDK platform tools directory does not exist: \${gem_fullpath_android_sdk_platform_tools}=$gem_fullpath_android_sdk_platform_tools}"
+        fi
+        if [[ ! -d ${gem_fullpath_android_sdk_tools} ]]; then
+            echo "$BASH_SOURCE(${LINENO}) WARNING:  Android SDK tools directory does not exist: \${gem_fullpath_android_sdk_tools}=$gem_fullpath_android_sdk_tools}"
+        fi
+    fi
+    export PATH="${PATH}:${gem_fullpath_android_sdk_platform_tools}:${gem_fullpath_android_sdk_tools}"
+
+
+    # =========================================================================
+    # VS Code
+    # =========================================================================
+    # Validate VS Code is installed.
+    if [[ ${gem_uname_kernel_name} == *"MINGW64"* || ${gem_uname_kernel_name} == *"CYGWIN"* ]]; then
+
+        gem_fullpath_vscode="$(cygpath $LOCALAPPDATA)/Programs/Microsoft VS Code/Code.exe"
+        if [[ ! -f ${gem_fullpath_vscode} ]]; then
+            echo "$BASH_SOURCE(${LINENO}) WARNING: Failed to find Visual Studio Code in directory: ${gem_fullpath_vscode}"
+        fi
+    elif [[ ${gem_uname_kernel_name} == "Linux" ]]; then
+
+        which code &>/dev/null
+        if [[ $? -ne 0 ]]; then
+            echo "$BASH_SOURCE(${LINENO}) WARNING: Failed to find Visual Studio Code in directory: ${gem_fullpath_vscode}"
+        fi
+    fi
+
+
+    # =========================================================================
+    # KDiff3
+    # =========================================================================
+    if [[ ${gem_uname_kernel_name} == *"MINGW64"* ]]; then
+        export PATH=${PATH}:"/c/Program Files/KDiff3"
+    elif [[ ${gem_uname_kernel_name} == *"CYGWIN"* ]]; then
+        export PATH=${PATH}:"/cygdrive/c/Program Files/KDiff3"
+    fi
+    # Validate kdiff3 is installed.
+    which kdiff3 &>/dev/null
+    if [[ $? -ne 0 ]]; then
+        echo "$BASH_SOURCE(${LINENO}) WARNING: Failed to find kdiff3."
+    fi
+
+
+    # =========================================================================
+    # CMake
+    # =========================================================================
+    if [[ ${gem_uname_kernel_name} == *"MINGW64"* ]]; then
+        export PATH=${PATH}:"/c/Program Files/CMake/bin"
+    #elif Cygwin: Don't use Windows cmake.  Must use cygwin cmake.
+    fi
+    # Validate cmake is installed.
+    which cmake &>/dev/null
+    if [[ $? -ne 0 ]]; then
+        echo "$BASH_SOURCE(${LINENO}) WARNING: Failed to find cmake."
+    fi
+
+
+    # =========================================================================
+    # Aliases
+    # =========================================================================
+    alias ls='ls -al --color=auto'
+    alias gitpush="git push git@github.com:MarkFiveThousand/gem.git"
+    alias gitpull="git pull git@github.com:MarkFiveThousand/gem.git"
+    if [[ ${gem_uname_kernel_name} == *"MINGW64"* || ${gem_uname_kernel_name} == *"CYGWIN"* ]]; then
+        # Escape spaces.
+        gem_fullpath_vscode=$(echo ${gem_fullpath_vscode} | sed 's/ /\\ /g')
+        alias code=${gem_fullpath_vscode}
+    fi
+
+
+    # =========================================================================
+    # Database Maintenance Support
+    # =========================================================================
+    # These are used for MediaWiki and PhpBB.
+
+    export CRED_NAME_DATABASE_ADMIN=root
+    export CRED_PASSWORD_DATABASE_ADMIN=xxxxxxxxx
+    export CRED_PASSWORD_ROOT=xxxxxxxxx
+
+
+
+    # Where would you like to go today?
+    cd ~/gem/local/src
+}
+gem_bash_init_Main
+

@@ -1,0 +1,76 @@
+#!/bin/bash
+
+#
+# File: gem_bash_init
+#
+# Configure Gem environment.
+# 
+
+function gem_bash_init_Main()
+{
+    # =========================================================================
+    # Query System Info
+    # =========================================================================
+    export gem_uname_kernel_name=$(uname -s)
+    export gem_uname_machine=$(uname -m)
+
+
+    # =========================================================================
+    # Determine Gem Directory
+    # =========================================================================
+    export gem_fullpath_gem=$(realpath $(dirname ${BASH_SOURCE})/../..)
+
+
+    # =========================================================================
+    # Path & Environment Variables
+    # =========================================================================
+
+    # MINGW NOTES: Default path after a fresh msys2 install: /usr/local/bin:/usr/bin:/bin:/opt/bin:/c/Windows/System32:/c/Windows:/c/Windows/System32/Wbem:/c/Windows/System32/WindowsPowerShell/v1.0/
+    #
+    # Fedora Notes: Default path after fresh install: /usr/libexec/python3-sphinx:/home/mhodges/.local/bin:/home/mhodges/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin
+    #
+    # Both /usr/bin and /bin are mapped to C:\msys64\usr\bin.
+    # C:\msys64\usr\bin\cmake.exe requires share\cmake-3.13.2\Modules to be in
+    # a child folder of cmake.exe.  cmake runs fine when we run \usr\bin\cmake.
+    # Running \bin\cmake produces an error indicating that the child share
+    # folder is missing.  To remedy this we moved /usr/bin earlier in the path
+    # than /bin.  It's not clear if this is going have other side effects.
+    # -4/16/2019.
+
+    export PATH="/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin"
+
+    # =========================================================================
+    # Gem
+    # =========================================================================
+
+    export PATH=${PATH}:${gem_fullpath_gem}/local/sbin
+
+    # Determine the OS we are building on.  Allow our build tools to be found
+	# prior to installed tools.
+    if [[ ${gem_uname_machine} == "x86_64" ]]; then
+        if [[ ${gem_uname_kernel_name} == "Linux" ]]; then
+
+            export GEM_OS_HOST_BUILD="GEM_OS_HOST_BUILD_LINUX"
+	        export PATH=${gem_fullpath_gem}/local_x86_64-pc-linux-gnu/release/bin:${PATH}
+
+        elif [[ ${gem_uname_kernel_name} == *"MINGW64"* ]]; then
+
+            export GEM_OS_HOST_BUILD="GEM_OS_HOST_BUILD_MINGW"
+	        export PATH=${gem_fullpath_gem}/local_x86_64-w64-mingw32/release/bin:${PATH}
+#	        export PATH=/c/msys64/mingw64/bin:${PATH}
+
+        elif [[ ${gem_uname_kernel_name} == *"CYGWIN"* ]]; then
+
+            export GEM_OS_HOST_BUILD="GEM_OS_HOST_BUILD_CYGWIN"
+	        export PATH=${gem_fullpath_gem}/local_x86_64-w64-cygwin/release/bin:${PATH}
+        else
+            echo "$BASH_SOURCE(${LINENO}) ERROR: Operating system ${gem_uname_kernel_name} is not supported."; return 0
+        fi
+    else
+        echo "$BASH_SOURCE(${LINENO}) ERROR: Operating system architecture ${gem_uname_machine} is not supported."; return 0
+    fi
+
+}
+
+gem_bash_init_Main
+

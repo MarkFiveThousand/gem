@@ -1,0 +1,409 @@
+# =============================================================================
+# NOTICE: This file has not yet been groomed for public comsumption.  You're
+# welcome to explore it.  However, be aware you're on your own.  If you would
+# like to proceed, you will find the process most successful
+# =============================================================================
+
+# =============================================================================
+# Download and Install Cygwin
+# =============================================================================
+# Last updated: 2019/09/07
+#
+# Copy the commands below into a DOS cmd prompt to download and install Cygwin.
+#
+# Cygwin Homepage:
+# https://www.cygwin.com/
+#
+# Direct Link to Installer:
+# https://www.cygwin.com/setup-x86_64.exe
+
+
+# Define and Create the Installation Directory.
+# ---------------------------------------------
+# c:\cygwin64 is the default installation directory.
+
+set gem_fullpath_cygwin_install=c:\cygwin64
+set gem_fullpath_cygwin_install_local_packages=%gem_fullpath_cygwin_install%\local_packages
+
+mkdir %gem_fullpath_cygwin_install%
+mkdir %gem_fullpath_cygwin_install_local_packages%
+
+
+# Download Cygwin Installer
+# -------------------------
+
+curl -o %gem_fullpath_cygwin_install%\setup-x86_64.exe https://www.cygwin.com/setup-x86_64.exe
+
+
+# Base Line installation
+# ----------------------
+#
+# The following options are used to install our packages from the command line.
+# Others are available.
+#
+# Command line arguments:
+# https://cygwin.com/faq/faq.html#faq.setup.cli
+#
+# -D --download                     Download from internet
+# -L --local-install                Install from local directory
+# -l --local-package-dir            Local package directory
+# -d --no-desktop                   Disable creation of desktop shortcut
+# -q --quiet-mode                   Unattended setup mode
+# -s --site                         Download site
+# -B --no-admin                     Do not check for and enforce running as
+#                                   Administrator
+# -P --packages                     Specify packages to install
+#
+# Mirrors in California:
+#
+#    ftp://mirrors.sonic.net/cygwin
+#    http://mirrors.kernel.org/sourceware/cygwin
+#    http://mirrors.sonic.net/cygwin
+
+set gem_url_site=ftp://mirrors.sonic.net/cygwin
+
+%gem_fullpath_cygwin_install%\setup-x86_64.exe --local-install --quiet-mode --no-desktop --download --site %gem_url_site% --local-package-dir %gem_fullpath_cygwin_install_local_packages%
+
+
+
+
+# =============================================================================
+# Install the Packages
+# =============================================================================
+#
+# NOTE: More packages may or may not be required.  See the section of this
+# document titles "Concerns"
+
+%gem_fullpath_cygwin_install%\setup-x86_64.exe --quiet-mode --packages xorg-server,xinit,xlaunch,rxvt-unicode,mercurial,yad,xarchiver,swig,llvm,mingw64-x86_64-llvm,mingw64-x86_64-llvm-static,clang,mingw64-x86_64-clang,git,perl,meson,curl,cmake,cmake-gui,gettext,diffstat,patch,doxygen,patchutils,subversion,cvs,mercurial,autoconf,automake,binutils,bison,flex,gdb,libtool,make,pkgconfig,byacc,ccache,cscope,ctags,mingw64-x86_64-binutils,mingw64-x86_64-gcc-core,mingw64-x86_64-gdbm
+
+
+
+
+
+
+# =============================================================================
+# Set Up Mintty Terminal
+# =============================================================================
+# Reference: https://code.google.com/archive/p/mintty/
+
+cat > ~/.minttyrc << "EOF"
+
+BoldAsFont=no
+Font=Lucida Sans Typewriter
+FontHeight=10
+
+ForegroundColour=170,170,170
+BackgroundColour=16,16,16
+CursorColour=253,157,79
+
+Black=0,0,0
+Red=191,0,0
+Green=0,191,0
+Yellow=191,191,0
+Blue=0,0,191
+Magenta=191,0,191
+Cyan=0,191,191
+White=170,170,170
+BoldBlack=64,64,64
+BoldRed=255,64,64
+BoldGreen=64,255,64
+BoldYellow=255,255,64
+BoldBlue=96,96,255
+BoldMagenta=255,64,255
+BoldCyan=64,255,255
+BoldWhite=255,255,255
+
+Transparency=off
+OpaqueWhenFocused=no
+ScrollbackLines=100000
+ScrollMod=shift
+Printer=*
+
+EOF
+
+# Restart the terminal.
+
+
+# =============================================================================
+# Initialize Git
+# =============================================================================
+# Initialize Git.
+git config --global user.email "markhodges5000@gmail.com"
+git config --global user.name "Mark Hodges"
+
+
+
+git remote rm origin
+git remote add origin git@github.com:MarkFiveThousand/gem
+# I'm not sure what these do, or if they're necessary.
+git config master.remote origin
+git config master.merge refs/heads/master
+
+
+
+# =============================================================================
+# Download Gem
+# =============================================================================
+
+# By default, gem will be installed in your home directory under ~/gem.  If
+# you'd like to change it, modify gem_fullpath_gem below.  However, portions of
+# these instructions, in their current state, may not work if gem is installed
+# elsewhere.
+
+gem_fullpath_gem_parent=/home/$USER
+
+cd ${gem_fullpath_gem_parent}
+
+git clone https://github.com/MarkFiveThousand/gem.git
+
+
+# NOTE: The clone operation will fail if you already have a gem directory.  If
+# you do, you'll either need to rename your existing gem directory, or perform
+# a "git pull" from within your gem directory to update it from github.
+
+
+
+
+# =============================================================================
+# .bashrc
+# =============================================================================
+
+mv ~/.bashrc ~/.bashrc_old
+cat << EOF > ~/.bashrc
+
+#
+# File: .bashrc
+#
+# Configure user-specific environment and startup programs
+#
+
+# Source global definitions
+if [ -f /etc/bashrc ]; then
+    . /etc/bashrc
+fi
+
+# Source our definitions
+source ~/gem/local/sbin/gem_bash_init
+
+EOF
+chmod u+x ~/.bashrc
+
+
+
+# =============================================================================
+# .bash_profile
+# =============================================================================
+
+mv ~/.bash_profile ~/.bash_profile_old
+cat << EOF > ~/.bash_profile_temp
+
+# Prepare the X Server.
+export DISPLAY=:0.0
+if [[ ! -S /tmp/.X11-unix/X0 ]]; then
+  startxwin &
+fi
+
+EOF
+cat ~/.bash_profile_temp >> ~/.bash_profile
+rm ~/.bash_profile_temp
+
+
+
+
+
+
+
+
+
+
+# =============================================================================
+# Apendix A- "groupinstall"-ed packages under Fedora linux
+# =============================================================================
+#
+# sudo dnf -y groupinstall "Development Libraries":
+# -------------------------------------------------
+
+Last metadata expiration check: 0:31:52 ago on Fri 06 Sep 2019 07:09:53 PM PDT.
+
+Group: Development Tools
+ Description: These tools include general development tools such as git and CVS.
+ Mandatory Packages:
+   gettext
+ Default Packages:
+   diffstat
+   doxygen
+   git
+   patch
+   patchutils
+   subversion
+   systemtap
+ Optional Packages:
+   archmage
+   buildbot
+   bzr
+   colordiff
+   cvs
+   cvs2cl
+   cvsgraph
+   cvsps
+   darcs
+   dejagnu
+   expect
+   gambas3-ide
+   giggle
+   git-annex
+   git-cola
+   git2cl
+   gitg
+   gtranslator
+   highlight
+   lcov
+   manedit
+   meld
+   mercurial
+   monotone
+   mr
+   nemiver
+   qgit
+   quilt
+   rapidsvn
+   rcs
+   robodoc
+   scanmem
+   subunit
+   svn2cl
+   tailor
+   tig
+   tkcvs
+   tortoisehg
+   translate-toolkit
+   utrac
+
+#
+# sudo dnf -y groupinstall "X Software Development":
+# -------------------------------------------------
+Last metadata expiration check: 0:00:00 ago on Sun 08 Sep 2019 04:58:22 PM PDT.
+
+Group: X Software Development
+ Description: These packages allow you to develop applications for the X Window System.
+ Mandatory Packages:
+   libICE-devel
+   libX11-devel
+   libXaw-devel
+   libXfixes-devel
+   libXt-devel
+ Default Packages:
+   SDL-devel
+   Xaw3d-devel
+   freetype-devel
+   gd-devel
+   giflib-devel
+   libSM-devel
+   libXScrnSaver-devel
+   libXau-devel
+   libXcomposite-devel
+   libXcursor-devel
+   libXdamage-devel
+   libXdmcp-devel
+   libXevie-devel
+   libXext-devel
+   libXfont-devel
+   libXft-devel
+   libXmu-devel
+   libXrandr-devel
+   libXrender-devel
+   libXres-devel
+   libXtst-devel
+   libXvMC-devel
+   libXxf86dga-devel
+   libXxf86misc-devel
+
+
+
+#
+# sudo dnf -y groupinstall "C Development Tools and Libraries":
+# -------------------------------------------------
+Last metadata expiration check: 0:05:44 ago on Sun 08 Sep 2019 04:58:22 PM PDT.
+
+Group: C Development Tools and Libraries
+ Description: These tools include core development tools such as automake, gcc and debuggers.
+ Mandatory Packages:
+   autoconf
+   automake
+   binutils
+   bison
+   flex
+   gcc
+   gcc-c++
+   gdb
+   glibc-devel
+   libtool
+   make
+   pkgconfig
+   strace
+ Default Packages:
+   byacc
+   ccache
+   cscope
+   ctags
+   elfutils
+   indent
+   ltrace
+   oprofile
+   valgrind
+ Optional Packages:
+   ElectricFence
+   astyle
+   cbmc
+   check
+   cmake
+   coan
+   cproto
+   elfinfo
+   insight
+   nasm
+   pscan
+   remake
+   scons
+   scorep
+   splint
+   trinity
+   undertaker
+   yasm
+   zzuf
+
+
+
+# Concerns:
+#
+# There are more llvm libraries available.  Do we need some of these?
+#
+# There are more clang packages available.
+#
+
+
+
+
+
+
+
+
+
+# =============================================================================
+# Build fping
+# =============================================================================
+# https://www.google.com/search?q=fping+cygwin&rlz=1C1CHBF_enUS775US775&oq=fping+cygwin&aqs=chrome..69i57.3038j0j4&sourceid=chrome&ie=UTF-8
+
+
+
+
+
+
+
+
+
+
+
+
+
+

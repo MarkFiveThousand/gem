@@ -1,0 +1,293 @@
+#!/bin/bash
+
+function gem_script_Callstack
+{
+	gem_v_Msg "Callstack:\n"
+
+	local deptn=${#FUNCNAME[@]}
+	for ((i=deptn-1; i>0; i--)); do
+		local func="${FUNCNAME[$i-1]}"
+		if [[ ${func} == *"gem_v_Error"* ]]; then
+			break
+		fi
+		local indent=$(printf '%*s' $((deptn-i)) '')
+		local src="${BASH_SOURCE[$((i-1))]}"
+		local line="${BASH_LINENO[$((i-1))]}"
+		gem_v_Msg "${indent}${src}(${line}): ${func}()"
+	done
+}
+
+# gem_v_Print()- Outputs the given arguments to stdout.  Treats the arguments
+# as a single string.
+#
+# *FIX: Does not automatically append a \n newline.  Maybe this link can help:
+#
+# https://wiki.bash-hackers.org/scripting/posparams#mass_usage
+
+function gem_v_Print { gem_script_Print "$@";}
+function gem_script_Print
+{
+	printf "%b" "$@"
+}
+
+function gem_v_Msg { gem_script_Msg "$@";}
+function gem_script_Msg
+{
+	printf "%b\n" "$@"
+}
+
+function gem_v_ExitMsg { gem_script_ExitMsg "$@";}
+function gem_script_ExitMsg
+{
+	gem_v_Msg "$@"
+	exit 1
+}
+
+function gem_v_Error { gem_script_Error "$@";}
+function gem_script_Error
+{
+	gem_v_Msg ""
+	gem_script_Callstack
+	gem_v_Msg "\n$@\n"
+	exit 1
+}
+
+function gem_v_ExitHelp { gem_script_ExitHelp "$@";}
+function gem_script_ExitHelp
+{
+	exit 0
+}
+
+# gem_v_OnArg()- Returns the number of arguments processed.
+function gem_v_OnArg { gem_script_ArgHandler "$@";}
+function gem_script_OnArg
+{
+	return 0	# 0 arguments handled here.
+}
+
+# Trims the whitespace from the head and tail of a string.
+#
+# Source: https://unix.stackexchange.com/questions/476455/how-to-remove-leading-and-trailing-spaces-from-a-shell-variable
+function gem_script_String_Trim
+{
+	local var=$1
+    # Determine if 'extglob' is currently on.
+    local extglobWasOff=1
+    shopt extglob >/dev/null && extglobWasOff=0 
+    (( extglobWasOff )) && shopt -s extglob # Turn 'extglob' on, if currently turned off.
+
+	trim=${var%%*([[:space:]])}
+	trim=${trim##*([[:space:]])}
+	printf '%s\n' "$trim"
+
+    (( extglobWasOff )) && shopt -u extglob # If 'extglob' was off before, turn it back off.
+}
+
+# Removes any characters following, and including, #.
+function gem_script_String_StripComments
+{
+	local str=${1}
+	printf "%s" ${str%%#*}
+}
+
+# Returns 1 if a space-separated list, $1, contains the indicated string, $2.
+function gem_script_ListContains
+{
+	haystack=${1}
+	needle=${2}
+
+	local gem_ifs_saved=${IFS}
+	local gem_found=0
+	IFS=" "
+	for item in ${haystack}; do
+
+		if [[ ${item} == ${needle} ]]; then
+			gem_found=1
+			break
+		fi
+	done
+	IFS=${gem_ifs_saved}
+	return ${gem_found}
+}
+
+# Verify that all the paths in a colon-separated list exist.
+function gem_script_ValidatePaths
+{
+	local gem_colon_separated_list=${1}
+	local gem_ifs_saved=${IFS}
+	IFS=":"
+	for gem_path in ${gem_colon_separated_list}
+	do
+		if [[ ! -d ${gem_path} ]]; then
+			gem_v_Error "Path contains an invalid entry: ${gem_path}"
+		fi
+	done
+	IFS=${gem_ifs_saved}
+}
+
+# Receives as parameters a copy of the parameters that were passed to our file
+# systme wrappers gem_script_cd, ... etc.  We would like to restrict these
+# functions from working outside the gem file heirarchy for safety purposes.
+#
+# Every argument that realpath successfully converts is expected to be a 
+# file path and, therefore, must contain "/gem/".
+function gem_script_ValidateFileParams
+{
+#	local gem_counter=0
+	for arg in "$@"
+	{
+		local gem_absolute_path
+		gem_absolute_path=$(realpath "${arg}" 2>/dev/null)	# Expand relative paths.
+		local gem_result=$?
+		if [[ ${gem_result} -eq 0 ]]; then
+			if [[ ${gem_absolute_path} != *"/gem/"* && ${arg} != *"/gem/"* ]]; then
+				gem_v_Error "ERROR: gem_script_ValidateFileParams() Refusing to perform file operations outside of /gem/ file tree: ${arg}"
+#			else
+#				((gem_counter++))
+			fi
+		fi
+	}
+	return 0
+}
+
+# Given a list of arguments (intended to be passed to a file-related call), it
+# sets gem_patharg1 and possibly gem_patharg2 to the arguments that are file
+# paths.  Returns the number of file paths set.
+
+#function gem_script_PathArg
+# {
+#	local gem_counter=0
+#	for arg in "$@"
+#	{
+#		local gem_absolute_path
+#		gem_absolute_path=$(realpath "${arg}" 2>/dev/null)	# Expand relative paths.
+#		local gem_result=$?
+#		if [[ ${gem_result} -eq 0  ]]; then
+#			if [[ -z ${gem_patharg1} ]]; then
+#				gem_patharg1=${arg}
+#			else
+#				gem_patharg2=${arg}
+#			fi
+#			((gem_counter++))
+#		fi
+#	}
+#	return ${gem_counter}
+#}
+
+function gem_script_cd
+{
+	gem_script_ValidateFileParams ${@}
+
+	local gem_cmd_line="cd ${@}"
+	${gem_cmd_line}
+	local gem_result=$?
+	if [[ ${gem_result} -ne 0 ]]; then
+		gem_v_Error "ERROR: gem_script_cd failed to change to directory. Error code: ${gem_result}, Command line: ${gem_cmd_line}."
+	fi
+}
+
+function gem_script_cp
+{
+	gem_script_ValidateFileParams ${@}
+
+	local gem_cmd_line="cp ${@}"
+	${gem_cmd_line}
+	local gem_result=$?
+	if [[ ${gem_result} -ne 0 ]]; then
+		gem_v_Error "ERROR: gem_script_cp failed to copy file(s).  Error code: ${gem_result}, Command line: ${gem_cmd_line}."
+	fi
+}
+
+function gem_script_rm
+{
+	gem_script_ValidateFileParams ${@}
+
+	local gem_cmd_line="rm ${@}"
+	${gem_cmd_line}
+	local gem_result=$?
+	if [[ ${gem_result} -ne 0 ]]; then
+		gem_v_Error "ERROR: gem_script_rm failed to remove file(s).  Command line \"${gem_cmd_line}\"."
+	fi
+}
+
+function gem_script_mkdir
+{
+	gem_script_ValidateFileParams ${@}
+
+	local gem_cmd_line="mkdir ${@}"
+	${gem_cmd_line}
+	local gem_result=$?
+	if [[ ${gem_result} -ne 0 ]]; then
+		gem_v_Error "ERROR: gem_script_mkdir failed to create directory.  Command line \"${gem_cmd_line}\"."
+	fi
+}
+
+function gem_script_rmdir
+{
+	gem_script_ValidateFileParams ${@}
+
+	local gem_cmd_line="rmdir ${@}"
+	${gem_cmd_line}
+	local gem_result=$?
+	if [[ ${gem_result} -ne 0 ]]; then
+		gem_v_Error "ERROR: gem_script_rmdir failed to remove directory.  Command line \"${gem_cmd_line}\"."
+	fi
+}
+
+# Returns 1 if the directory parameter is a directory.
+function gem_script_DirExists
+{
+	local gem_path=${1}
+	if [[ ! -z ${gem_path} && -d ${gem_path} ]]; then
+		return 1
+	fi
+	return 0
+}
+
+# Returns 1 if the directory parameter is not a valid directory, or the
+# directory does exist and is empty.
+function gem_script_DirIsEmpty
+{
+	local gem_path=${1}
+
+	gem_script_DirExists ${gem_path}
+	local gem_dir_exists=$?
+	if [[ ${gem_dir_exists} -ne 0 && ! $(ls -A ${gem_path}) ]]; then
+		return 1
+	fi
+	return 0
+}
+
+function gem_script_rmdir_IfEmpty
+{
+	gem_script_ValidateFileParams ${@}
+	local gem_path=${1}
+
+	gem_script_DirIsEmpty ${gem_path}
+	local gem_dir_is_empty=$?
+	if [[ ${gem_dir_is_empty} -ne 0 ]]; then
+		gem_script_rmdir ${gem_path}
+		local gem_result=$?
+		if [[ ${gem_result} -ne 0 ]]; then
+			gem_v_Error "ERROR: gem_script_rmdir_IfEmpty failed to remove directory: ${gem_path}"
+		fi
+	fi
+}
+
+
+function gem_v_Main { gem_script_Main "$@";}
+function gem_script_Main
+{
+	while [[ $# > 0 ]]
+	do
+		gem_v_OnArg "$@"
+		local num_handled=$?
+		if [[ ${num_handled} == 0 ]]; then
+			gem_v_ExitHelp "ERROR: gem_script_Main encountered an unrecognized argument: ${1}"
+		else
+			for (( i=0; i<${num_handled}; i++ )) do shift ; done
+		fi
+	done
+}
+
+
