@@ -1,0 +1,1331 @@
+
+# Resource:
+#
+# This site has been very helpful:
+#
+# https://kbroman.org/github_tutorial/pages/first_time.html
+# https://kbroman.org/github_tutorial/pages/init.html
+
+
+# =============================================================================
+# SSH to avoid github login repetition
+# =============================================================================
+# Sources: https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent
+# Sources: https://help.github.com/articles/which-remote-url-should-i-use/#cloning-with-ssh-urls
+# https://help.github.com/articles/set-up-git/
+# https://help.github.com/articles/connecting-to-github-with-ssh/
+# http://www.biostat.jhsph.edu/bit/nopassword.html
+
+# FYI, Show your SSH version.
+ssh -V
+
+# list your ssh keys:
+ls -al ~/.ssh
+
+# Create Public/Private Keys
+
+
+# NOTE: Method 1, seems github didn't like this.  Gave the below error:
+# ---------------------------------------------------------------------
+The authenticity of host 'github.com (192.30.255.113)' can't be established.
+RSA key fingerprint is SHA256:nThbg6kXUpJWGl7E1IGOCspRomTxdCARLviKw6E5SY8.
+Are you sure you want to continue connecting (yes/no)? y
+Please type 'yes' or 'no': yes
+Warning: Permanently added 'github.com,192.30.255.113' (RSA) to the list of known hosts.
+git@github.com: Permission denied (publickey).
+fatal: Could not read from remote repository.
+
+Please make sure you have the correct access rights
+and the repository exists.
+
+
+# Method 1 procedure (Don't use.  See Method 2 further below.):
+# ----------------------------------------------
+#
+# Don't do this if you already have ssh keys in ~/.ssh.  It will overwrite them.
+# Create public and private cryptography keys that can be used for
+# authentication/login. During this process you will be prompted with some
+# questions. Just hit ENTER until you get your command prompt back. In
+# particular, you don't need to specify a passphrase. Just leave it blank.
+
+ssh-keygen -t dsa
+
+# Tell Github your key via cut-and-paste.
+
+npp ${HOME}/.ssh/id_dsa.pub
+
+# Select a copy the key text.  It starts with "ssh-dss".
+#
+# Navigate to:
+#
+# https://github.com/settings/keys
+# or else from here: https://github.com/settings/profile,
+#
+# Click "New SSH key" and paste your key.  
+
+# Common Problems:
+#
+# https://help.github.com/categories/authenticating-to-github/
+
+
+# Method 2 procedure:
+# -------------------
+# Source: https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/
+#
+# Generating a new SSH key
+#
+# When you're prompted to "Enter a file in which to save the key," press Enter.
+# This accepts the default file location: ${HOME}/.ssh/id_rsa.  You don't need
+# to specify a passphrase. Just leave it blank.
+
+ssh-keygen -t rsa -b 4096 -C "markhodges5000@gmail.com"
+
+# Add your SSH key to the ssh-agent.
+#
+# Before adding a new SSH key to the ssh-agent to manage your keys, you should
+# have checked for existing SSH keys.  New ones will overwrite old ones:
+#
+# https://help.github.com/articles/checking-for-existing-ssh-keys
+
+# Start the ssh-agent in the background.
+
+eval "$(ssh-agent -s)"
+# Agent pid 26957    <------- You should get this kind of output.
+
+# Add your SSH private key to the ssh-agent:
+ssh-add ~/.ssh/id_rsa
+
+
+# Add the SSH key to your GitHub account.
+# ---------------------------------------
+# https://help.github.com/articles/adding-a-new-ssh-key-to-your-github-account
+
+# Tell Github your key via cut-and-paste.
+
+npp ${HOME}/.ssh/id_rsa.pub
+
+# Select and copy the key text.  It starts with "ssh-rsa".
+#
+# Navigate to:
+#
+# https://github.com/settings/keys
+# or else from here: https://github.com/settings/profile,
+#
+# Click "New SSH key" and paste your key.  
+
+
+
+
+
+# =============================================================================
+# Git Basic Commands
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# View Status of Repo:
+# -----------------------------------------------------------------------------
+
+git status
+
+
+# -----------------------------------------------------------------------------
+# View name of remote repo.
+# -----------------------------------------------------------------------------
+
+git remote show origin
+
+... or if you only want the url:
+
+git config --get remote.origin.url
+... or ...
+git remote get-url origin
+
+
+# -----------------------------------------------------------------------------
+# Create repository in current directory.
+# -----------------------------------------------------------------------------
+
+git init
+
+
+# -----------------------------------------------------------------------------
+# Diff-ing
+# -----------------------------------------------------------------------------
+
+# List all new or modified files to be committed:
+
+git diff
+
+
+
+# -----------------------------------------------------------------------------
+# Add files to be staged.
+# -----------------------------------------------------------------------------
+git add <file or folder>
+
+# Stage all changes.
+# https://git-scm.com/docs/git-add
+# Is equivalent to "git add .; git add -u."  See below.
+
+git add -A <file or folder>
+
+
+# The important point about git add . is that it looks at the working tree and
+# adds all those paths to the staged changes if they are either changed or are
+# new and not ignored, it does not stage any 'rm' actions.
+
+git add . # Stages new files and modifications, without deletions.
+
+
+# git add -u looks at all the already tracked files and stages the changes to
+# those files if they are different or if they have been removed. It does not
+# add any new files, it only stages changes to already tracked files.
+
+git add -u # Stages modifications and deletions, without new files.
+
+
+# -----------------------------------------------------------------------------
+# Commit changes to local repo.
+# -----------------------------------------------------------------------------
+# NOTE: -m comment is required.
+
+git commit -m "These are my changes"
+
+
+# -----------------------------------------------------------------------------
+# Push your code to the master branch of the local repo.
+# -----------------------------------------------------------------------------
+# Push your code to the master branch of the remote repository defined with
+# origin and -u let you point your current local branch to the remote master
+# branch
+
+git push
+git push -u origin master
+git push git@github.com:MarkFiveThousand/gem.git
+
+# -----------------------------
+# Clone the gem git repository
+# -----------------------------
+cd ${HOME}
+git clone git@github.com:MarkFiveThousand/gem.git
+
+# When you run git clone, the following actions occur:
+# Source: https://help.github.com/articles/fetching-a-remote/
+#
+# * A new folder called repo is made.
+# * It is initialized as a Git repository.
+# * A remote named origin is created, pointing to the URL you cloned from.
+# * All of the repository's files and commits are downloaded there.
+# * The default branch (usually called master) is checked out
+#
+# For every branch foo in the remote repository, a corresponding remote-
+# tracking branch refs/remotes/origin/foo is created in your local
+# repository. You can usually abbreviate such remote-tracking branch names to
+# origin/foo.
+
+
+# -----------------------------------------------------------------------------
+# Fetch new work done by other people on a remote repository
+# -----------------------------------------------------------------------------
+# Source: https://help.github.com/articles/fetching-a-remote/
+#
+# Use git fetch to retrieve new work done by other people. Fetching from a
+# repository grabs all the new remote-tracking branches and tags without
+# merging those changes into your own branches.
+#
+# If you already have a local repository with a remote URL set up for the
+# desired project, you can grab all the new information by using git fetch
+# *remotename* in the terminal:
+#
+# Note: 'git pull' is a shortcut for 'git fetch' and 'git merge'.
+
+git fetch remotename
+git fetch git@github.com:MarkFiveThousand/gem.git
+
+
+# -----------------------------------------------------------------------------
+# Merge- Merges updates made online with your local work
+# -----------------------------------------------------------------------------
+# Source: https://help.github.com/articles/fetching-a-remote/
+#
+# Merging combines your local changes with changes made by others.
+#
+# Typically, you'd merge a remote-tracking branch (i.e., a branch fetched from
+# a remote repository) with your local branch:
+#
+# Note: 'git pull' is a shortcut for 'git fetch' and 'git merge'.
+
+git merge remotename/branchname
+
+
+# -----------------------------------------------------------------------------
+# Pull- Grabs online updates and merges them with your local work
+# -----------------------------------------------------------------------------
+# Source: https://help.github.com/articles/fetching-a-remote/
+#
+# 'git pull' is a convenient shortcut for completing both 'git fetch' and 'git
+# merge' in the same command.
+
+git pull remotename branchname
+git pull git@github.com:MarkFiveThousand/gem.git
+
+# Because pull performs a merge on the retrieved changes, you should ensure
+# that your local work is committed before running the pull command. If you run
+# into a merge conflict you cannot resolve, or if you decide to quit the merge,
+# you can use git merge --abort to take the branch back to where it was in
+# before you pulled.
+
+
+
+# -----------------------------------------------------------------------------
+# Link to github
+# -----------------------------------------------------------------------------
+git remote add origin git@github.com:MarkFiveThousand/gem
+
+# Push your files up to github.
+git push -u origin master
+
+
+# ------------------------------------------------------------
+# Change "origin" of your GIT repository to a local bare repo.
+# ------------------------------------------------------------
+# Source: https://help.github.com/articles/changing-a-remote-s-url/
+# This is a work in progress...
+
+git remote rm origin
+git remote add origin /home/mhodges/git_server
+# I'm not sure what these do, or if they're necessary.
+git config master.remote origin
+git config master.merge refs/heads/master
+
+
+# ---------------------------------------------------------------
+# Change "origin" of your GIT repository to a remote github repo.
+# ---------------------------------------------------------------
+# Source: https://help.github.com/articles/changing-a-remote-s-url/
+
+# For SSH (This is what we want.):
+
+git remote rm origin
+git remote add origin git@github.com:MarkFiveThousand/gem
+# I'm not sure what these do, or if they're necessary.
+git config master.remote origin
+git config master.merge refs/heads/master
+
+
+# For regular https (See For SSH above.):
+
+git remote rm origin
+git remote add origin https://github.com:MarkFiveThousand/gem
+# I'm not sure what these do, or if they're necessary.
+git config master.remote origin
+git config master.merge refs/heads/master
+
+
+# -----------------------------------------------------------------------------
+# Remove a file from the repo
+# ----------------------------------------------------------------------------
+git rm <file>
+
+
+# -----------------------------------------------------------------------------
+# Reset to rollback to an earlier commit.
+# -----------------------------------------------------------------------------
+
+# Need docs.  git reset is important.
+
+
+# -----------------------------------------------------------------------------
+# Add a submodule (.git-within-.git)
+# -----------------------------------------------------------------------------
+# Add a repo that resides within another repo.
+#
+# Source: https://blog.github.com/2016-02-01-working-with-submodules/
+
+cd /home/mhodges/gem
+git submodule add https://github.com/OGRECave/ogre.git local/src/ogre/v1-11-5/2018_12_23/ogre
+
+
+
+# -----------------------------------------------------------------------------
+# Change the url of an existing remote repository that has already been added.
+# ----------------------------------------------------------------------------
+git remote set-url origin git@github.com:User/UserRepo.git
+
+
+git submodule add https://github.com/<user>/rock rock
+
+
+
+
+
+
+
+
+# =============================================================================
+# Install GitKraken
+# =============================================================================
+
+fullpath_gem=${HOME}/gem_original
+gitkraken_install_dest=${fullpath_gem}/local/opt
+cd ~/temp
+
+sudo dnf -y upgrade
+sudo dnf -y install libXScrnSaver
+sudo dnf -y update
+
+# For some reason wget won't connect, but downloads from browser...(?)  Okay,
+# it finally connected.  It just had to retry a couple of times.
+wget https://release.gitkraken.com/linux/gitkraken-amd64.tar.gz
+wget https://release.axocdn.com/linux/gitkraken-amd64.tar.gz
+
+tar -xvzf gitkraken-amd64.tar.gz
+
+mkdir -p ${gitkraken_install_dest}
+cp -r gitkraken/ ${gitkraken_install_dest}
+
+cd ${gitkraken_install_dest}
+
+./gitkraken/gitkraken
+
+
+# =============================================================================
+# Misc. Git Notes
+# =============================================================================
+
+Links
+http://gitref.org/index.html
+https://fedoraproject.org/wiki/Git_quick_reference
+
+
+GUI
+The following two GUIS are included in Windows msysgit, but not Linux.
+
+Command line:
+gitk        # Commit viewer
+git gui        # UI for git
+
+
+SmartGit Overview
+http://www.syntevo.com/smartgithg/documentation/5/show
+
+
+
+
+YouTube Overviews
+https://www.youtube.com/watch?v=dK4iCStqAxc
+
+13:35    Nice workflow explained.
+20:25    Creating a respository.  Adding files & your first commit.
+31:12    Editing files.
+
+
+Vocabulary
+Remote Repository
+
+The "blessed" repository.  Nobody works directly on this one. It is a bare repository.  Typically, it would reside on the GitHub website, but can also be on a local computer such as webserver.  From the local repository's perspective, the remote respository from which it was cloned is known as 'origin'.
+
+
+Local Repository
+
+The repository that one works in.  Is created by 'cloning' the remote repository.  Is connected to the cloned repository.  Later updates are 'pulled' from the remote repository.  Changes committed from the working tree to the local repository may be 'pushed' to the remote repository.  Located in the .git folder of a working tree.
+
+
+Working Tree
+
+A directory where you can edit files-- always part of a repository.  Contains the .git folder, which contains the local repository.
+
+
+Bare Repository
+
+Used on servers as central repositories-- do not have a working tree.
+
+Origin
+
+
+The remote repository from witch a local repository was cloned.
+
+
+Commit
+
+Edited files are stored from the working tree into the local repository.  All files intended to be committed must be staged with "git add" first.
+
+
+Develop Branch
+
+Contains the ongoing development line. It contains all finished improvements and fixes.
+
+
+Master Branch
+
+Contains the stable release line. Its HEAD represents the latest stable release.
+
+
+Stage
+
+To stage certain files, it to say I want to "add" the changes of these files to a staging area.  Then it goes to a commit.  Really just a pre-commit area.  You can stage just a portion of your code.
+
+
+Push
+
+Move changes that have occured in the local repository to the central repository on the server.
+
+
+Add
+
+Adds a file to the staging area.
+
+
+HEAD
+
+Current working branch, and your last commit message.  Typically, as you checkout out different branches, head will point to the latest version on the selected branch.
+
+
+Typical Workflow
+
+Working Directory               Staging Area                Git Repository
+       |                              |                            |
+       |                              |                            |
+       |      ->  Add Files->         |                            |
+       |                              |     ->  Commit->           |
+       |                              |                            |
+       |                              |                            |
+       |                                                           |
+       |           <----- Checkout Project  <--------
+       |                                                           |
+       |                              |                            |
+       |                              |                            |
+
+
+
+
+Example: Branching and Merging
+
+Source: https://www.youtube.com/watch?v=RDGzF2M-zlo
+
+master
+|
+|\
+| \
+|  | feature
+|  |
+| /
+|/
+|
+
+In git, branches are like contexts or states that you can switch between.  When
+you switch to another branch via git checkout, files in your working tree are
+delete, modified, and added so that your working tree reflects the state of the
+branch that you have switched to.
+
+The following example demonstrates a typical branch, implement, then merge
+session.  It assumes we are starting out already having a file called index.php
+contained in the master branch.  master branch is the current branch.
+
+git branch                # Output a list of all the available branches. '*'
+                          # indicates which branch you are currently in (checked
+                          # out).
+
+git branch feature        # Create a new branch named 'feature'
+git branch                # Now shows our new branch.
+
+git checkout feature      # Switch to the branch named 'feature'
+
+<modify index.php to have a new feature>
+
+git commit -a -m "I added new feature x"
+                          # Commit any modified files to the repository.
+
+<create a file containing some comments called comments.php>
+
+git add comments.php      # Add new file.  Commit doesn't add new files.
+git commit -a -m "added new feature x comments"
+                          # Commit any modified files to the repository.
+
+git checkout master       # Switch back to the master branch.  Notice that
+                          # comments.php has disappeared.  Also, the new feature
+                          # added to index.php is not there.  It still exists in
+                          # feature branch, but has not yet been merged into
+                          # master branch.
+
+git branch                # Shows we are currently in the master branch.
+
+git merge feature         # Merge from feature branch into the current branch,
+                          # master.  The comments.php file is now present, and
+                          # index.php now includes the updates to index.php.
+git branch -d feature     # Delete feature branch.  We no longer need it.
+
+
+
+
+
+
+Example: Manually Resolving Conflicts
+Source: https://www.youtube.com/watch?v=zz7NuSCH6II
+
+...
+...
+...
+# Suppose both yopu and someone else have made changes to the same file.  You
+# now try to commit your changes.
+
+git add .               # Stage all the changed files for commit.
+git commit              # Save the files to the repository.
+# You enter a comment for the change
+git push                # Move changes to the server.
+
+# If someone else has modified the same file, the push will be rejected and fail.
+# Let's suppose this happened.
+
+git pull                # Update our tree with the changes on the server.  This
+                        # will try to auto-merge the changes.  If a merge
+                        # conflict occurs you have to manually resolve the
+                        # conflicts.
+
+<open the file that has the conflicts & resolve by hand.  Save the merged file.>
+
+git status              # The file will still show up under unmerged paths.
+
+git add <filename>      # Stage the manually merged file(s).
+# or git add .
+
+git status              # Shows the file is ready to be committed.
+git commit              # Shows that the merge has been performed.
+git push                # Move changes to the server.
+
+
+
+
+
+Rebase vs. Merge
+Source 1: http://www.kerrybuckley.org/2008/06/18/avoiding-merge-commits-in-git/
+Source 2: http://www.youtube.com/watch?v=hjVeZkFvsEU
+Very good article:
+Source 3: http://blog.experimentalworks.net/2009/03/merge-vs-rebase-a-deep-dive-into-the-mysteries-of-revision-control/
+Very good article:
+Source4: http://think-like-a-git.net/sections/rebase-from-the-ground-up.html
+This article compares always merge vs. always rebase philosophies:
+Source 5: https://blogs.atlassian.com/2013/10/git-team-workflows-merge-or-rebase/
+Another Merge vs. Rebase article:
+Source 6:
+http://blog.marcomonteiro.net/post/are-you-a-merge-or-rebase-guy
+Source 7:
+This article explains it very simply:
+http://www.fiveminutes.eu/git-merge-and-rebase-the-simple-explanation/
+
+
+REBASING:
+
+Rebasing a branch to master will snip off the branch and append it to master.
+
+The following occurs when you rebase: a.) find the common ancestor (where the branch occured).  b.) rewind your history back to the common ancestor.  c.) replay the master branch commits on your feature branch.  Rebasing will "pause" if there is a conflict, to allow you the option of aborting, or manually merging the conflicts.
+
+Assume the following history exists and the current branch is “feature”:
+
+      A---B---C feature
+     /
+D---E---F---G master
+
+From this point, the result of either of the following commands:
+
+git rebase master
+git rebase master feature
+
+Would be:feature
+
+              A'--B'--C' feature
+             /
+D---E---F---G master
+
+If the upstream branch already contains a change you have made (e.g., because you mailed a patch which was applied upstream), then that commit will be skipped. For example, running git rebase master on the following history (in which A’ and A introduce the same set of changes, but have different committer information):
+
+      A---B---C feature
+     /
+D---E---A'---F master
+
+will result in:
+
+               B'---C' feature
+              /
+D---E---A'---F master
+
+And it can get more and more complex than this. But trying to resume what it is to a more simple definition in contrast to Branching.
+
+Rebasing unifies the lines of development by re-writing changes from the source branch so that they appear as children of the destination branch effectively pretending that those commits were written on top of the destination branch all along.
+
+Rebasing will rewrite the history such that all of the commits made only to the feature branch will be applied after any changes that appear on the main branch, regardless of the actual chronological order of those commits.
+
+Never rebase branches that are pulled.  Only rebase local branches.  Otherwise, when you push, you will mWhen a feature branch’s development is complete, rebase/squash all the work down to the minimum number of meaningful commits and avoid creating a merge commit – either making sure the changes fast-forward (or simply cherry-pick those commits into the target branch).
+
+Rebase as clean up is a healthy part of the coding lifecycle.  The following are the best times to use rebase:
+
+You’re developing locally. You have not shared your work with anyone else. At this point, you should prefer rebasing over merging to keep history tidy. If you’ve got your personal fork of the repository and that is not shared with other developers, you’re safe to rebase even after you’ve pushed to your fork.
+Your code is ready for review. You create a pull request, others are reviewing your work and are potentially fetching it into their fork for local review. At this point you should not rebase your work. You should create ‘rework’ commits and update your feature branch. This helps with traceability in the pull request, and prevents the accidental history breakage.
+Review is done and ready to be integrated into the target branch. Congratulations! You’re about to delete your feature branch. Given that other developers won’t be fetch-merging in these changes from this point on, this is your chance to sanitize history. At this point you can rewrite history and fold the original commits and those pesky ‘pr rework’ and ‘merge’ commits into a small set of focussed commits. Creating an explicit merge for these commits is optional, but has value. It records when the feature graduated to master.
+
+Advice from others:
+Rebase your own stuff before pushing (rebase as clean-up).
+Always rebase feature branches on master if you’re working on it alone, including at the end of a sprint so hopefully master can simply be fast-forwarded.
+Merge master into feature branches if you working in a team and: 3a) If the team can coordinate, rebase on master at the end of the sprint, else 3b) If coordination is difficult (remoteness, timezones, …), just merge.
+Enjoy mostly readable history. :)
+There are pros and cons to a policy of using rebase and also for using merge.
+
+REBASE POLICY:
+
+When a feature branch’s development is complete, rebase/squash all the work down to the minimum number of meaningful commits and avoid creating a merge commit – either making sure the changes fast-forward (or simply cherry-pick those commits into the target branch).
+
+While the work is still in progress and a feature branch needs to be brought up to date with the upstream target branch, use rebase – as opposed to pull or merge – not to pollute the history with spurious merges.
+
+PROS:
+Code history remains flat and readable. Clean, clear commit messages are as much part of the documentation of your code base as code comments, comments on your issue tracker etc. For this reason, it’s important not to pollute history with 31 single-line commits that partially cancel each other out for a single feature or bug fix. Going back through history to figure out when a bug or feature was introduced, and why it was done, is going to be tough in a situation like this.
+Simplifies your history. Is the most intuitive and clutter-free way to combine commits from multiple developers in a shared branch .
+Manipulating a single commit is easy (e.g. reverting them).
+The result on the main line after a pre-rebased branch merge will be identical to what existed on the feature branch before the merge. This means that the team can be sure that what is being considered during the pull request will be the result on the main line exactly. The team can then be confident the main-line always meets the quality thresholds of the team (measured by peer review and/or actual automated tests or whatever). Conversely, merging divergent changes cannot give this confidence.  Having said that, in a busy repository this might add a lot of overhead. e.g. you can imagine many pull requests needing to be rebased as they age.
+
+
+CONS:
+Squashing the feature down to a handful of commits can hide context, unless you keep around the historical branch with the entire development history.
+Rebasing doesn’t play well with pull requests, because you can’t see what minor changes someone made if they rebased (incidentally, the consensus inside the Stash development team is to never rebase during a pull request).
+Rebasing can be dangerous! Rewriting history of shared branches is prone to team work breakage. This can be mitigated by doing the rebase/squash on a copy of the feature branch, but rebase carries the implication that competence and carefulness must be employed.
+It’s more work: Using rebase to keep your feature branch updated requires that you resolve similar conflicts again and again. <Reply from another poster: "That makes it sound like you’ll have to merge the same change again and again, but you’d only have to merge changes again if someone else changed the file between your rebases. And if that happens wouldn’t the Merge Team Policy require merging again too?">  Yes, you can reuse recorded resolutions (rerere) sometimes, but merges win here: Just solve the conflicts one time, and you’re set.
+Another side effect of rebasing with remote branches is that you need to force push at some point. The biggest problem we’ve seen is that people force push – which is fine – but haven’t set git push.default. This results in updates to all branches having the same name, both locally and remotely, and that is dreadful to deal with.
+Slightly more complex, especially under conflict conditions. Each commit is rebased in order, and a conflict will interrupt the process of rebasing multiple commits. With a conflict, you have to resolve the conflict in order to continue the rebase. SourceTree guides you through this process, but it can still become a bit more complicated. Rewriting of history has ramifications if you've previously pushed those commits elsewhere.  You may push commits you may want to rebase later (as a backup) but only if it's to a remote branch that only you use. If anyone else checks out that branch and you later rebase it, it's going to get very confusing. You decide which one to use and where. It’s up to you, personally I rarely use rebase (author says).
+
+
+
+
+
+
+
+
+
+
+
+Problem as stated in source 1: "When you rebase a branch, you are changing its history in a way that will cause problems for anyone who already has a copy of the branch in their repository and tries to pull updates from you. You should understand the implications of using git rebase on a repository that you share."
+
+
+
+MERGING:
+
+Joins two or more development histories together.
+
+Suppose you have created a branch to develop a feature.  After completing work in your branch, both your branch and the master branch have many commits.  Before we merge our feature into master branch, first merge master into feature branch.  That way we can resolve any conflicts before merging our code into master.
+
+The merge incorporates changes from the named commits (since the time their histories diverged from the current branch) into the current branch. This command is used by git pull to incorporate changes from another repository and can be used by hand to merge changes from one branch into another.
+
+Assume the following history exists and the current branch is “master”:
+
+  A---B---C feature
+ /
+D---E---F---G master
+
+Then "git merge feature" will replay the changes made on the feature branch in the order of the commit timestamps since it diverged from master (i.e., E) until its current commit (C) on top of master, and record the result in a new commit called a "merge commit" along with the names of the two parent commits and a log message from the user describing the changes.
+
+
+MERGE POLICY:
+
+"Always Merge"-based policies flow like this: When a feature branch is complete merge it to your target branch (master or develop or next).
+
+Make sure the merge is explicit with –no-ff, which forces git to record a merge commit in all cases, even if the changes could be replayed automatically on top of the target branch.
+
+PROS:
+Simple to use and understand.
+Maintains the original context of the source branch.
+The commits on the source branch remain separate from other branch commits, provided you don't perform a fast-forward merge. This separation can be useful in the case of feature branches (remember git-flow?), where you might want to take a feature and merge it into another branch later.
+Existing commits on the source branch are unchanged and remain valid; it doesn't matter if they've been shared with others.
+Traceability: This helps keeping information about the historical existence of a feature branch and groups together all commits part of the feature.
+CONS:
+History can become intensely polluted by lots of merge commits, and visual charts of your repository can have rainbow branch lines that don’t add too much information, if not outright obfuscate what’s happening. (Now to be fair, confusion is easily solved by knowing how to navigate your history; The trick here is to use, for example, git log –first-parent to make sense of what happened.)
+Debugging using git bisect can become much harder due to the merge commits.
+Difficult to calculate quickly what has been done in one particular merge commit. To calculate resulting “diff” of one particular merge commit you should collect all diffs between this commit and all of the parent commits and add diff of conflict resolving. Could be done, but not so obvious and intuitively.
+If the need to merge arises simply because multiple people are working on the same branch in parallel, the merges don't serve any useful historic purpose and create clutter.
+
+Fast Forward
+
+LINKS:
+http://365git.tumblr.com/post/504140728/fast-forward-merge
+
+A fast forward merge occurs when you have been working in a branch, then commit your changes, AND there have been no updates to the master branch.  There is nothing to merge.  It's almost as if, if you knew there weren't going to be any changes to the master branch you could have just done your work in the master branch instead of branching in the first place.  The branch is simply appended to the master branch.  It's not really a merge at all.  This makes it the same as rebase.  By default the branch is eliminated, since no merges were required.
+
+Sometimes you may want the branch to persist.  This can be accompllished with "git merge --no-ff feature".  Notice the "--no-ff" flag.  The link above offers a nice illustrations of the process.
+
+
+
+FAST FORWARD ERRORS
+
+GitHub has a nice section called "Dealing with “non-fast-forward” errors". 
+
+Sometimes, Git can't make your change to a remote repository without losing commits. When this happens, your push is refused.  Usually, this is caused by another user pushing to the same branch.  In other cases this error is a result of destructive changes made locally by using commands like git commit --amend or git rebase . . You can fix this by fetching and merging the changes made on the remote branch with the changes that you have made locally.  Or, you can simply use git pull to perform both commands at once.
+
+
+
+Questions
+
+
+Set Up a Local and Remote Repository For an Existing Project
+
+# The following script is intended to be executed on
+# the computer on which the remote repo is stored.
+
+# Name of the working directory that you would
+# like to place under version control.
+MYDIR=Docs
+# Parent of that folder.
+MYDIR_PARENT=~/projects
+# Parent of desired repo.
+REMOTE_REPO_DIR=~/GitServer
+
+# Create the bare repository
+mkdir $REMOTE_REPO_DIR/$MYDIR
+cd $REMOTE_REPO_DIR/$MYDIR
+git init --bare
+
+# Save the original project
+mv $MYDIR_PARENT/$MYDIR $MYDIR_PARENT/${MYDIR}_Saved
+
+# Clone the empty remote repo.
+cd $MYDIR_PARENT
+git clone $REMOTE_REPO_DIR/$MYDIR
+
+# Copy saved original dir into the cloned repo.
+cp -r $MYDIR_PARENT/${MYDIR}_Saved/* $MYDIR_PARENT/$MYDIR
+
+# Stage and commit all the files.
+cd $MYDIR_PARENT/$MYDIR
+git add .
+git commit -m "Initial commit."
+
+# Push the files to the remote repo.
+git push
+
+# ==========================================
+# Pull the remote repo from another location
+# ==========================================
+# You need to set the paths manually:
+MYDIR=Docs
+cd ~/projects
+git clone //webserver/root/home/mhodges/GitServer/$MYDIR
+
+
+
+Set up a repository for playing with merging.
+Create the following history:
+
+                      A---B---C feature
+                     /
+                D---E---F---G master
+
+
+# Delete the old repository from the previous experiment.
+cd ~/git/test1
+rm -rf *
+rm -rf .git
+
+# Create the new repository
+git init
+
+echo "" >> file.txt
+git add file.txt
+git commit file.txt -m "D"
+
+echo "" >> file.txt
+git add file.txt
+git commit file.txt -m "E"
+
+git branch feature
+
+echo "" >> file.txt
+git add file.txt
+git commit file.txt -m "F"
+
+echo "" >> file.txt
+git add file.txt
+git commit file.txt -m "G"
+
+# Move back to the feature branch
+git checkout feature
+
+echo "" >> file.txt
+git add file.txt
+git commit file.txt -m "A"
+
+echo "" >> file.txt
+git add file.txt
+git commit file.txt -m "B"
+
+echo "" >> file.txt
+git add file.txt
+git commit file.txt -m "C"
+
+# Move back to the master branch
+git checkout master
+
+
+
+==============================================================
+Create a.) a bare repository on Linux Server b.)
+==============================================================
+LINUX:
+cd ~                # Create the remote repository in Linux
+mkdir GitServer        # ~/GitServer will hold all our remote repositories.
+cd GitServer
+mkdir test1
+cd test1
+git init --bare
+
+cd ~                # Create a local working tree in Linux
+mkdir git            # ~/git/ will hold all our local working trees.
+cd git
+git clone ~/GitServer/test1
+                    # ~/git/test1 is now our working tree.
+
+WINDOWS:
+cd ~                # Create a local working tree in Windows
+mkdir git            # ~/git/ will hold all our local working trees.
+cd git
+git clone //webserver/root/home/mhodges/GitServer/test1
+                    # ~/git/test1 is now our working tree.
+cd test1
+
+
+# --------------------------------------
+# Create, add, commit, and push file.txt
+# --------------------------------------
+cd ~/git/test1
+echo "m1" >> file.txt
+git add file.txt
+git commit file.txt -m "m1"
+git push origin master
+
+# WINDOWS
+git pull
+
+# Now msys and linux both have identical working trees.
+
+# --------------------------------------
+# Modify file.txt on Linux and push to server.
+# --------------------------------------
+# LINUX:
+echo "v2 from Linux" >> file.txt
+git add file.txt
+git commit -a -m "v2 from Linux"
+git push origin master
+
+
+# --------------------------------------
+# Pull from remote repository, resolve conflict, then push to remote repo.
+# --------------------------------------
+# WINDOWS
+git pull        # Should result in conflicts.
+<manually resolve conflict>
+git add file.txt
+git commit -m "v3 from Windows"
+git push
+
+
+
+Creating a remote repository
+
+Create the following starting point:
+|
++- GitLocal
+|  |
+|  +- Project1
+|     |
+|     +- file1.txt
+|     |
+|     +- Folder1
+|        |
+|        +- file2.txt
+|
++- GitRemote
+|  |
+|  +- Project1
+
+
+# Create a remote bare repository first
+#--------------------------------------
+cd ~
+mkdir GitRemote
+mkdir GitRemote/Project1
+git init --bare
+
+# Create a sample project
+# -----------------------
+cd ~
+mkdir GitLocal
+mkdir GitLocal/Project1
+cd GitLocal/Project1
+echo "file1" > file1.txt
+mkdir Folder1
+echo "file2" > Folder1/file2.txt
+
+# Create a local repository for Project1
+----------------------------------------
+git init
+
+# Recursively add all the files to the local repository
+git add .
+
+# Commit to the local repository
+git commit -m "Initial import"
+
+# Configure the path to the remote repository
+git remote add origin ~/GitRemote/Project1
+
+# Set the global push preference
+# This only needs to be done ONCE!
+git config --global push.default simple
+
+# Push the code to the remote repository
+# Push the current branch and set the remote as upstream
+git push --set-upstream origin master
+
+# Maybe this will work next time:
+git push
+
+
+Remove, reset and rollback commits
+Source: http://ariejan.net/2011/09/08/git-remove-reset-and-rollback-commits/
+
+Use git log to see your most recent commits.
+
+To remove commits from your local repository:
+
+git reset --hard HEAD~3        # Revert the last three commits
+git reset --hard HEAD~1        # Remove the last commit
+
+HEAD~1 is a shorthand for the commit before head.
+
+
+If you already pushed your changes to a remote repository, you can't use git
+reset, because it will wreak havoc with other people's repositories later.
+Instead, you could revert your commit (e.g. create a new commit, undoing a
+previous one).
+
+Note that git revert does not walk back into history, but only works on a
+specific commit or range of commits. To use my previous examples:
+
+git revert HEAD~3..HEAD
+git revert HEAD~1..HEAD
+git revert d3f1a8..master
+
+Optionally specify the --no-commit option to see what's being reverted.
+
+
+
+Git Command Line Quick Index
+
+git add <name_of_file>
+
+                Stage a file to be commited to the repo.  It can be a new file
+                being first introduced to the repository, or one that you are
+                going to start changing.  Note that the file is "staged"--
+                ready to receive changes to be later committed.
+
+git add .
+
+                Stage all files in the current directory.
+
+git branch
+
+                Display all the branches that git knows about in your current
+                working tree.  The branch marked with "*" is your current
+                working branch.
+
+git branch <name_of_branch>
+
+                Create a new branch.
+
+git branch -d <name_of_branch>
+
+                Delete a branch.
+
+git checkout <name_of_branch>
+
+                Switch to a different branch
+
+git checkout -b <name of new branch>
+
+                Create the new branch then switch to it.
+
+git checkout --track origin/<branch>
+
+                This creates a local branch named <branch> and tells
+                git that it came from origin/<branch>. Using git status
+                will show you whether your local branch is ahead, behind,
+                or otherwise different than the upstream branch.
+
+git checkout --track --branch <some-other-name> origin/<branch>
+
+                Switch to a branch that was pushed remotely, but use a
+                different name for your local branch.
+
+git clone <path to remote repository>
+git clone //webserver/root/home/mhodges/git/git1_remote
+git clone ~/git/git1_remote
+
+                Clone a remote repository.
+
+git commit <fielname>
+
+                Commit changes to a file.  It will bring up whichever editor you
+                have defined in $EDITOR and allow you to write a commit log
+                message explaining the changes you've made. A commit log message
+                usually consists of:
+
+                * a one-line summary of your changes
+                * a blank line
+                * one or more additional lines with more detail. These lines are
+                  optional.
+
+  The identity of a commit is an agragate of
+A snapshot of the repository (different in the second commit since the repository now has the changes from ccc5b8a in it).
+The commit message, author, time (the same since you used format-patch and am).
+The parent commit (different in the second commit).
+
+
+git commit <fielname> -m <quoted commit message>
+
+                Provide the log message on the command line.
+
+git commit -a
+
+                Add then commit all modified files.
+
+git commit -a -m <quoted commit message>
+
+                The above will perform both with a single command.
+
+git commit --amend
+
+                Combine the staged changes with the previous commit and replace
+                the previous commit with the resulting snapshot. Running this
+                when there is nothing staged lets you edit the previous commit’s
+                message without altering its snapshot.
+
+                NOTE: Amended commits are actually entirely new commits, and the
+                previous commit is removed from the project history. If you
+                amend a commit that other developers have based their work on,
+                it will look like the basis of their work vanished from the
+                project history. This is a confusing situation for developers to
+                be in and it’s complicated to recover from.
+
+git commit --amend -m <quoted commit message>
+
+                Combine the staged changes with the previous commit and replace
+                the previous commit with the resulting snapshot. Running this
+                when there is nothing staged lets you edit the previous commit’s
+                message without altering its snapshot.
+
+                NOTE: Amended commits are actually entirely new commits, and the
+                previous commit is removed from the project history. If you
+                amend a commit that other developers have based their work on,
+                it will look like the basis of their work vanished from the
+                project history. This is a confusing situation for developers to
+                be in and it’s complicated to recover from.
+
+git diff <filename>
+
+                Display what has changed between two versions of a file.
+
+git fetch
+
+                Download objects and references from another repository.
+                NOTE: This doesn't change anything.  Only makes your local git
+                aware that a remote server has changes that your local one does
+                not.  It does not apply those changes to your local copy.  You
+                would have to run a git merge to apply the changes.
+
+git ignore <filename>
+
+                Tell git to ignore a file.  *NOTE*  I'm not sure this is a real
+                command.  The best way to indicate files to be ignored is by
+                placing a .gitignore file in a directory.  So far, I am placing
+                one at the top level directory, the one that contains .git.  That
+                way when I do status, and the relative path is shown, I can just
+                cut-and-paste the file name of files that I want to ignore into
+                the .gitignore file.
+
+git init
+
+                Create an empty git repository.
+
+git init --bare
+
+                Create an empty git repository with no working tree.
+
+git log
+
+                Display a log of your history.
+
+git log --oneline --decorate
+
+                Display only the most recent.
+
+git log --oneline --decorate --graph
+
+                Display a graph, too.
+
+git merge <name_of_other_branch>
+
+                Integrate changes in another branch into the current branch.
+
+                      A---B---C feature
+                     /
+                D---E---F---G master
+
+                Followed by "git merge feature" will result in:
+
+                      A---B---C feature
+                     /         \
+                D---E---F---G---H master
+
+                Master history (via 'git log') will show: D E F   A B C   G H
+
+                The below explanation is from the following source:
+                http://git-scm.com/book/en/Git-Branching-Basic-Branching-and-Merging
+
+                Each letter above represents a commit.  Git will automatically
+                identify the common ancestor E.  Node H is a commit that
+                resulted from the merge.  Node H is called a merge commit.
+
+                Merge Conflict:
+
+                If you changed the same part of the same file differently in the
+                two branches you’re merging together, Git won’t be able to merge
+                them cleanly.
+
+                You’ll get a merge conflict that looks something like this:
+
+                    $ git merge my_branch_name
+                    Auto-merging index.html
+                    CONFLICT (content): Merge conflict in index.html
+                    Automatic merge failed; fix conflicts and then commit the result.
+
+                Git hasn’t automatically created a new merge commit. It has
+                paused the process while you resolve the conflict. If you want
+                to see which files are unmerged at any point after a merge
+                conflict, you can run 'git status'.
+
+                Anything that has merge conflicts and hasn’t been resolved is
+                listed as unmerged. Git adds standard conflict-resolution
+                markers to the files that have conflicts, so you can open them
+                manually and resolve those conflicts. Your file contains a
+                section that looks something like this:
+
+                    <<<<<<< HEAD
+                    <div id="footer">contact : email.support@github.com</div>
+                    =======
+                    <div id="footer">
+                      please contact us at support@github.com
+                    </div>
+                    >>>>>>> my_branch_name
+
+                This means the version in HEAD (your master branch, because that
+                was what you had checked out when you ran your merge command) is
+                the top part of that block (everything above the =======), while
+                the version in your my_branch_name branch looks like everything
+                in the bottom part. In order to resolve the conflict, you have
+                to either choose one side or the other or merge the contents
+                yourself. For instance, you might resolve this conflict by
+                replacing the entire block with this:
+
+                    <div id="footer">
+                        please contact us at email.support@github.com
+                    </div>
+
+                This resolution has a little of each section.  You will fully
+                removed the <<<<<<<, =======, and >>>>>>> lines. After you’ve
+                resolved each of these sections in each conflicted file, run git
+                add on each file to mark it as resolved. Staging the file marks
+                it as resolved in Git.
+
+               
+
+
+
+
+
+git pull
+
+                Fetch and merge changes from a remote server.  It is shorthand
+                for performing a separate git fetch and then a git merge.
+                NOTE:  Maybe don't use until you are more familiar with git.  It
+                will fetch and merge multiple branches at the same time.  It can
+                get very confusing.
+
+What pull does depends upon the branch you are on and only works if it’s setup as a tracking branch (master probably will be, but likely not your other branches unless you set them up yourself). It does two things:
+Fetches remote changes (same as git fetch).
+Tries to merge the remote branch with your current branch (same as git merge). It only knows what branch to try and merge with if your local branch is set up as a tracking branch.
+The merge is what’s confusing. It tries to do a fast-forward merge, but can’t. So, instead, it creates a merge commit with your local branch as one parent and the remote branch as another parent
+
+
+git push
+
+                Push changes and history from your local working tree to a
+                remote repository on a server.
+
+git push origin :<branch_name>
+
+                * IS THIS CORRECT? *
+                Remove a branch named <branch_name>:
+
+git push origin <branch>
+
+                Push and create a new remote branch from an existing local
+                branch of the same name.
+
+git rm <filename>
+
+                Remove a file from the depot.
+
+git reset HEAD~...
+git reset HEAD~1    Remove last commit.
+git reset HEAD~3    Remove last 3 commits.
+
+                Rollback to a previous commit.  NOTE: This does not delete files
+                in the working tree.  Use the --hard switch to do that.  All
+                your uncommitted changes will be lost when you perform git reset
+                --hard. You might want to use git stash to save your uncommitted
+                changes.  Do not use if you have already pushed your changes to
+                a remote repository.  See git revert.
+
+git reset --hard HEAD~...
+git reset --hard HEAD~1        Remove last commit.
+git reset --hard HEAD~3        Remove last 3 commits.
+
+                Rollback to a previous commit.  NOTE: This deletes files in the
+                working tree.  All your uncommitted changes will be lost when
+                you perform git reset --hard. You might want to use git stash to
+                save your uncommitted changes.  Do not use if you have already
+                pushed your changes to a remote repository.  See git revert.
+
+git reset --hard <SHA hash>
+git reset --hard d3f1a8
+
+                Rollback to a specific commit using the SHA hash.  All your
+                uncommitted changes will be lost when you perform git reset
+                --hard. You might want to use git stash to save your uncommitted
+                changes.  Do not use if you have already pushed your changes to
+                a remote repository.  See git revert.
+
+git revert HEAD~3..HEAD
+git revert HEAD~1..HEAD
+git revert d3f1a8..master
+
+                INCOMPLETE.  Does not walk back into history, but only works on
+                a specific commit or range of commits.
+
+git show <hash number (looks like MD5) for a particular commit>
+
+                Display changes that occurred for a particular commit.  Similar
+                to git diff.
+
+git status
+
+                Display the current status of staged files.
+
+
+
+
