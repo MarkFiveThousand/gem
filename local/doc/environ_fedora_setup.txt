@@ -77,6 +77,7 @@ selinux appendix as appropriate.
 # Contents:
 # =============================================================================
 #
+# Begin the Installation
 # Preparing Boot Media
 # Download Fedora Linux
 # Create a Virtual Machine
@@ -101,7 +102,10 @@ selinux appendix as appropriate.
 
 
 
-
+# =============================================================================
+# Begin the Installation
+# =============================================================================
+#
 # NOTE: The official documentation of the Fedora download and installation
 # process can be found at:
 # https://docs.fedoraproject.org/en-US/fedora/f30/install-guide/
@@ -115,25 +119,15 @@ selinux appendix as appropriate.
 # To install Fedora as the primary operating system, rather than a virtual
 # machine, continue to the section below titled "Preparing Boot Media"
 
+
+
 # =============================================================================
 # Preparing Boot Media
 # =============================================================================
 #
-# *FIX: Disregard this.  Don't use CDBurnerXP.  Nowadays, we use Fedora's
-# Media Writer, as documented at:
+# Use Fedora's Media Writer, as documented at:
 # https://docs.fedoraproject.org/en-US/fedora/f30/install-guide/
-# -------------------------------------
-# NOTE: You only need to burn a dvd for web server.  The VirtualBox optical
-# drive can read the .iso as-is.
-# 
-# In the past I've had difficulty getting Fedora to recognize a DVD burnt on
-# Windows 7.  These instructions should lead us past that difficulty.
-# 
-# Download CDBurnerXP from https://cdburnerxp.se/
-# Burn using the default settings.
 #
-
-
 # Proceed to the section of this document titled, Install Fedora Linux.
 
 
@@ -285,7 +279,7 @@ selinux appendix as appropriate.
 
 
 # =============================================================================
-# *FIX: Break into a separate section-- Drive Sharing
+# *FIX: Move this section into gem\local\doc\environ_network.txt.
 # =============================================================================
 #
 # We're going to notify Oracle VirtualBox VM Manager of which Windows folders
