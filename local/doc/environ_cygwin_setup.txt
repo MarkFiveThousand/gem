@@ -1,7 +1,7 @@
 # =============================================================================
-# NOTICE: This file has not yet been groomed for public comsumption.  You're
-# welcome to explore it.  However, be aware you're on your own.  If you would
-# like to proceed, you will find the process most successful
+# NOTE: This file has not yet been groomed for public comsumption.  All the
+# information required to install Cygwin is present, albeit only moderately
+# well organized.
 # =============================================================================
 
 # =============================================================================

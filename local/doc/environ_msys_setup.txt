@@ -1,13 +1,19 @@
 # =============================================================================
-# NOTICE: This file has not yet been groomed for public comsumption.  You're
-# welcome to explore it.  However, be aware you're on your own.
+# NOTE: This file has not yet been groomed for public comsumption.  All the
+# information required to install Msys is present, albeit only moderately
+# well organized.
 # =============================================================================
-
-# NOTICE! This document, in it's current state, is a conglomeration of two
-# related documents.  This integration has yet to be completed.  The following
+#
+# This document, in it's current state, is a conglomeration of two related
+# documents.  These have not yet been integrated properly.  The following
 # document navigation aids are broken. The information you need is here.  You'll
 # just have to scroll for it.  Please update this document as you progress
 # through it.  Thank you.
+#
+# File sharing and file system mounting instructions are currently being
+# factored out into gem\local\doc\environ_network.txt.  This is currently a
+# work in progress.  If you don't need to share files with Fedora, all file
+# mounting instructions may be disregarded.
 
 
 
@@ -45,7 +51,7 @@ Appendix G: Links
 # =============================================================================
 # Choose the Correct Shell
 # =============================================================================
-
+#
 # We are using the msys shell.  Should we be using the mingw64 shell?  Read up
 # on the differences.  My current understanding is at least part of it is
 # related to command line parameters.
@@ -59,7 +65,7 @@ Appendix G: Links
 # =============================================================================
 #
 # Msys2 Homepage: https://www.msys2.org/
-
+#
 # Download only the 64-bit installer.  It has both a 32-bit and 64-bit shell.
 # i686 is the 32-bit version.  x86_64 is the 64-bit version.  After downloading
 # and installing msys2, follow the directions in section III Updating Packages
@@ -138,14 +144,19 @@ https://sourceforge.net/p/msys2/wiki/MSYS2%20installation/
 
 
 # =============================================================================
-# Rename user Mark to mhodges
+# Change Msys User Name
 # =============================================================================
 # Source:
 # https://sourceforge.net/p/msys2/discussion/general/thread/76612760/
 #
-# This step is optional.  The below procedure describes how to change the mingw
-# user name.  It's the same as the Windows login by default.  Gem scripts make
-# the assumption that the same user name is used for all build platforms.
+# This step is optional.  The below procedure describes how to change the Msys
+# user name.  Gem scripts make the assumption that the same user name is used
+# for all build platforms (i.e. msys, cygwin, fedora.)  By default, msys will
+# use the Windows user name and Fedora will use the first initial of the user's
+# first name followed by the user's last name.  As these likely differ, we may
+# want to change the msys user name to match that of Fedora.
+#
+# The below commands change Windows user name "Mark" to "mhodges."
 
 # Create a passwd file:
 /usr/bin/mkpasswd  >  /etc/passwd
@@ -380,84 +391,6 @@ mkdir ~/gem/mnt/f28v2_mhodges
 mkdir ~/gem/mnt/f28v2_root
 mkdir ~/gem/mnt/f29v1_mhodges
 mkdir ~/gem/mnt/f29v1_root
-
-
-
-# =============================================================================
-# Create Software Development File System
-# =============================================================================
-
-# NOTE: This is deprecated.
-
-Note: If you are going to clone the remote repo you can skip this step.  All
-you must do is create the ~/projects directory.  The below is only to be
-performed if *not* pulling from remote repo.  This is to be used when building
-the GNU code base from scratch.
-
-GNU packages expect a standard file structure:
-http://en.wikipedia.org/wiki/Filesystem_Hierarchy_Standard ,
-http://en.wikipedia.org/wiki/Unix_filesystem#Conventional_directory_layout
-and
-http://www.gnu.org/prep/standards/html_node/Directory-Variables.html
-
-
-In msys2, / is mapped to c:\msys64, and /usr is mapped to c:\msys64\usr.
-
-
-# -------- OLD --------: Update this, please.
-
-# Set up the GNU developement file structure:
-# -----------------------------------------------------------------------------
-NOTE: This should *follow* setting up .bashrc, since that's where $GNU_ROOT is
-defined.
-
-mkdir $GNU_ROOT
-mkdir $GNU_ROOT/{build32,build64,local32,local64}
-mkdir $GNU_ROOT/local{32,64}/{bin,etc,include,lib,share}
-mkdir $GNU_ROOT/local{32,64}/lib/pkgconfig
-
-
-Until we get our tools directory organized we will need to do the following:
-
-NOTE: Are we going to put Ant here?  For now we will skip this.  Update this
-doc if it turns out that we do need this.
-
-TOOLS_ROOT=$PROJECTS_ROOT/tools
-mkdir $PROJECTS_ROOT/tools
-mkdir $TOOLS_ROOT/opt
-mkdir $TOOLS_ROOT/opt/bin
-
-
-NOTE: Here's a recursive directory command to view your work:
-
-cd $GNU_ROOT && \
-ls -R ~ | awk '/:$/&&f{s=$0;f=0}/:$/&&!f{sub(/:$/,"");s=$0;f=1;next}NF&&f{ print s"/"$0 }'
-
-
-
-When a GNU program installs via pkgconfig it expects the following directories
-to be present:
-
-NOTE:
---prefix is passed to all our ./configure scripts while building GNU libraries.
-
-Below are listed the common prefix for installation directories used in Linux.
-I think this is what our *.pc (package config) files contain.
-
-NOTE!:
-How is the "prefix = /usr/local" going to work for us with the
-local32 and local64 configuration?
-
-prefix = /usr/local
-datarootdir = $(prefix)/share
-datadir = $(datarootdir)
-exec_prefix = $(prefix)
-# Where to put the executable for the command `gcc'.
-bindir = $(exec_prefix)/bin
-# Where to put the directories used by the compiler.
-libexecdir = $(exec_prefix)/libexec
-# Where to put the Info files.
-infodir = $(datarootdir)/info
 
 
 
