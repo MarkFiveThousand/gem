@@ -149,7 +149,7 @@ function gem_bash_init_Main()
 
 
     # Where would you like to go today?
-    cd ~/gem
+    cd ~/gem/local/src
 }
 gem_bash_init_Main
 

@@ -295,7 +295,7 @@ function gem_build_BuildFilePaths
 			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=/usr/include
 			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=/lib
 		elif [[ ${gem_host} == "mingw" ]]; then	# Building for MinGW.
-			export PKG_CONFIG_SYSTEM_INCLUDE_PATH/usr/x86_64-w64-mingw32/sys-root/mingw/include
+			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=/usr/x86_64-w64-mingw32/sys-root/mingw/include
 			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=/usr/x86_64-w64-mingw32/sys-root/mingw/lib
 		fi
 	fi

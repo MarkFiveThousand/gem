@@ -74,9 +74,10 @@ set gem_url_site=ftp://mirrors.sonic.net/cygwin
 # NOTE: More packages may or may not be required.  See the section of this
 # document titles "Concerns"
 
-%gem_fullpath_cygwin_install%\setup-x86_64.exe --quiet-mode --packages xorg-server,xinit,xlaunch,rxvt-unicode,mercurial,yad,xarchiver,swig,llvm,mingw64-x86_64-llvm,mingw64-x86_64-llvm-static,clang,mingw64-x86_64-clang,git,perl,meson,curl,cmake,cmake-gui,gettext,diffstat,patch,doxygen,patchutils,subversion,cvs,mercurial,autoconf,automake,binutils,bison,flex,gdb,libtool,make,pkgconfig,byacc,ccache,cscope,ctags,mingw64-x86_64-binutils,mingw64-x86_64-gcc-core,mingw64-x86_64-gdbm
+%gem_fullpath_cygwin_install%\setup-x86_64.exe --quiet-mode --packages xorg-server,xinit,xlaunch,rxvt-unicode,wget,mercurial,yad,xarchiver,swig,llvm,mingw64-x86_64-llvm,mingw64-x86_64-llvm-static,clang,mingw64-x86_64-clang,git,perl,meson,curl,cmake,cmake-gui,gettext,diffstat,patch,doxygen,patchutils,subversion,cvs,mercurial,autoconf,automake,binutils,bison,flex,gdb,libtool,make,pkgconfig,byacc,ccache,cscope,ctags,mingw64-x86_64-binutils,mingw64-x86_64-gcc-core,mingw64-x86_64-gdbm,gperf
 
 
+#%gem_fullpath_cygwin_install%\setup-x86_64.exe --quiet-mode --packages gperf
 
 
 
