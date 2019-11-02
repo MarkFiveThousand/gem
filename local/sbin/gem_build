@@ -99,16 +99,16 @@ function gem_build_ExitHelp
 	gem_v_Msg
 	gem_v_Msg "Host host:"
 	gem_v_Msg
-	gem_v_Msg "  -host        {linux | mingw | msvc | android_x86 | android_v7vfpv3 |"
+	gem_v_Msg "  -host        {linux | cygwin | mingw | msvc | android_x86 | android_v7vfpv3 |"
 	gem_v_Msg "                android_arm_v7_plus_neon | android_arm64_v8a}"
 	gem_v_Msg
 	gem_v_Msg "Build type:"
 	gem_v_Msg
-	gem_v_Msg "  -type        {debug|release|relwithdebinfo}"
+	gem_v_Msg "  -type        {debug | release | relwithdebinfo}"
 	gem_v_Msg
 	gem_v_Msg "Library type:"
 	gem_v_Msg
-	gem_v_Msg "  -libtype        {static|shared}"
+	gem_v_Msg "  -libtype        {static | shared}"
 	gem_v_Msg
 	gem_v_Msg "Install directory:"
 	gem_v_Msg
@@ -152,9 +152,11 @@ function gem_build_SetDefaults
 	# gem_fullpath_install is set further below in function gem_v_BuildFilePaths().
 
 	# Common Defaults
-	if [[ $(uname -s) == *"MINGW64"* ]]; then	# MinGW shell on Windows.
+	if [[ $(uname -s) == "MINGW64"* ]]; then	# MinGW shell on Windows.
 		gem_host=mingw
-	elif [[ $(uname -s) == *"Linux"* ]]; then	# Linux shell.
+	elif [[ $(uname -s) == "CYGWIN"* ]]; then	# Cygwin shell on Windows.
+		gem_host=cygwin
+	elif [[ $(uname -s) == "Linux"* ]]; then	# Linux shell.
 		gem_host=linux
 	fi
 
@@ -219,9 +221,13 @@ function gem_build_BuildFilePaths
 	gem_fullpath_install=${gem_fullpath_local}_${gem_path_suffix}
 
 	# Always use the pkg-config for the build machine, *not* for the host."
-	if [[ $(uname -s) == *"MINGW64"* ]]; then	# MinGW shell on Windows.
+	# *FIX: Shouldn't we be using local_${gem_platform_host} instead of
+	# local_x86_64-w64-mingw32, local_x86_64-pc-cygwin, and local_x86_64-pc-linux-gnu below?
+	if [[ $(uname -s) == "MINGW64"* ]]; then	# MinGW shell on Windows.
 		gem_fullpath_tool_bin=${gem_fullpath_local}/../local_x86_64-w64-mingw32/release/bin
-	elif [[ $(uname -s) == *"Linux"* ]]; then	# Linux shell.
+	elif [[ $(uname -s) == "CYGWIN"* ]]; then	# Cygwin shell on Windows.
+		gem_fullpath_tool_bin=${gem_fullpath_local}/../local_x86_64-pc-cygwin/release/bin
+	elif [[ $(uname -s) == "Linux" ]]; then	# Linux shell.
 		gem_fullpath_tool_bin=${gem_fullpath_local}/../local_x86_64-pc-linux-gnu/release/bin
 	else
 		gem_v_Error "ERROR: Build platform not supported: $(uname -s)"
@@ -266,27 +272,34 @@ function gem_build_BuildFilePaths
 	# Other .pc files are in ${gem_fullpath_install}/lib/pkgconfig
 	export PKG_CONFIG_LIBDIR=${gem_fullpath_install}/lib/pkgconfig:${gem_fullpath_install}/share/pkgconfig
 
-	if [[ ${gem_os} == "Linux" ]]; then		# Running on Linux
+	if [[ ${gem_os} == "Linux" ]]; then		# Running on Linux.
 		if [[ ${gem_host} == "linux" ]]; then
 			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=${gem_fullpath_sysroot}/usr/include
 			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=${gem_fullpath_sysroot}/usr/lib:${gem_fullpath_sysroot}/usr/lib64
-		elif [[ ${gem_host} == "mingw" ]]; then
+		elif [[ ${gem_host} == "mingw" ]]; then	# Building for MinGW.
 			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=${gem_fullpath_sysroot}/mingw/include
 			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=${gem_fullpath_sysroot}/mingw/lib
-		elif [[ ${gem_host} == *"android_"* ]]; then
+		elif [[ ${gem_host} == *"android_"* ]]; then	# Building for Android.
 			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=${gem_fullpath_sysroot}/usr/include
 			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=${gem_fullpath_sysroot}/usr/lib
 		fi
-	elif  [[ ${gem_os} == *"MINGW64"* ]]; then	# Running in MinGW Windows.
-		if [[ ${gem_host} == "mingw" ]]; then	# Building under MinGW on Windows.
+	elif  [[ ${gem_os} == "MINGW64"* ]]; then	# Running in MinGW Windows.
+		if [[ ${gem_host} == "mingw" ]]; then	# Building for MinGW.
 #			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=${gem_fullpath_sysroot}/include
 #			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=${gem_fullpath_sysroot}/lib
 			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=/usr/include
 			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=/usr/lib
 		fi
+	elif  [[ ${gem_os} == "CYGWIN"* ]]; then	# Running in Cygwin Windows.
+		if [[ ${gem_host} == "cygwin" ]]; then	# Building for Cygwin.
+			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=/usr/include
+			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=/lib
+		elif [[ ${gem_host} == "mingw" ]]; then	# Building for MinGW.
+			export PKG_CONFIG_SYSTEM_INCLUDE_PATH/usr/x86_64-w64-mingw32/sys-root/mingw/include
+			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=/usr/x86_64-w64-mingw32/sys-root/mingw/lib
+		fi
 	fi
-	gem_script_ValidatePaths ${PKG_CONFIG_SYSTEM_INCLUDE_PATH}
-	gem_script_ValidatePaths ${PKG_CONFIG_SYSTEM_LIBRARY_PATH}
+	gem_script_ValidatePaths ${PKG_CONFIG_SYSTEM_INCLUDE_PATH}:${PKG_CONFIG_SYSTEM_LIBRARY_PATH}
 
 	# These must be reset to stay away from system libraries while cross compiling.
 	export PKG_CONFIG_PATH=
@@ -332,11 +345,11 @@ function gem_build_ValidateFilePaths
 function gem_v_ValidateCompatibility { gem_build_ValidateCompatibility ;}
 function gem_build_ValidateCompatibility
 {
-	if [[ $(uname -s) == *"MINGW64"* ]]; then	# MinGW shell on Windows.
+	if [[ $(uname -s) == "MINGW64"* ]]; then	# MinGW shell on Windows.
 		if [[ ${gem_host} == "linux" || ${gem_host} == *"android"* ]]; then
 			gem_v_Error "ERROR: gem_build_ValidateCompatibility: Can't build executables for host '${gem_host}' on Windows."
 		fi
-	elif [[ $(uname -s) == *"Linux"* ]]; then	# Linux shell.
+	elif [[ $(uname -s) == "Linux" ]]; then	# Linux shell.
 		if [[ ${gem_host} == "msvc" ]]; then
 			gem_v_Error "ERROR: gem_build_ValidateCompatibility: Can't build executables for host '${gem_host}' on Linux."
 		fi
@@ -349,7 +362,7 @@ function gem_build_SelectCMakeGenerator
 {
 	# Select the correct generator based upon gem_host.
 	case ${gem_host} in
-		linux|mingw|android_x86_64|android_v7vfpv3|android_arm_v7_plus_neon|android_arm64_v8a)
+		linux|cygwin|mingw|android_x86_64|android_v7vfpv3|android_arm_v7_plus_neon|android_arm64_v8a)
 			gem_cmake_generator="-G\"Unix Makefiles\"" ;;
 		msvc)
 			# Good sources: https://cognitivewaves.wordpress.com/cmake-and-visual-studio/
@@ -505,14 +518,68 @@ function gem_build_SetHost_linux
 	gem_v_SetHost_common
 }
 
+function gem_v_SetHost_cygwin { gem_build_SetHost_cygwin ;}
+function gem_build_SetHost_cygwin
+{
+	gem_platform_host=x86_64-pc-cygwin
+	gem_platform_arch=x86-64
+
+	if [[ ${gem_build_script} == "cmake" ]]; then
+		gem_filename_cmake_toolchain=${gem_fullpath_local}/toolchains/cygwin.toolchain.cmake
+
+	elif [[ ${gem_build_script} == "autotools" ]]; then
+		gem_fullpath_toolchain=/usr
+		gem_fullpath_sysroot=/usr
+
+		gem_flags_common="-march=x86-64 -msse4.2 -mpopcnt -m64 -mtune=intel"
+		gem_flags_c="${gem_flags_c} ${gem_flags_common}"
+		gem_flags_cpp="${gem_flags_cpp} ${gem_flags_common}"
+		gem_flags_cxx="${gem_flags_cxx} ${gem_flags_common}"
+		gem_flags_ld="${gem_flags_ld}"
+
+		if [[ ${gem_use_clang} == 0 ]]; then
+			CC=${gem_fullpath_toolchain}/bin/gcc
+			CXX=${gem_fullpath_toolchain}/bin/g++
+		else	# clang
+			CC=${gem_fullpath_toolchain}/bin/clang
+			CXX=${gem_fullpath_toolchain}/bin/clang++
+		fi
+		LD=${gem_fullpath_toolchain}/bin/ld
+		AR=${gem_fullpath_toolchain}/bin/ar
+		AS=${gem_fullpath_toolchain}/bin/as
+		NM=${gem_fullpath_toolchain}/bin/nm
+		STRIP=${gem_fullpath_toolchain}/bin/strip
+		RANLIB=${gem_fullpath_toolchain}/bin/ranlib
+		DLLTOOL=${gem_fullpath_toolchain}/bin/dlltool
+		OBJDUMP=${gem_fullpath_toolchain}/bin/objdump
+
+
+
+
+
+		RESCOMP="${gem_fullpath_toolchain}/bin/windres -DGCC_WINDRES=1"
+
+	elif [[ ${gem_build_script} == "meson" ]]; then
+		noop=0
+	fi
+	gem_v_SetHost_common
+}
+
+RCFLAGS="-DGCC_WINDRES=1"
+
+
+
+
+
+
+
 function gem_v_SetHost_mingw { gem_build_SetHost_mingw ;}
 function gem_build_SetHost_mingw
 {
-#echo "----------> SetHost()"
 	gem_platform_host=x86_64-w64-mingw32
 	gem_platform_arch=x86-64
 
-	if [[ $(uname -s) == *"MINGW64"* ]]; then	# MinGW on Windows
+	if [[ $(uname -s) == "MINGW64"* ]]; then	# MinGW on Windows
 		gem_fullpath_toolchain=/mingw64
 		gem_fullpath_sysroot=/mingw64
 	else										# MinGW on Linux
@@ -533,7 +600,7 @@ function gem_build_SetHost_mingw
 		gem_flags_ld="${gem_flags_ld} -L${gem_fullpath_sysroot}/mingw/lib"
 
 		if [[ ${gem_use_clang} == 0 ]]; then
-			if [[ $(uname -s) == *"MINGW64"* ]]; then	# MinGW on Windows
+			if [[ $(uname -s) == "MINGW64"* ]]; then	# MinGW on Windows
 				CC=${gem_fullpath_toolchain}/bin/${gem_platform_host}-gcc
 				CXX=${gem_fullpath_toolchain}/bin/${gem_platform_host}-g++
 			else
@@ -554,9 +621,9 @@ function gem_build_SetHost_mingw
 		RANLIB=${gem_fullpath_toolchain}/bin/ranlib
 		DLLTOOL=${gem_fullpath_toolchain}/bin/dlltool
 		OBJDUMP=${gem_fullpath_toolchain}/bin/objdump
-		if [[ $(uname -s) == *"MINGW64"* ]]; then	# MinGW on Windows
+		if [[ $(uname -s) == "MINGW64"* ]]; then	# MinGW on Windows
 			RESCOMP=${gem_fullpath_toolchain}/bin/windres
-		else
+		else										# MinGW on Linux
 			RESCOMP=${gem_fullpath_toolchain}/bin/x86_64-w64-mingw32-windres
 		fi
 	elif [[ ${gem_build_script} == "meson" ]]; then
@@ -780,7 +847,6 @@ function gem_build_SetBuildType_relwithdebinfo
 	gem_v_SetBuildType_common
 }
 
-
 # =============================================================================
 #                                   Configure
 # =============================================================================
@@ -792,7 +858,7 @@ function gem_build_OnConfigure
 	# flags=$(printf '%s\n' "${flags//-byebye/}")
 
 	gem_build_OnCommandLine_Configure
-#	echo ${gem_cmd_line_configure} && exit
+	echo ${gem_cmd_line_configure} && exit
 	eval "${gem_cmd_line_configure} ${gem_redirect_suffix_configure}"
 }
 
@@ -838,7 +904,7 @@ function gem_build_OnCommandLine_Configure_Autotools
 	if [[ $(uname -s) == "Linux" ]]; then
 	#	export gem_platform_build=$(uname -m)-redhat-linux	# Fedora uses this prefix in /usr/bin/.
 		gem_platform_build=$(uname -m)-pc-linux-gnu	# This is reported by configure scripts.
-	elif [[ $(uname -s) == *"MINGW64"* ]]; then
+	elif [[ $(uname -s) == "MINGW64"* ]]; then
 		gem_platform_build=$(uname -m)-w64-mingw32	# Fedora uses this prefix in /usr/bin/.
 	fi
 	gem_cmd_line_configure="${gem_fullpath_src}/configure \
@@ -926,17 +992,7 @@ function gem_build_OnCommandLine_Configure_Meson
 	#                                        corrupted, or when rebuilding with a
 	#                                        newer version of meson.
 
-	# Get meson:
-	# As of Mar 31, 2019, the mingw meson is not a recent enough version to
-	# build glib.  It is our hope, that we will eventually be able to install
-	# meson via the standard package manager for the given build platform.
-	#
-	# How to Download Meson:
-	# -------------------------------------------------------------------------
-	# cd ~/gem/local/src
-	# git clone --depth=1  https://github.com/mesonbuild/meson.git
-
-	gem_meson=${gem_fullpath_local}/src/meson/meson.py
+	gem_fullpath_meson_py=$(which meson)
 	# *FIX: Put this back in when we have meson version > 48.0 installed.
 #		which meson &>/dev/null
 #		if [[ $? != 0 ]]; then
@@ -958,13 +1014,19 @@ function gem_build_OnCommandLine_Configure_Meson
 			gem_meson_crossfile=${gem_fullpath_build}/android.toolchain.meson
 			gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_android
 		fi
-	elif  [[ ${gem_os} == *"MINGW64"* ]]; then	# Running in MinGW Windows
+	elif  [[ ${gem_os} == "MINGW64"* ]]; then	# Running in MinGW Windows
 		if [[ ${gem_host} == "mingw" ]]; then	# MinGW on Windows
 			gem_meson_crossfile_source=${gem_fullpath_local}/toolchains/mingw_on_windows.toolchain.meson
 			gem_meson_crossfile=${gem_fullpath_build}/mingw_on_windows.toolchain.meson
 			gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_mingw
 		elif [[ ${gem_host} == "msvc" ]]; then
 			gem_v_Error "ERROR: Do we need to set these for msvc?"
+		fi
+	elif  [[ ${gem_os} == "CYGWIN"* ]]; then	# Running in Cygwin Windows
+		if [[ ${gem_host} == "cygwin" ]]; then	# Build for cygwin.
+			gem_meson_crossfile_source=${gem_fullpath_local}/toolchains/cygwin.toolchain.meson
+			gem_meson_crossfile=${gem_fullpath_build}/cygwin.toolchain.meson
+			gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_cygwin
 		fi
 	fi
 	if [[ ${gem_meson_crossfile} == "<undefined>" ]]; then
@@ -982,7 +1044,7 @@ function gem_build_OnCommandLine_Configure_Meson
 		*)	gem_v_Msg "ERROR: Invalid build configuration: ${gem_build_type}"
 	esac
 
-	gem_cmd_line_configure="${gem_meson} . ../../../src \
+	gem_cmd_line_configure="${gem_fullpath_meson_py} . ../../../src \
 --cross-file ${gem_meson_crossfile} \
 --prefix=${gem_fullpath_install} \
 --buildtype=${gem_build_type_meson} \
@@ -1077,6 +1139,11 @@ function gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_mingw
 	gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common
 }
 
+function gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_cygwin
+{
+	gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common
+}
+
 function gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_android
 {
 	gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common
@@ -1155,7 +1222,7 @@ function gem_build_OnCommandLine_Build
 
 # THIS IS FOR SDL2.  Remove the addition of this to the command line below.
 		# Building on Linux fails and haults when trying to build the OpenGLES2 tests.
-#		if [[ ${gem_platform_host} == *"linux"* ]]; then
+#		if [[ ${gem_platform_host} == "Linux" ]]; then
 #			gem_error_ignore_build_errors="-i"
 #		fi
 		if [[ ${gem_fullpath_autotools_makefile}x != "x" ]]; then
@@ -1458,7 +1525,7 @@ function gem_build_OnArg
 		-help) gem_v_ExitHelp ;;
 		-host)
 			case ${2} in
-				linux|mingw|android_x86_64|android_v7vfpv3|android_arm_v7_plus_neon|android_arm64_v8a)
+				linux|cygwin|mingw|android_x86_64|android_v7vfpv3|android_arm_v7_plus_neon|android_arm64_v8a)
 					gem_host=${2}
 					gem_cmake_generator="-G\"Unix Makefiles\"" ;;
 				msvc)

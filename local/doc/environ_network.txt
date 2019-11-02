@@ -1,0 +1,3680 @@
+# =============================================================================
+# NOTICE: This file has not yet been groomed for public comsumption.  You're
+# welcome to explore it.  However, be aware you're on your own.
+# =============================================================================
+
+# =============================================================================
+# Overview
+# =============================================================================
+#
+# This document provides instructions for sharing files between each of our
+# supported environments: Fedora, Windows via Msys and Cygwin.
+#
+# IMPORTANT: This process requires you to log into the router provided to you
+# by your internet provider.  You will need the login username (often "admin")
+# and password.  These are often found on a sticker located on the side of the
+# router.  If you are unable to identify the username and password required to
+# log into your router, consult your internet service provider.
+#
+# Identify the IP address of your router.  That, too, should be located on a
+# sticker on the rounter.  In my experience the following have been common
+# router IP addresses:
+#
+# Xfinity: http:\\10.0.0.1
+# ATT: http:\\192.168.1.1
+
+# To allow Windows to share files with Fedora, we need to assign each computer
+# on our network a static IP adress.  By default IP addresses are assigned
+# dynamically.  We will have to change that so each computer can talk directly
+# to another as required by the file sharing process.  Even though Fedora may
+# be running inside Windows via VirtualBox, Fedora still gets it's own IP
+# address.
+#
+# Windows and Fedora, whether running in VirtualBox or not, share files through
+# a network file sharing protocol called Samba.
+
+
+# =============================================================================
+# Contents:
+# =============================================================================
+#
+# Assign Static IP Addresses
+#     View Your Network Settings on Windows:
+#     View Your Network Settings on Fedora:
+# Set the Computer Host Name
+# Configure Samba
+# Mount Remote Drives
+
+
+
+# =============================================================================
+# Static IP Address
+# =============================================================================
+# 
+# IMPORTANT: Before changing any network setting, always make a note of what
+# the existing setting are prior to changing them, in case you need to revert
+# to the original settings.
+
+
+# View Your Network Settings on Windows:
+# --------------------------------------
+# Open a DOS command prompt.  Enter the command "ipconfig". A report showing
+# network devices will be displayed.  Different sections will be displayed
+# depending which network devices you have installed.  Look for the section
+# related to your PC's internet connetion.  Below is an *abbreviated* list of
+# what's shown on my PC.  Yours will likely be different, but similar.
+#
+# -----------------------------------------------------------------------------
+# Windows IP Configuration
+# 
+# 
+# Ethernet adapter Ethernet:
+# 
+#    Media State . . . . . . . . . . . : Media disconnected
+# 
+# Ethernet adapter VirtualBox Host-Only Network:
+# 
+#    IPv4 Address. . . . . . . . . . . : 192.168.56.1
+# 
+# Wireless LAN adapter Local Area Connection* 2:
+# 
+#    Media State . . . . . . . . . . . : Media disconnected
+# 
+# Wireless LAN adapter Local Area Connection* 14:
+# 
+#    Media State . . . . . . . . . . . : Media disconnected
+# 
+# Wireless LAN adapter Wi-Fi:
+# 
+#    IPv4 Address. . . . . . . . . . . : 10.0.0.74
+#    Subnet Mask . . . . . . . . . . . : 255.255.255.0
+#    Default Gateway . . . . . . . . . : 10.0.0.1
+# -----------------------------------------------------------------------------
+#
+# Ignore the sections with "Media State...: Media disconnected", and "Ethernet
+# adapter VirtualBox Host-Only Network".  The remaining section may be wired or
+# wireless, depending on how your Windows PC is connected to your local
+# network.  This is the section we are interested in.  Mine is "Wireless LAN
+# adapter Wi-Fi".  I've only shown the relevent fields in the above example.
+#
+# IPv4 Address-    This is the address of your Windows PC on your local
+#                  network.  This typically is assigned dynamically, meaning it
+#                  may change from time to time.  We're going to reconfigure
+#                  this to become constant.  The purpose of this procedure is
+#                  to keep this IP address constant, i.e. become a static IP
+#                  address.
+#
+# Subnet Mask-     This is usually the same value: 255.255.255.0
+#
+# Default Gateway- This is your router's IP address on your local network.
+#                  This is the address you http into using the web browser.
+#                  Some common values are http://10.0.0.1 on Xfinity, and
+#                  http://192.168.1.1 on ATT.
+
+
+# View Your Network Settings on Fedora:
+# --------------------------------------
+# Open a terminal window.  Enter the command "ifconfig". A report showing
+# network devices will be displayed.  Different sections will be displayed
+# depending which network devices you have installed.  Below is a list of
+# what's shown on my PC.
+#
+# -----------------------------------------------------------------------------
+# enp0s3: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+#         inet 10.0.0.97  netmask 255.255.255.0  broadcast 10.0.0.255
+#         inet6 fe80::ba97:1e19:89c5:59c8  prefixlen 64  scopeid 0x20<link>
+#         inet6 2601:203:200:f141::ffb8  prefixlen 128  scopeid 0x0<global>
+#         inet6 2601:203:200:f141:f57e:5737:5b54:b3e5  prefixlen 64  scopeid 0x0<global>
+#         ether 08:00:27:b2:b8:17  txqueuelen 1000  (Ethernet)
+#         RX packets 89373  bytes 22762617 (21.7 MiB)
+#         RX errors 0  dropped 0  overruns 0  frame 0
+#         TX packets 104598  bytes 14754018 (14.0 MiB)
+#         TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+#
+# lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+#         inet 127.0.0.1  netmask 255.0.0.0
+#         inet6 ::1  prefixlen 128  scopeid 0x10<host>
+#         loop  txqueuelen 1000  (Local Loopback)
+#         RX packets 310412  bytes 18626628 (17.7 MiB)
+#         RX errors 0  dropped 0  overruns 0  frame 0
+#         TX packets 310412  bytes 18626628 (17.7 MiB)
+#         TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+# -----------------------------------------------------------------------------
+#
+# We're interested in the section titled enp0s3.  Yours may be different, but
+# similar.  The 2nd line should be something similar to:
+#
+# inet 10.0.0.97  netmask 255.255.255.0  broadcast 10.0.0.255
+#
+# inet-            This is the network address of your Fedora installation.
+#                  This is the one we're going to change.
+# netmask-         This is usually the same value: 255.255.255.0, also called
+#                  the subnet mask.
+
+
+# In my experience Lynksys routers used by ATT assign IP address in the form:
+# 192.168.1.xxx, and Xfinity routers assign IP addresses in the form
+# 10.0.0.xxx, where xxx is a unique number for each device connected to your
+# network.  Under the default dynamic IP addresses this last number may be
+# different each time the device connects to the netork.  This is called
+# dynamic IP addressing.  We are going to change to static IP addressing, so
+# this number will be the same every time.
+
+# Our approach has two stages.  First, we're going to log into the router and
+# tell it to limit the range of addresses that it issues as dynamic IP address.
+# This third number, denoted by xxx above, can hold values 0 to 255.  We're
+# going to limit the range to 0-99 for dynamic IP addresses.  The we're going
+# to tell Windows and Fedora to begin assigning static IP address starting with
+# 100.
+
+
+# Limit Dynamic IP Address Range- Xfinity Router
+# ----------------------------------------------
+# NOTE: As mentioned earlier, before making any changes in your router, note
+# the original value prior to modifying it.
+#
+# WARNING: Making changes to your router can render it unable to provide an
+# internet connection.  If this happens, you may have to contact your internet
+# service provider
+
+
+
+# *FIX: Put instructions for setting the host name before the below section.
+# Create an IP address to work around our dynamic IP addresses.
+# -------------------------------------------------------------
+# Source: https://www.noip.com/blog/2013/10/29/how-to-setup-remote-access-for-a-computer-with-a-dynamic-ip-address/
+#
+# Create an account at: https://www.noip.com/sign-up
+
+
+
+
+
+# Manually Under Linux:
+# 
+# First check Comcast router:
+# 1.) Login (Browse to 10.0.0.1)
+# 2.) Gateway->Connection->Local IP Network
+#     Under IPv4 make set DHCP Ending Address to 10.0.0.99
+#     This is necessary so that dynamicly assigned ip addresses stay
+#     away from our linux server.
+# 
+# Start Menu->Preferences->Network Connections
+# Ethernet->Wired connection 1
+# Click the settings gear at the bottom.
+
+# 
+# Click IPv6 Settings tab.
+# Under "Method:", select "Ignore".
+
+# 
+# Click IPv4 Settings tab.
+# For Method: select Manual.
+# Click +Add
+# Set...
+# 
+# Navigate to 192.168.1.254 to log into the ATT router.
+#
+# ---->Lynksys Router (ATT)
+# Address: 192.168.1.---  <- .121 for webserver, .122 for vbox
+# Netmask: 255.255.255.0
+# Gateway: 192.168.1.1
+# DNS Servers:75.75.75.75,75.75.76.76
+# 
+# ---->Comcast Router:
+# NOTE: Maybe first set up DHCP.  On Windows log into the router: 10.0.0.1.
+# See which IP address was assigned.  Use that IP address as static.
+#
+# Address: 10.0.0.100    <--  Set Comcast router to end DHCP range at 99, so we
+# Netmask: 255.255.255.0      can use the rest for static IP addresses.
+# Default Gateway:10.0.0.1
+# DNS Servers:75.75.75.75,75.75.76.76
+# 
+# Reboot.
+
+
+
+
+
+
+# ================================================================================= 
+# Hostname
+# ================================================================================= 
+#
+# IMPORTANT:  When logged in via VNC and logged in as root leafpad will not run
+# because root does not have the DISPLAY environment variable set.  You may
+# have to use:
+#
+# *FIX: Does this also happen with notepadqq?
+# DISPLAY=:1 leafpad ...
+
+# In /etc/hostname replace localhost.localdomain with webserver.localdomain.
+# 
+# WARNING: Only run this once.
+# 
+# NOTE: The .localdomain suffix is required in the hostname file.  This makes
+# it a fully qualified domain name (FQDM).  When it shows up in windows, it
+# only shows the first portion.  If you leave off .localdomain Windows will not
+# be able to see the linux machine on the network.
+
+
+su
+
+gem_fedora_hostname=f30v1
+
+if [[ ! -f /etc/hostname.backup ]]; then
+	\cp -f /etc/hostname /etc/hostname.backup
+fi
+sed "s|localhost.localdomain|${gem_fedora_hostname}.localdomain|g" /etc/hostname > /etc/hostname_temp
+mv -f /etc/hostname_temp /etc/hostname
+
+cat /etc/hostname
+
+# Reboot before you begin working on samba.
+lxsession-logout
+
+
+
+
+
+# =============================================================================
+# Samba- Make Linux Computer Visible to Windows
+# =============================================================================
+#
+# NEXT TIME:
+# When I get the status of the selinux bool allow_smbd_anon_write nothing comes
+# up.  Has this bool been depricated?
+#
+# Documentation at: https://wiki.samba.org/index.php/User_Documentation
+# Comes with example: /etc/samba/smb.conf.example
+#
+# The CIFS (Common Internet File System (CIFS) protocol is the successor to the
+# SMB protocol and is supported by most Windows servers and many other
+# commercial servers and Network Attached Storage appliances.
+# 
+# NOTE: If you are having difficulty accessing /var/www/html it may be because
+# you copied/restored that directory *after* setting up LAMP.  See the Samba
+# troublshooting notes in the LAMP section regarding troubleshooting
+# /var/www/html.
+#
+# * When you log in from windows the user must be "mhodges".
+# 
+# * Don't forget to restart smb and nmb anytime you make changes.  If you need
+#   to debug, remember you can disable the firewall and SELinux.
+# 
+# * IMPORTANT: As you log into samba as user mhodges, you will only have read
+#   access to all files owned by root.
+#
+# * Windows stores the username and password information in the Windows
+#   Credential Manager.  In Windows10 search for Credential Manager then delete
+#   all the credentials to clear them.
+
+# CONVENIENCE COMMANDS:
+# 
+# List all samba users:
+pdbedit -L -v
+
+# Delete a user:
+smbpasswd -x mhodges
+ 
+# Restore my temp file from backup.
+yes | cp /etc/samba/smb.conf.bak /etc/samba/smb.conf
+
+# Restart samba server.
+systemctl restart smb.service
+systemctl restart nmb.service
+
+# View the value of a selinux boolean:
+semanage boolean -l | grep samba_enable_home_dirs
+
+
+# GOOD RESOURCES (MOSTLY SELINUX-RELATED)
+#
+# https://www.lisenet.com/2016/samba-server-on-rhel-7/
+# https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/6/html/security-enhanced_linux/sect-security-enhanced_linux-working_with_selinux-selinux_contexts_labeling_files
+# https://danwalsh.livejournal.com/14195.html
+
+
+
+
+
+# Manual (See Automatic below)
+# -----------------------------------------------------------------------------
+# 
+# Allow samba to modify public files used for public file transfer services.
+# setsebool -P allow_smbd_anon_write on
+# 
+# Enable sharing home directories via samba:
+# setsebool -P samba_enable_home_dirs on
+# 
+# Define directory to share.
+# system-config-samba
+# 
+# To share files with multiple domains (i.e. Apache, FTP, rsync, Samba) we must
+# recursively set the file context of all shared files to public_content_rw_t.
+# chcon -R -t public_content_rw_t /var/www
+# or
+# chcon -R -t public_content_rw_t /home/mhodges/www
+# 
+# QUESTION:  Do we need to use:  YES, YES, YES!  -Mark 2018/06/27
+#
+# setsebool -P samba_export_all_rw on
+#
+# ...to share our system directories?
+# Click Preferences->Samba Users->Add User
+# 1.) Unix Username: select "mhodges"
+# 2.) Windows Username: Enter: "mark" (NOT "TITAN\mark")
+# 3.) Enter and confirm the samba password.
+# 
+# Click Preferences->Server Settings
+# 1.) Workgroup: mshome
+# 
+# Make sure the Windows computer is a member of Homegroup.
+# Otherwise, the samba computer will not be visible on the network.
+# 
+# Change workgroup.
+# leafpad /etc/samba/smb.conf
+# 
+# The following step seems to no longer be necessary.  Remove if
+# you have confirmed that.
+# 
+# In smb.conf, search for "workgroup =".  Change
+# "MYGROUP" to "MSHOME".  Also, comment out logging, just below.
+# 
+# Open Administration->Samba
+# 
+# File->Add Share
+# 
+# Folder: /
+# Share name: root
+# Check "writable" and "visible"
+# Click "Access" tab.  Check "Give access to users:" mhodges
+# 
+# 
+# . . . . . . . . . . . . . . . . . .
+# IMPORTANT PARTS OF THE OLD SMB.CONF
+# . . . . . . . . . . . . . . . . . .
+#
+# Add the [root] and [html] portions below:
+# 
+# [global]
+# 	workgroup = mshome
+# 	security = user
+# 
+# [homes]
+# 	comment = Home Directories
+# 	browseable = no
+# 	writable = yes
+# 	valid users = mhodges
+# 	valid users = TITAN\mark
+# 
+# [root]
+# 	path = /
+# 	read only = no
+# 	browseable = yes
+# ;	guest ok = yes
+# 	valid users = mhodges
+# 
+# [html]
+# 	path = /var/www/html
+# 	read only = no
+# 	browseable = yes
+# ;	guest ok = yes
+# 	valid users = mhodges
+# 
+#
+# IMPORTANT!  Make sure root is shared at 'root' and not 'root directory'.
+# This is necessary for git to access the repository in GitServer from
+# Windows.  If you need to, make the change by hand at the bottom of the
+# smb.conf file.
+# 
+# Check if 'Samba' ports are open. NOT 'Samba Client'.
+# firewall-config
+# 
+# Change to permanent configuration
+# Select Configuration: Permanent
+# Select the Services tab.  Check "Samba", NOT "Samba Client"
+# 
+# Close firewall-config.
+# 
+# Enable Samba to be automatically started at boot time.
+# systemctl enable smb.service
+# systemctl enable nmb.service
+# systemctl start smb.service
+# systemctl start nmb.service
+
+
+
+# Automatic
+# -----------------------------------------------------------------------------
+
+*FIX: To get peer-to-peer networking going for two virtualbox machines we may
+need to set the following flags, too:
+
+setsebool -P use_samba_home_dirs 1
+setsebool -P samba_export_all_rw 1
+
+# *FIX: These are old and can be remved.  Verify and remove, please.
+#setsebool -P samba_enable_home_dirs 1
+#setsebool -P allow_smbd_anon_write 1
+
+
+
+su
+
+# Allow samba to modify public files used for public file transfer services.
+setsebool -P allow_smbd_anon_write on
+
+# Enable sharing home directories via samba:
+setsebool -P samba_enable_home_dirs on
+
+# To share files with multiple domains (i.e. Apache, FTP, rsync, Samba) we must
+# recursively set the file context of all shared files to public_content_rw_t.
+# OLD
+# chcon -R -t public_content_rw_t /var/www
+# NEW
+su mhodges
+mkdir /home/mhodges/www
+exit
+chcon -R -t public_content_rw_t /home/mhodges/www
+
+# Back up smb.conf in case we mess it up.
+yes | cp /etc/samba/smb.conf /etc/samba/smb.conf.bak
+
+# Should we use samba-tool user add?
+echo -e "ab29xlk\nab29xlk" | smbpasswd -a mhodges
+
+
+cp /etc/samba/smb.conf /etc/samba/smb.conf.backup
+
+# Add shares to /etc/samba/smb.conf.
+sed 's/;\tvalid users = %S, %D%w%S/\tvalid users = mhodges/g' /etc/samba/smb.conf > /etc/samba/smb.conf_temp1
+sed 's/\tworkgroup = SAMBA/\tworkgroup = MSHOME/g' /etc/samba/smb.conf_temp1 > /etc/samba/smb.conf_temp2
+sed 's/\tbrowseable = No/\tbrowseable = yes/g' /etc/samba/smb.conf_temp2 > /etc/samba/smb.conf_temp3
+
+cat > temp << "EOF"
+
+[root]
+    path = /
+    read only = no
+    browseable = yes
+    valid users = mhodges
+
+EOF
+cat temp >> /etc/samba/smb.conf_temp3
+rm -f temp
+yes | cp /etc/samba/smb.conf_temp3 /etc/samba/smb.conf
+rm -f /etc/samba/smb.conf_temp1
+rm -f /etc/samba/smb.conf_temp2
+rm -f /etc/samba/smb.conf_temp3
+
+
+............................................................
+Verify smb.conf looks like the following, that works!
+............................................................
+# See smb.conf.example for a more detailed config file or
+# read the smb.conf manpage.
+# Run 'testparm' to verify the config is correct after
+# you modified it.
+
+[global]
+	workgroup = MSHOME
+	security = user
+	passdb backend = tdbsam
+
+
+[homes]
+	comment = Home Directories
+	valid users = mhodges
+	browseable = yes
+	read only = No
+	inherit acls = Yes
+
+[root]
+    path = /
+    read only = no
+    browseable = yes
+    valid users = mhodges
+............................................................
+
+# Open firewall ports for samba service
+
+firewall-cmd --permanent --add-service=samba
+
+# The above line seems to no longer be enough for Windows 10.
+# Open firewall ports for Samba:
+# 
+# 445 tcp
+# 139 tcp
+# 445 udp
+# 137 udp
+# 138 udp
+#
+# No need to restart the firewall.
+
+# Enable Samba to be automatically started at boot time.
+systemctl enable smb.service
+systemctl enable nmb.service
+
+systemctl start smb.service
+systemctl start nmb.service
+
+
+
+
+
+
+
+
+
+
+
+# =============================================================================
+# BASHRC
+# =============================================================================
+# 
+# NOTE: We are going to do this twice, first as root, then as our user.
+# 
+# NOTE: root is getting more settings than necessary, but that doesn't do any
+# harm.
+#
+# NOTE: root will be running user mhodges' gem_bash_init
+# 
+# su-
+
+mv ~/.bashrc ~/.bashrc_old
+cat << EOF > ~/.bashrc
+
+#
+# File: .bashrc
+#
+# Configure user-specific environment and startup programs
+#
+
+# Source global definitions
+if [ -f /etc/bashrc ]; then
+    . /etc/bashrc
+fi
+
+# Source our definitions
+source /home/mhodges/gem/local/sbin/gem_bash_init
+
+EOF
+chmod u+x ~/.bashrc
+
+
+
+
+
+
+
+
+
+
+# ================================================================================= 
+# GEM_BASH_INIT
+# ================================================================================= 
+
+# Create gem_bash_init, mount, and mountall, only for user mhodges, not root.  Root
+# will use resources in user mhodges' ~/gem/local/sbin directory.
+# 
+# IMPORTANT!
+#
+# If you restored files from a backup, you already have these files.
+
+mkdir ~/gem/local/sbin
+
+cat << EOF > ~/gem/local/sbin/gem_bash_init
+#
+# File: gem_bash_init
+#
+# Configure user-specific environment and startup programs.
+# 
+
+function Main()
+{
+    # =========================================================================
+    # How to run a Windows .bat file in mingw64 mintty terminal. Important for
+    # building for Android under mingw64.
+    # =========================================================================
+    # Source: http://sourceforge.net/p/mingw/bugs/1902/
+    # Source: http://ss64.com/nt/cmd.html
+    # cmd //C mark.bat
+
+
+    # Source global definitions
+    if [[ -f /etc/bashrc ]]; then
+        . /etc/bashrc    # We expect this to only happen on Linux.
+    fi
+
+    # =========================================================================
+    # Path & Environment Variables
+    # =========================================================================
+    export PATH="/usr/local/bin:/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/sbin:~/sbin"
+
+    # *FIX: Move ~/sbin/* to /usr/local/sbin so everyone can use the scripts instead doing this crap!
+    if [[ \$(whoami) == "root" ]]; then
+        export PATH=\${PATH}:/home/mhodges/sbin
+    fi
+
+    # Git command line needs to know which editor you use:
+    export EDITOR=npp
+
+    # File listing colors
+    export LS_COLORS="rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=01;05;37;41:su=37;41:sg=30;43:ca=30;41:tw=3;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*xz=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.jpg=01;35:*.jpeg=01;35:*.gif=01;35:*.bmp=1;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.axv=01;35:*.anx=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=01;36:*.au=01;36:*.flac=01;36:*.mid=01;36:*.midi=01;36:*.mka=01;36:*.mp3=01;36:*.mpc=01;36:*.ogg=01;36:*.ra=01;36:*.wav=01;36:*.axa=01;36:*.oga=1;36:*.spx=01;36:*.xspf=01;36:"
+
+    # Rainbow Prompt
+    export PS1="\[\$(tput bold)\]\[\$(tput setaf 1)\][\[\$(tput setaf 3)\]\u\[\$(tput setaf 2)\]@\[\$(tput setaf 4)\]\h \[\$(tput setaf 5)\]\W\[\$(tput setaf 1)\]]\[\$(tput setaf 7)\]\\$ \[\$(tput sgr0)\]"
+
+
+    # =========================================================================
+    # Gem
+    # =========================================================================
+
+    # *FIX: In setting the path abo
+    export GEM_FULLPATH_LOCAL=${HOME}/gem/local/sbin
+
+	# Put Gem first in the path, so any binaries we create will supercede the system's.
+    export PATH=${GEM_FULLPATH_LOCAL}:${PATH}
+
+    # Allow our build tools to be found prior to installed tools.
+    if [[ $(uname -s) == "Linux" ]]; then
+        export PATH=${GEM_FULLPATH_LOCAL}/../local_x86_64-pc-linux-gnu/release/bin:${PATH}
+    elif [[ $(uname -s) == *"MINGW64"* ]]; then
+        export PATH=${GEM_FULLPATH_LOCAL}/../local_x86_64-w64-mingw32/release/bin:${PATH}
+    fi
+
+    export GEM_DIR_LOCAL=~/local
+    export PATH=\${PATH}:\${GEM_DIR_LOCAL}/bin
+    # *FIX: Move ~/sbin to /usr/local/sbin so everyone can use the scripts instead doing this crap!
+    if [[ \$(whoami) == "root" ]]; then
+        export PATH=\${PATH}:\${GEM_DIR_LOCAL}/bin
+    fi
+
+    # Determine the OS we are building on.
+    if [[ \$(uname -m) == "x86_64" ]]; then
+        if [[ \$(uname -s) == "Linux" ]]; then
+            export GEM_OS_HOST_BUILD="GEM_OS_HOST_BUILD_LINUX"
+        elif [[ \$(uname -s) == *"MINGW64"* ]]; then
+            export GEM_OS_HOST_BUILD="GEM_OS_HOST_BUILD_MINGW"
+        else
+            echo "gem_bash_init(\${LINENO}) Error: Operating system \$(uname -s) is not supported."; return
+        fi
+    else
+        echo "gem_bash_init(\${LINENO}) Error: Operating system architecture \$(uname -m) is not supported."; return
+    fi
+
+
+    # =========================================================================
+    # Mount Shares
+    # =========================================================================
+    if [[ \$(whoami) != "root" ]]; then
+        mountall
+    fi
+
+
+    # =========================================================================
+    # Aliases
+    # =========================================================================
+
+    if [[ \${GEM_OS_HOST_BUILD} == GEM_OS_HOST_BUILD_MINGW ]]; then
+        alias npp="/c/Program\ Files\ \(x86\)/Notepad++/notepad++.exe "
+    elif [[ \${GEM_OS_HOST_BUILD} == GEM_OS_HOST_BUILD_LINUX ]]; then
+        alias npp="notepadqq "
+        if [[ \$(whoami) == "root" ]]; then
+            alias npp="notepadqq --allow-root "
+        fi
+    else
+        echo "gem_bash_init(\${LINENO}) Error: GEM_OS_HOST_BUILD value of /"\${GEM_OS_HOST_BUILD}/" not supported.  Aborting script." && return
+    fi
+
+    alias ls='ls -al --color=auto'
+    alias npplinux="(npp \${VBOX_HOME}/projects/docs/Linux/Linux_Notes.txt &> /dev/null &)"
+    alias nppfedora="(npp \${VBOX_HOME}/projects/docs/Linux/Fedora_25.txt &> /dev/null &)"
+    alias npptodo="(npp \${VBOX_HOME}/Desktop/ToDo.txt &> /dev/null &)"
+    alias nppgem="(npp ~/sbin/gem_bash_init &> /dev/null &)"  # Only edits local version.
+
+
+    # =========================================================================
+    # Android
+    # =========================================================================
+    if [[ \${GEM_OS_HOST_BUILD} == GEM_OS_HOST_BUILD_MINGW ]]; then
+
+        export ANDROID_SDK=/c/Android/sdk
+        export PATH="\${PATH}:\${ANDROID_SDK}/build-tools/26.0.2"
+
+    elif [[ \${GEM_OS_HOST_BUILD} == GEM_OS_HOST_BUILD_LINUX ]]; then
+
+        export ANDROID_SDK=~/Android/sdk
+
+    else echo "gem_bash_init(\${LINENO}) Error: GEM_OS_HOST_BUILD value of /"\${GEM_OS_HOST_BUILD}/" not supported.  Aborting script." && return
+    fi
+    export PATH="\${PATH}:\${ANDROID_SDK}/tools:\${ANDROID_SDK}/platform-tools"
+
+
+    # =========================================================================
+    # Additional Settings For MinGW
+    # =========================================================================
+    if [[ \${GEM_OS_HOST_BUILD} == GEM_OS_HOST_BUILD_MINGW ]]; then
+
+        export PATH=\${PATH}:/c/msys64/mingw64/bin
+        export PATH=\${PATH}:"/c/Program Files/KDiff3"
+    fi
+
+
+	# =========================================================================
+	# Back Up Support
+	# =========================================================================
+	export CRED_NAME_DATABASE_ADMIN=root
+	export CRED_PASSWORD_DATABASE_ADMIN=abxkl2904
+    export CRED_PASSWORD_ROOT=abxkl2904
+}
+Main
+
+EOF
+chmod 700 ~/gem/local/sbin/gem_bash_init
+
+
+# For the copy-and-paste into terminal scheme to work, the files presented here must
+# have $ escaped (replaced with /$)
+#
+# IMPORTANT: Before running this, the source file must have tabs converted into spaces.
+
+ESCAPE_FILE=~/gem/local/sbin/gem_bash_init
+sed 's/\$/\\$/g' $ESCAPE_FILE > ${ESCAPE_FILE}_temp
+npp ${ESCAPE_FILE}_temp
+
+# Then copy it to this file.
+
+rm ${ESCAPE_FILE}_temp
+
+
+
+
+
+# =============================================================================
+# Shares
+# =============================================================================
+# IMPORTANT!  Complete the below procedures for both root and mhodges.
+# 
+#
+# VirtualBox
+# -----------------------------------------------------------------------------
+# Source:
+# https://forums.virtualbox.org/viewtopic.php?t=15868
+# 
+# NOTE: Setting up shares for webserver is in the following section.
+# 
+# In the VM window select Devices->Shared folders.
+# 
+# In the dialog share:
+# *NOTE: Update these lines.  See further below for what we actually want.
+# 
+# Add the following as Machine Folders.  Also check "Auto-Mount" and "Make
+# Permanent"
+# 
+# Name: mars_root,      Path: C:\
+# Name: mars_mhodges,   Path: C:\msys64\home\mhodges
+# 
+
+
+# IMPORTANT: Edit the values at the top of ~/gem/local/sbin/gem_mountall
+# and ~/gem/local/sbin/gem_umountall as needed.
+
+
+# After you made the above changes:
+# -----------------------------------------------------------------------------
+# Open samba-client in firewall so vbox can access each other's files.  Despite
+# cifs being the successor to SMB, this still seems to be necessary.
+#
+# NOTE: Need to verify that this is still necesary.
+
+su
+
+/usr/bin/firewall-config
+
+
+
+
+# ================================================================================= 
+# Sharing Windows Folders
+# ================================================================================= 
+# 
+# ---------------------------------------------------------------------------------
+# Sharing Windows Folders NEW- BEGIN
+# ---------------------------------------------------------------------------------
+# NOTE: This has been updated for Windows 10, and the security updates that Windows
+# 10 included.
+#
+# IMPORTANT!  Read the NOTE and VERY ODD!  Sections below before you begin making
+# any changes.  Next time we should make changes for "Everyone" first.  Then only
+# make the changes for Mark(Titan\Mark) if that doesn't work.  Apply the changes
+# in the SUGGESTED order.  I left the original order listed here, because it
+# actually worked in that order, just in case we can't get it going in the
+# SUGGGESTED order.
+# 
+# 
+# Linux command to mount:
+# 
+# sudo mount -t cifs //192.168.1.120/titan_mhodges /home/mhodges/shares/titan_mhodges --verbose -o user="Titan\\Mark",password="",uid=1000,gid=1000
+# 
+# 
+# 
+# 
+# Only #1 and #2 are necessary.  The others are left here un case we have more
+# difficulty in the future.
+#
+# #1)
+# Right-click the folder->Properties->Sharing tab
+# Click the "Advanced Sharing" button.
+# Check Share this folder.
+# Under Settings->Share given it a name: titan_mhodges
+# 
+# 
+# #2)
+# NOTE: This part definitely *is* necessary.  It started working when I made
+# these changes.
+# 
+# Right-click the folder->Properties->Sharing tab
+# Click the "Share" button.
+# Under "Choose people to share with" select "Everyone".
+# Click the "Add" button.
+# Change the Permission Level to Read/Write.
+# Click the "Share" button.
+# 
+# 
+# . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+# #3, #4, and #5 are not required.  Skip- Begin
+# . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+# #3)
+# NOTE: Maybe we don't have to change the security settings for Mark either.  Maybe
+# try without changing anything here, too.  Maybe we only have to change the
+# settings for "Everyone".  What are the security settings for "Everyone"?  I
+# think they should be set to "Full Control".
+# 
+# Right-click the folder->Properties->Security tab
+# Select Mark (Titan\Mark)
+# Click Edit button.
+# Select Allow->Full Control.
+# Click Ok, Ok
+# 
+#
+# #4)
+# NOTE: See VERY ODD! section below.  It seems that Mark (Tital\Mark) will
+# disappear.  Maybe try rebooting here to see if Mark remains.  Maybe I
+# removed Mark(Titan\Mark) while playing around with other stuff.  Maybe try
+# skipping this section to simplify the instructions for next time.  Do that
+# and see if it works without this step.  Maybe this isn't necessary due to
+# Mark being the owner of the files.
+# 
+# 
+# Make sure Mark (TITAN\Mark) is selected.
+# Under Permissions for Mark, check Full Control.
+# Click Ok, Ok, Close
+# 
+# 
+# #5)
+# NOTE: Maybe we don't need to make this change here.  It started working when
+# we gave permission to "Everyone".  Try doing that first next time.  Maybe we
+# don't have to change anything for Mark(Titan\Mark) since he is the owner. It's
+# working fine without this here!  Only "Everyone" and "Administrators" are
+# listed, no Mark.
+# 
+# Right-click the folder->Properties->Sharing tab
+# Click the "Advanced Sharing" button.
+# Click the "Permissions" button.
+# Click the "Add" button.
+# The Select Users or Groups dialog opens.  Under Enter the object names to select enter:
+# TITAN\Mark
+# Click Ok.
+# Now you are back to the Permissions for titan_mhodges dialog.
+# 
+# . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+# #3, #4, and #5 are not required.  Skip- End
+# . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+# ---------------------------------------------------------------------------------
+# Sharing Windows Folders NEW- END
+# ---------------------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------------
+# Sharing Windows Folders OLD- BEGIN
+# ---------------------------------------------------------------------------------
+# NOTE: This predates Windows 10, and the security updates that Windows 10
+# included.
+#
+# Sources:
+# https://access.redhat.com/solutions/448263
+# http://community.linuxmint.com/tutorial/view/1208
+# http://www.cyberciti.biz/faq/access-windows-shares-from-linux/
+
+
+mkdir shares
+mkdir shares/titan_mhodges
+
+# In Windows right-click on C:/msys64/home/Mark.
+# 3 methods.  Which one to use?
+
+# 1.) Select Share with.  Select Homegroup (Read/Write).
+#     Wait.  This will take about 2 minutes.
+#
+# 2.) Right-click C:/msys64/home/Mark"
+#     Click "Properties"
+#     Click "Sharing"
+#     Click "Share"
+#     Select "Homegroup"
+#     Click "Add"
+#     Click "Share"
+#
+# 3.) Right-click C:/msys64/home/Mark"
+#     Click "Properties"
+#     Click "Sharing"
+#     Click "Advanced Sharing"
+#     Check "Share this folder"
+#     Click "Add"
+#     For "Share name" enter "titan_mhodges"
+#     Click OK.
+#     Click "Permissions"
+#     With "Everyone" selected click "Full Control"
+
+# BEFORE YOU GO ON!  Reboot Windows.  Skip past all the below cifs
+# troubleshooting.  What shows up in the mountall script should work fine.
+
+
+
+# NOTE: The below command prompts me for a password, then gives
+# NT_STATUS_UNSUCCESSFUL.
+# 
+# List all Windows shares with:
+smbclient -L 10.0.0.6
+or
+smbclient -L //TITAN -U Mark
+
+# IMPORTANT!
+# The above command was showing the Windows shares, but none were showing up in
+# the Linux file browser.  I was getting a lot of NT_??? permission denied
+# errors when I tried various ways of mounting.  I tried a bunch of things with
+# no success until I rebooting *both* the Linux and Windows pc.  Then it worked
+# fine.
+# 
+# Try googling: 
+# fedora "windows 7" NT_STATUS_ACCESS_DENIED NT_STATUS_RESOURCE_NAME_NOT_FOUND Permission denied
+
+# First try to get it working without the below packages:
+
+dnf -y install gvfs-smb   ????? Not sure if this is necessary.
+dnf -y install cifs-utils ????? Not sure if this is necessary.
+
+
+# The CIFS (Common Internet File System (CIFS) protocol is the successor to the
+# SMB protocol and is supported by most Windows servers and many other
+# commercial servers and Network Attached Storage appliances as well as by the
+# popular Open Source server Samba.
+# 
+# To access Windows shares all we need is cifs (Common Internet File System
+# (CIFS).  We don't need Samba at all (so says a post).
+
+su
+
+# COMMAND FAILS:
+mount -t cifs //TITAN/titan_mhodges /home/mhodges/shares/titan_mhodges
+# GIVES: 
+# mount error: could not resolve address for TITAN: Unknown error
+
+# COMMAND FAILS:
+mount -t cifs smb://TITAN/titan_mhodges /home/mhodges/shares/titan_mhodges
+# GIVES:
+# Mounting cifs URL not implemented yet. Attempt to mount smb://TITAN/titan_mhodges
+
+# * * * * * * * * * * * * * * * * SUCCESS * * * * * * * * * * * * * * * *
+# NOTE: Try the above one that says not implemented yet.  Maybe it is now.
+mount -t cifs //192.168.1.120/titan_mhodges /home/mhodges/shares/titan_mhodges
+
+# ---------------------------------------------------------------------------------
+# Sharing Windows Folders OLD- END
+# ---------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+# =============================================================================
+# MOUNTALL
+# =============================================================================
+# IMPORTANT!!!: The following will not work properly until you have run:
+# source ~/gem/local/sbin/gem_bash_init  as it initializes the GEM_OS environment variable
+# that makes the mountall and umountall scripts work.
+
+
+mkdir ~/gem/local/sbin
+
+cat << EOF > ~/gem/local/sbin/mountall
+#
+# File: ~/gem/local/sbin/mountall
+#
+# Mount all the user-defined drives.
+#
+
+# IMPORTANT: If you're having difficulty mounting drives your may want to
+# consider using a GUI.  See:
+# https://www.samba.org/samba/GUI/
+
+# Does mhodges need to belong to the group vboxfs?  Didn't seem to help.  Wait
+# off on this.
+echo "I did: usermod -a -G vboxsf mhodges"
+
+USERNAME=mhodges
+USERPASSWORD=ab29xlk    # *FIX: This is horrifying!  Please correct immediately!
+
+WINDOWS_HOSTNAME=mars
+WINDOWS_IP_ADDRESS=10.0.0.120
+
+LINUX1_HOSTNAME=f28v2
+LINUX1_IP_ADDRESS=10.0.0.124
+
+LINUX2_HOSTNAME=vbox
+LINUX2_IP_ADDRESS=10.0.0.121
+
+function Main()
+{
+    if [[ ! -d ${HOME}/gem/mnt ]]; then
+        mkdir ${HOME}/gem/mnt
+    fi
+
+    FPING_HOW_MANY=-c1
+    if [[ \${HOSTNAME} == "\${WINDOWS_HOSTNAME}" ]]; then
+        FPING_HOW_MANY=-n1  # fping for windows needs special treatment.
+    fi
+    fping \${WINDOWS_IP_ADDRESS} \${FPING_HOW_MANY} -t300 2> /dev/null 1> /dev/null ; WINDOWS_IS_ONLINE=\$(expr \$? == 0)
+    fping  \${LINUX1_IP_ADDRESS} \${FPING_HOW_MANY} -t300 2> /dev/null 1> /dev/null ;  LINUX1_IS_ONLINE=\$(expr \$? == 0)
+    fping  \${LINUX2_IP_ADDRESS} \${FPING_HOW_MANY} -t300 2> /dev/null 1> /dev/null ;  LINUX2_IS_ONLINE=\$(expr \$? == 0)
+
+    echo "WINDOWS_IS_ONLINE = \${WINDOWS_IS_ONLINE}"
+    echo "LINUX1_IS_ONLINE = \${LINUX1_IS_ONLINE}"
+    echo "LINUX2_IS_ONLINE = \${LINUX2_IS_ONLINE}"
+
+    WINDOWS_ROOT_NOT_MOUNTED=\$(expr \$(grep -c "\${WINDOWS_HOSTNAME}_root"  /proc/mounts) == 0)
+    WINDOWS_HOME_NOT_MOUNTED=\$(expr \$(grep -c "\${WINDOWS_HOSTNAME}_\${USERNAME}"     /proc/mounts) == 0)
+     LINUX1_ROOT_NOT_MOUNTED=\$(expr \$(grep -c "\${LINUX1}_root"            /proc/mounts) == 0)
+     LINUX1_HOME_NOT_MOUNTED=\$(expr \$(grep -c "\${LINUX1}_\${USERNAME}"     /proc/mounts) == 0)
+     LINUX2_ROOT_NOT_MOUNTED=\$(expr \$(grep -c "\${LINUX2}_root"            /proc/mounts) == 0)
+     LINUX2_HOME_NOT_MOUNTED=\$(expr \$(grep -c "\${LINUX2}_\${USERNAME}"     /proc/mounts) == 0)
+
+
+    echo "Before mount:"
+    echo "WINDOWS_ROOT_NOT_MOUNTED = \${WINDOWS_ROOT_NOT_MOUNTED}"
+    echo "WINDOWS_HOME_NOT_MOUNTED = \${WINDOWS_HOME_NOT_MOUNTED}"
+    echo " LINUX1_ROOT_NOT_MOUNTED = \${LINUX1_ROOT_NOT_MOUNTED}"
+    echo " LINUX1_HOME_NOT_MOUNTED = \${LINUX1_HOME_NOT_MOUNTED}"
+    echo " LINUX2_ROOT_NOT_MOUNTED = \${LINUX2_ROOT_NOT_MOUNTED}"
+    echo " LINUX2_HOME_NOT_MOUNTED = \${LINUX2_HOME_NOT_MOUNTED}"
+    echo
+
+    case \${HOSTNAME} in
+    (\${WINDOWS_HOSTNAME}) # Running on Windows(MinGW).  Mount Linux1 and Linux 2.
+
+        # Linux1 --------------------------------------------------------------
+        if [[ \${LINUX1_IS_ONLINE} ]]; then
+            if [[ \${LINUX1_ROOT_NOT_MOUNTED} ]]; then
+                if [[ ! -d ${HOME}/gem/mnt/\${LINUX1_HOSTNAME}_root ]]; then
+                    mkdir ${HOME}/gem/mnt/\${LINUX1_HOSTNAME}_root
+                fi
+                mount -f //\${LINUX1_HOSTNAME}/root ${HOME}/gem/mnt/\${LINUX1_HOSTNAME}_root
+            fi
+            if [[ \${LINUX1_HOME_NOT_MOUNTED} ]]; then
+                if [[ ! -d ${HOME}/gem/mnt/\${LINUX1_HOSTNAME}_\${USERNAME} ]]; then
+                    mkdir ${HOME}/gem/mnt/\${LINUX1_HOSTNAME}_\${USERNAME}
+                fi
+                mount -f //\${LINUX1_HOSTNAME}/\${USERNAME} ${HOME}/gem/mnt/\${LINUX1_HOSTNAME}_\${USERNAME}
+            fi
+        else
+            echo "\${LINUX1_HOSTNAME} is offline."
+        fi
+
+        # Linux2 --------------------------------------------------------------
+       if [[ \${LINUX2_IS_ONLINE} ]]; then
+           if [[ \${LINUX2_ROOT_NOT_MOUNTED} ]]; then
+                if [[ ! -d ${HOME}/gem/mnt/\${LINUX2_HOSTNAME}_root ]]; then
+                    mkdir ${HOME}/gem/mnt/\${LINUX2_HOSTNAME}_root
+                fi
+                mount -f //\${LINUX2_HOSTNAME}/root ${HOME}/gem/mnt/\${LINUX2_HOSTNAME}_root
+            fi
+            if [[ \${LINUX2_HOME_NOT_MOUNTED} ]]; then
+                if [[ ! -d ${HOME}/gem/mnt/\${LINUX2_HOSTNAME}_\${USERNAME} ]]; then
+                    mkdir ${HOME}/gem/mnt/\${LINUX2_HOSTNAME}_\${USERNAME}
+                fi
+                mount -f //\${LINUX2_HOSTNAME}/\${USERNAME} ${HOME}/gem/mnt/\${LINUX2_HOSTNAME}_\${USERNAME}
+            fi
+        else
+            echo "\${LINUX2_HOSTNAME} is offline."
+        fi;;
+
+
+    (\${LINUX1_HOSTNAME}.localdomain)
+
+        # Windows -------------------------------------------------------------
+        if [[ \${WINDOWS_IS_ONLINE} ]]; then
+            if [[ \${WINDOWS_ROOT_NOT_MOUNTED} ]]; then
+                if [[ ! -d ${HOME}/gem/mnt/\${WINDOWS_HOSTNAME}_root ]]; then
+                    mkdir ${HOME}/gem/mnt/\${WINDOWS_HOSTNAME}_root
+                fi
+                sudo mount -t vboxsf -o uid=\${USERNAME},gid=\${USERNAME} \${WINDOWS_HOSTNAME}_root ${HOME}/gem/mnt/\${WINDOWS_HOSTNAME}_root
+            fi
+            if [[ \${WINDOWS_HOME_NOT_MOUNTED} ]]; then
+                if [[ ! -d ${HOME}/gem/mnt/\${WINDOWS_HOSTNAME}_\${USERNAME} ]]; then
+                    mkdir ~${HOME}/gem/mnt/\${WINDOWS_HOSTNAME}_\${USERNAME}
+                fi
+                sudo mount -t vboxsf -o uid=\${USERNAME},gid=\${USERNAME} \${WINDOWS_HOSTNAME}_\${USERNAME} ${HOME}/gem/mnt/\${WINDOWS_HOSTNAME}_\${USERNAME}
+            fi
+        else
+            echo "\${WINDOWS_HOSTNAME} is offline."
+        fi
+
+        # linux2 ---------------------------------------------------------
+        if [[ \${LINUX2_IS_ONLINE} -eq 1 ]]; then
+            if [[ \${LINUX2_ROOT_NOT_MOUNTED} -eq 1 ]]; then
+                if [[ ! -d ${HOME}/gem/mnt/\${LINUX2_HOSTNAME}_root ]]; then
+                    mkdir ${HOME}/gem/mnt/\${LINUX2_HOSTNAME}_root
+                fi
+                sudo mount -t cifs -o username=\${USERNAME},password=\${USERPASSWORD} //\${LINUX2_IP_ADDRESS}/root ${HOME}/gem/mnt/\${LINUX2_HOSTNAME}_root
+            fi
+            if [[ \${LINUX2_HOME_NOT_MOUNTED} -eq 1 ]]; then
+                if [[ ! -d ${HOME}/gem/mnt/\${LINUX2_HOSTNAME}_\${USERNAME} ]]; then
+                    mkdir ${HOME}/gem/mnt/\${LINUX2_HOSTNAME}_\${USERNAME}
+                fi
+                sudo mount -t cifs -o vers=1.0,username=\${USERNAME},password=\${USERPASSWORD} //\${LINUX2_IP_ADDRESS}/\${USERNAME} ${HOME}/gem/mnt/\${LINUX2_HOSTNAME}_\${USERNAME}
+            fi
+        else
+            echo "\${LINUX2_HOSTNAME} is offline."
+        fi;;
+
+    (\${LINUX2_HOSTNAME}.localdomain)
+
+        # Windows -------------------------------------------------------------
+        if [[ \${WINDOWS_IS_ONLINE} ]]; then
+            if [[ \${WINDOWS_ROOT_NOT_MOUNTED} ]]; then
+                sudo mount -t vboxsf -o uid=\${USERNAME},gid=\${USERNAME} \${WINDOWS_HOSTNAME}_root ${HOME}/gem/mnt/\${WINDOWS_HOSTNAME}_root
+            fi
+            if [[ \${WINDOWS_HOME_NOT_MOUNTED} ]]; then
+                sudo mount -t vboxsf -o uid=\${USERNAME},gid=\${USERNAME} \${WINDOWS_HOSTNAME}_\${USERNAME} ${HOME}/gem/mnt/\${WINDOWS_HOSTNAME}_\${USERNAME}
+            fi
+        else
+            echo "\${WINDOWS_HOSTNAME} is offline."
+        fi
+
+        # vbox ----------------------------------------------------------------
+       if [[ \${VBOX_IS_ONLINE} -eq 1 ]]; then
+            if [[ \${VBOX_ROOT_NOT_MOUNTED} -eq 1 ]]; then
+                sudo mount -t cifs -o username=\${USERNAME},password=ab29xlk //10.0.0.121/root ${HOME}/gem/mnt/vbox_root
+            fi
+            if [[ \${VBOX_HOME_NOT_MOUNTED} -eq 1 ]]; then
+                sudo mount -t cifs -o vers=1.0,username=\${USERNAME},password=ab29xlk //10.0.0.121/\${USERNAME} ${HOME}/gem/mnt/vbox_\${USERNAME}
+            fi
+        else
+            echo "vbox is offline."
+        fi;;
+    *)
+        echo "Error in \$0(\${LINENO}).  Case not handled.  Aborting script." && return
+    esac
+}
+Main
+
+EOF
+chmod u+x ~/gem/local/sbin/mountall
+
+
+# For the copy-and-paste into terminal scheme to work, the files presented here must
+# have $ escaped (replaced with /$)
+#
+# IMPORTANT: Before running this, the source file must have tabs converted into spaces.
+
+ESCAPE_FILE=~/gem/local/sbin/mountall
+sed 's/\$/\\$/g' $ESCAPE_FILE > ${ESCAPE_FILE}_temp
+npp ${ESCAPE_FILE}_temp
+
+# Then copy it to this file.
+
+rm ${ESCAPE_FILE}_temp
+
+
+
+
+# =============================================================================
+# UMOUNTALL
+# =============================================================================
+
+
+cat << EOF > ~/gem/local/sbin/umountall
+#
+# File: umountall
+#
+# Unmount all the user-defined drives.
+#
+
+
+USERNAME=mhodges
+
+WINDOWS_HOSTNAME=mars
+LINUX1_HOSTNAME=f28v2
+LINUX2_HOSTNAME=vbox
+
+
+function UnmountShare()
+{
+    SHARE=\$1
+
+    if [ \${HOSTNAME} != "MARS" ]; then
+        UMOUNT_OPTIONS="-f"			# Linux-specific settings.
+        SUDO="sudo"
+    fi
+
+    COUNTER=0
+    while [ \$((COUNTER++)) -lt 500 ] && [ \$(grep -c \${SHARE} /proc/mounts) -ne 0 ]; do
+        \$SUDO umount \${UMOUNT_OPTIONS} \${SHARE} > /dev/null 2>&1
+        RESULT=\$?
+        if [ \${RESULT} -eq 32 ]; then
+            if [ \$(expr \${COUNTER} % 100) == 0 ]; then
+                echo "Share \${SHARE} is busy.  Retrying..."
+                sleep 0
+            fi
+        elif [ \${RESULT} -ne 0 ]; then
+            echo "Failed to unmount \${SHARE}.  Return code \${RESULT}."
+        fi
+    done
+#   echo "COUNTER = \${COUNTER}"
+    if [ \$(grep -c \${SHARE} /proc/mounts) -ne 0 ]; then
+        echo "Failed to umount \${SHARE}."
+    fi
+}
+
+function Main()
+{
+    case \${HOSTNAME} in
+    (\${WINDOWS_HOSTNAME})
+        UnmountShare ${HOME}/gem/mnt/\${LINUX1_HOSTNAME}_root
+        UnmountShare ${HOME}/gem/mnt/\${LINUX1_HOSTNAME}_\${USERNAME}
+        UnmountShare ${HOME}/gem/mnt/\${LINUX2_HOSTNAME}_root
+        UnmountShare ${HOME}/gem/mnt/\${LINUX2_HOSTNAME}_\${USERNAME}
+        ;;
+    (\${LINUX1_HOSTNAME}.localdomain)
+        UnmountShare ${HOME}/gem/mnt/\${WINDOWS_HOSTNAME}_root
+        UnmountShare ${HOME}/gem/mnt/\${WINDOWS_HOSTNAME}_\${USERNAME}
+        UnmountShare ${HOME}/gem/mnt/\${LINUX2_HOSTNAME}_root
+        UnmountShare ${HOME}/gem/mnt/\${LINUX2_HOSTNAME}_\${USERNAME}
+        ;;
+    (\${LINUX2_HOSTNAME}.localdomain)
+        UnmountShare ${HOME}/gem/mnt/\${WINDOWS_HOSTNAME}_root
+        UnmountShare ${HOME}/gem/mnt/\${WINDOWS_HOSTNAME}_\${USERNAME}
+        UnmountShare ${HOME}/gem/mnt/\${LINUX1_HOSTNAME}_root
+        UnmountShare ${HOME}/gem/mnt/\${LINUX1_HOSTNAME}_\${USERNAME}
+        ;;
+    *)
+        echo "\$0(\${LINENO}) Error: Case not handled.  Aborting script." && return
+    esac
+}
+Main
+
+EOF
+chmod u+x ~/gem/local/sbin/umountall
+
+
+# For the copy-and-paste into terminal scheme to work, the files presented here must
+# have $ escaped (replaced with /$)
+#
+# IMPORTANT: Before running this, the source file must have tabs converted into spaces.
+
+ESCAPE_FILE=~/gem/local/sbin/umountall
+sed 's/\$/\\$/g' $ESCAPE_FILE > ${ESCAPE_FILE}_temp
+npp ${ESCAPE_FILE}_temp
+
+# Then copy it to this file.
+
+
+
+
+
+
+
+# =============================================================================
+# Update Scripts
+# =============================================================================
+# The following scripts:
+# 
+# ~/gem/local/sbin/gem_bash_init
+# ~/gem/local/sbin/mountall
+# ~/gem/local/sbin/umountall
+# 
+# ... are likely to be more up to date than what was created here. Please
+# update the scripts both here and in...
+#
+# ~/shares/titan_mhodges/projects/docs/Programming/Shells_Set_Up_MSYS_&_Linux.txt
+#
+# ...for next time.
+#
+# IMPORTANT!
+# Remember to escape $ (i.e.  replace it with \$) and verify that spaces are
+# used for indentations.
+
+
+
+
+
+
+# =============================================================================
+# TigerVNC Server - Webserver only.
+# =============================================================================
+#
+# Fedora 24 docs:
+# https://docs.fedoraproject.org/en-US/Fedora/24/pdf/System_Administrators_Guide/Fedora-24-System_Administrators_Guide-en-US.pdf
+# 
+# Source:
+# https://www.digitalocean.com/community/tutorials/how-to-install-and-configure-vnc-remote-access-for-the-gnome-desktop-on-centos-7
+# 
+# IMPORTANT:  The last time I used the automated process, each of the three vnc
+# services failed to upon start.  I tried rebooting, and that made it work.  If
+# you try this, please document exactly at which step the reboot needs to happen.
+# 
+# 
+# IMPORTANT:  When logged in via VNC and logged in as root leafpad will not run
+# because root does not have the DISPLAY environment variable set.  You may
+# have to use:
+# 
+# DISPLAY=:1 leafpad ...
+
+
+# Recovery
+# -----------------------------------------------------------------------------
+# It is very easy to mess things up and wind up getting errors.  If worse comes to
+# worse undo everything:
+# 
+systemctl disable vncserver@:1.service
+rm -f /etc/systemd/system/vncserver@:1.service
+
+systemctl disable vncserver@:2.service
+rm -f /etc/systemd/system/vncserver@:2.service
+
+systemctl disable vncserver@:3.service
+rm -f /etc/systemd/system/vncserver@:3.service
+
+
+# Useful Commands
+#------------------------------------------------------------------------------
+# 
+# If vnc server fails to enable or start or you get an error, check the status:
+# systemctl -l status vncserver-mhodges@:1.service
+# and 
+# journalctl -xe
+# 
+# List service files:
+# ls -al /etc/systemd/system/vncserver*
+# 
+# Reparse the service files:
+# systemctl --system daemon-reload
+# 
+# 
+# To start from the command line:
+# vncserver :1
+# 
+# To kill from the command line:
+# vncserver -kill :1
+# 
+# To view all vnc service files.
+# notepadqq /lib/systemd/system/vncserver@.service /etc/systemd/system/vncserver-mhodges@:1.service /etc/systemd/system/vncserver-mhodges@:2.service /etc/systemd/system/vncserver-mhodges@:3.service
+
+
+
+
+# Set up
+# -----------------------------------------------------------------------------
+
+su
+
+# Create a vnc user.
+su mhodges
+echo -e "ab29xlk\nab29xlk\n" | vncpasswd
+exit
+
+
+
+# Open firewall ports for vnc-server
+firewall-cmd --permanent --zone=public --add-service=vnc-server
+firewall-cmd --permanent --zone=public --add-port=5900/tcp
+firewall-cmd --permanent --zone=public --add-port=5901/tcp
+firewall-cmd --permanent --zone=public --add-port=5902/tcp
+firewall-cmd --permanent --zone=public --add-port=5903/tcp
+
+
+
+# Troubleshooting (See NEW DEVELOPMENTS further below)
+# -------------------------------------
+# 1.) To view errors:
+# 
+#     systemctl status vncserver-mhodges@:1.service
+#
+#     and
+# 
+#     journalctl -xe
+#
+# 2.) Kill all the currently running vnc services:
+#     vncserver -kill :1
+# 
+# 3.) Delete the log and pid files from ~/.vnc/
+# 
+# 4.) Fix any errors raised in .bashrc, gem_bash_init, mountall, etc.  mountall
+#     has been a source of errors for me, when it failed due to no being able
+#     to see another computer on the network.
+#
+#     UPDATE: I've commented out the
+#     call to gem_bash_init in .bashrc for both root and mhodges.  It still
+#     didn't fix anything.
+# 
+# 5.) It starts fine from the command line when run as user mhodges with any 
+#     of the following:
+#
+#     /usr/bin/vncserver :1 -geometry 1920x1040 -depth 16
+#     /usr/bin/vncserver :2 -geometry 938x1036 -depth 16
+#     /usr/bin/vncserver :3 -geometry 1000x750 -depth 16
+# 
+# LEADS:
+#
+# 1.) The following line in /etc/systemd/system/vncserver-mhodges@:1.service fails:
+# 
+#         ExecStart=/sbin/runuser -l mhodges -c "/usr/bin/vncserver %i -geometry 1920x1040 -depth 16"
+# 
+#     ...when run from the command line via:
+# 
+#         systemctl start vncserver-mhodges@:1.service
+#
+#     ...BUT, just running the following from the command line works:
+#
+#         /sbin/runuser -l mhodges -c "/usr/bin/vncserver :2 -geometry 1920x1040 -depth 16"
+#
+#     and the following as root works, too:
+#
+#         /usr/bin/vncserver :1 -geometry 1920x1040 -depth 16
+#
+#     This suggests that the error is occuring somewhere else in
+#     /etc/systemd/system/vncserver-mhodges@:1.service.
+#
+#
+# 2.) While trying to log into VNC:
+# 
+#         When I boot up Fedora and don't log in as a user I get:
+#
+#             unable connect to socket: Connection timed out (10060)
+#
+#         When I log into Fedora as user mhodges I get:
+#
+#             unable connect to socket: connection refused (10061)
+#
+# NEW DEVELOPMENTS:
+#
+# 1.) After reading the documentation at:
+#     https://docs.fedoraproject.org/en-US/Fedora/24/pdf/System_Administrators_Guide/Fedora-24-System_Administrators_Guide-en-US.pdf
+#     AROUND PAGE 119, if you use their page finder.  Actually, it's pg 99 by printed page number.
+# 
+#     I renamed the .service files as per the docs.  E.g. vncserver@:1.service -> vncserver-mhodges@:1.service
+# 
+#     Also, I replace the runuser stuff with what they recommend in
+#     /lib/systemd/system/vncserver@.service I.e.:
+#
+#     ExecStartPre=-/usr/bin/vncserver -kill %i
+#     ExecStart=/usr/bin/vncserver %i
+#     PIDFile=/home/<USER>/.vnc/%H%i.pid
+#     ExecStop=-/usr/bin/vncserver -kill %i
+#
+#     Now "systemctl start vncserver-mhodges@:1.service" works from the command
+#     line.  It hangs, but reponds correctly to client requests.
+#     Unfortunately, it still doesn't work correctly after reboot, and before
+#     logging in.  At least we're closer.
+
+
+
+# Fullscreen
+# -------------------------------------
+# Clean up previous attempt and get ready to start over.
+systemctl stop vncserver-mhodges@:1.service
+systemctl disable vncserver-mhodges@:1.service
+rm -f /etc/systemd/system/vncserver-mhodges@:1.service
+
+
+
+cp /lib/systemd/system/vncserver@.service /etc/systemd/system/vncserver-mhodges@:1.service
+
+# IMPORTANT!: The below sed commands need to be adjusted so that the files are
+# renamed from vncserver@:1.service to vncserver-mhodges@:1.service. I.e. you
+# need to add "-mhodges" before "@".
+
+sed 's/ExecStartPre=-\/usr\/bin\/vncserver -kill %i/ExecStartPre=\/sbin\/runuser -l mhodges -c \"\/usr\/bin\/vncserver -kill %i  > \/dev\/null 2>\&1 || :\"/g' /etc/systemd/system/vncserver@:1.service > /etc/systemd/system/vncserver@:1.service_temp1
+sed 's/ExecStart=\/usr\/bin\/vncserver %i/ExecStart=\/sbin\/runuser -l mhodges -c \"\/usr\/bin\/vncserver %i -geometry 1920x1040 -depth 16\"/g' /etc/systemd/system/vncserver@:1.service_temp1 > /etc/systemd/system/vncserver@:1.service_temp2
+sed 's/PIDFile=\/home\/<USER>\/.vnc\/%H%i.pid/PIDFile=\/home\/mhodges\/.vnc\/%H%i.pid/g' /etc/systemd/system/vncserver@:1.service_temp2 > /etc/systemd/system/vncserver@:1.service_temp3
+sed 's/ExecStop=-\/usr\/bin\/vncserver -kill %i/ExecStop=\/sbin\/runuser -l mhodges -c \"-\/usr\/bin\/vncserver -kill %i\"/g' /etc/systemd/system/vncserver@:1.service_temp3 > /etc/systemd/system/vncserver@:1.service
+
+rm -f /etc/systemd/system/vncserver-mhodges@:1.service_temp1
+rm -f /etc/systemd/system/vncserver-mhodges@:1.service_temp2
+rm -f /etc/systemd/system/vncserver-mhodges@:1.service_temp3
+
+systemctl stop vncserver-mhodges@:1.service
+systemctl disable vncserver-mhodges@:1.service
+systemctl daemon-reload
+systemctl enable vncserver-mhodges@:1.service
+# START WILL BLOCK WHEN RUN FROM THE COMMAND LINE.
+systemctl start vncserver-mhodges@:1.service
+
+
+
+
+
+# Half Screen
+# -------------------------------------
+
+# Clean up previous attempt and get ready to start over.
+systemctl stop vncserver-mhodges@:2.service
+systemctl disable vncserver-mhodges@:2.service
+rm -f /etc/systemd/system/vncserver-mhodges@:2.service
+
+
+
+cp /lib/systemd/system/vncserver@.service /etc/systemd/system/vncserver-mhodges@:2.service
+
+sed 's/ExecStartPre=-\/usr\/bin\/vncserver -kill %i/ExecStartPre=\/sbin\/runuser -l mhodges -c \"\/usr\/bin\/vncserver -kill %i  > \/dev\/null 2>\&1 || :\"/g' /etc/systemd/system/vncserver@:2.service > /etc/systemd/system/vncserver@:2.service_temp1
+sed 's/ExecStart=\/usr\/bin\/vncserver %i/ExecStart=\/sbin\/runuser -l mhodges -c \"\/usr\/bin\/vncserver %i -geometry 938x1036 -depth 16\"/g' /etc/systemd/system/vncserver@:2.service_temp1 > /etc/systemd/system/vncserver@:2.service_temp2
+sed 's/PIDFile=\/home\/<USER>\/.vnc\/%H%i.pid/PIDFile=\/home\/mhodges\/.vnc\/%H%i.pid/g' /etc/systemd/system/vncserver@:2.service_temp2 > /etc/systemd/system/vncserver@:2.service_temp3
+sed 's/ExecStop=-\/usr\/bin\/vncserver -kill %i/ExecStop=\/sbin\/runuser -l mhodges -c \"-\/usr\/bin\/vncserver -kill %i\"/g' /etc/systemd/system/vncserver@:2.service_temp3 > /etc/systemd/system/vncserver@:2.service
+
+rm -f /etc/systemd/system/vncserver-mhodges@:2.service_temp1
+rm -f /etc/systemd/system/vncserver-mhodges@:2.service_temp2
+rm -f /etc/systemd/system/vncserver-mhodges@:2.service_temp3
+
+systemctl stop vncserver-mhodges@:2.service
+systemctl disable vncserver-mhodges@:2.service
+systemctl daemon-reload
+systemctl enable vncserver-mhodges@:2.service
+# START WILL BLOCK WHEN RUN FROM THE COMMAND LINE.
+systemctl start vncserver-mhodges@:2.service
+
+
+
+
+# Smaller Screen
+# -------------------------------------
+
+# Clean up previous attempt and get ready to start over.
+systemctl stop vncserver-mhodges@:3.service
+systemctl disable vncserver-mhodges@:3.service
+rm -f /etc/systemd/system/vncserver-mhodges@:3.service
+
+
+
+cp /lib/systemd/system/vncserver@.service /etc/systemd/system/vncserver-mhodges@:3.service
+
+sed 's/ExecStartPre=-\/usr\/bin\/vncserver -kill %i/ExecStartPre=\/sbin\/runuser -l mhodges -c \"\/usr\/bin\/vncserver -kill %i  > \/dev\/null 2>\&1 || :\"/g' /etc/systemd/system/vncserver@:3.service > /etc/systemd/system/vncserver@:3.service_temp1
+sed 's/ExecStart=\/usr\/bin\/vncserver %i/ExecStart=\/sbin\/runuser -l mhodges -c \"\/usr\/bin\/vncserver %i -geometry 1000x750 -depth 16\"/g' /etc/systemd/system/vncserver@:3.service_temp1 > /etc/systemd/system/vncserver@:3.service_temp2
+sed 's/PIDFile=\/home\/<USER>\/.vnc\/%H%i.pid/PIDFile=\/home\/mhodges\/.vnc\/%H%i.pid/g' /etc/systemd/system/vncserver@:3.service_temp2 > /etc/systemd/system/vncserver@:3.service_temp3
+sed 's/ExecStop=-\/usr\/bin\/vncserver -kill %i/ExecStop=\/sbin\/runuser -l mhodges -c \"-\/usr\/bin\/vncserver -kill %i\"/g' /etc/systemd/system/vncserver@:3.service_temp3 > /etc/systemd/system/vncserver@:3.service
+
+rm -f /etc/systemd/system/vncserver-mhodges@:3.service_temp1
+rm -f /etc/systemd/system/vncserver-mhodges@:3.service_temp2
+rm -f /etc/systemd/system/vncserver-mhodges@:3.service_temp3
+
+systemctl stop vncserver-mhodges@:3.service
+systemctl disable vncserver-mhodges@:3.service
+systemctl daemon-reload
+systemctl enable vncserver-mhodges@:3.service
+# START WILL BLOCK WHEN RUN FROM THE COMMAND LINE.
+systemctl start vncserver-mhodges@:3.service
+
+
+# All
+# -------------------------------------
+systemctl --system daemon-reload
+
+
+
+
+
+
+
+
+
+
+# VNC to Display 0, x11vnc Method
+# -----------------------------------------------------------------------------
+# This is the only way you can VNC with hardware accellerated graphics.
+# Enter the following in a terminal:
+
+x11vnc -usepw -forever -display :0 &
+
+# Open firewall ports for vnc-server
+firewall-cmd --permanent --zone=public --add-port=5900/tcp
+
+For more info on speeding up x11vnc see:
+http://karlrunge.com/x11vnc/faq.html#faq-turbovnc
+
+
+
+
+
+
+
+
+
+
+
+
+
+# =============================================================================
+# Android Tools
+# =============================================================================
+
+# Download and install Android Studio from:
+# https://developer.android.com/studio/
+
+
+# Add an icon to the menus.
+
+su
+
+cat > /usr/share/applications/android-studio.desktop << "EOF"
+
+[Desktop Entry]
+Encoding=UTF-8
+Type=Application
+Name=Android Studio
+Name[en_US]=Android Studio
+Exec=/home/mhodges/android/android-studio/bin/studio.sh
+Comment[en_US]=Android Studio
+StartupNotify=true
+Categories=Development
+Icon=/home/mhodges/android/android-studio/bin/studio.png
+EOF
+
+lxpanelctl restart
+exit
+
+
+# How to add native support to Android Studio
+# https://developer.android.com/studio/projects/add-native-code
+
+
+# =============================================================================
+# Prepare to build vulkan samples
+# =============================================================================
+# Source: https://developer.android.google.cn/ndk/guides/graphics/getting-started
+#
+# You need to build some libraries before you build any vulkan samples.
+#
+# ../../../ndk-build NDK_PROJECT_PATH=. APP_BUILD_SCRIPT=Android.mk APP_STL:=gnustl_static APP_ABI=all APP_PLATFORM=android-24 -j8 clean libshaderc_combined
+
+
+# =============================================================================
+# Build an NDK Sample
+# =============================================================================
+
+
+# =============================================================================
+# Build Ogre
+# =============================================================================
+
+
+
+
+
+# =============================================================================
+# 28 Things to Do After Fresh Installation of Fedora 26 Workstation
+# =============================================================================
+http://www.tecmint.com/things-to-do-after-fedora-26-installation/
+
+
+
+
+
+
+
+# =============================================================================
+# Install Video Download Helper for Firefox
+# =============================================================================
+# A script must be downloaded from here:
+# https://www.downloadhelper.net/install-coapp?browser=firefox
+
+# cd into your download directory then:
+
+tar xf net.downloadhelper.coapp-1.3.0-1_amd64.tar.gz -C ~
+
+~/net.downloadhelper.coapp-1.3.0/bin/net.downloadhelper.coapp-linux-64 install --user
+
+
+
+
+# =============================================================================
+# Set up the printer
+# =============================================================================
+*FIX: I haven't been able to get this to work yet.
+
+system-config-printer
+
+I received the following errors in the console the above command was issued:
+
+No ID match for device dnssd://Officejet%204500%20G510n-z%20%5B0E3365%5D._pdl-datastream._tcp.local/:
+MFG:HP;MDL:Officejet 4500 G510n-z;CMD:PCL;
+
+Do we need to mount it?
+
+
+
+
+
+
+
+
+
+# =============================================================================
+# Install Video Downloader in Firefox
+# =============================================================================
+# Source: https://www.downloadhelper.net/install-coapp?browser=firefox#extra-targz64
+
+
+targz user-wide install
+# tar xf net.downloadhelper.coapp-1.2.4-1_amd64.tar.gz -C ~
+# ~/net.downloadhelper.coapp-1.2.4/bin/net.downloadhelper.coapp-linux-64 install --user
+
+targz system-wide install
+# sudo tar xf net.downloadhelper.coapp-1.2.4-1_amd64.tar.gz -C /usr/local
+# sudo /usr/local/net.downloadhelper.coapp-1.2.4/bin/net.downloadhelper.coapp-linux-64 install --system
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# =============================================================================
+# LAMP- MARIADB
+# =============================================================================
+# MySQL was bought by Oracle.  The MySQL in Fedora has been replaced with MariaDB,
+# which was branched off of MySQL.  It seems to be distributed under the MySQL name.
+# FYI:
+# http://www.unixmen.com/201205-howto-install-lamp-in-fedora/
+#
+# MySQL was replaced by MariaDB since Fedora 19.
+# (http://fedoraproject.org/wiki/Features/ReplaceMySQLwithMariaDB).
+
+
+# To start MariaDB on Fedora 20, execute the following command:
+
+# NOTE: Even though we are installing mysql, we still need to use these
+# commands that reference mariadb.
+
+systemctl enable mariadb.service
+systemctl start mariadb.service
+
+
+# After you started MariaDB (do this only once), execute the following command.
+# This command will ask you some inputs to:
+#
+# * Set root password.
+# * Remove anonymous users.
+# * Disallow root login remotely.
+# * Remove test database.
+# * Reload privilege tables.
+
+/usr/bin/mysql_secure_installation
+
+
+# We don't want to use the password on the command line, especially in scripts.
+# Instead we will put it in an encrypted file located at ~\.mylogin.cnf.
+
+# For user mhodges:
+
+cat > temp << "EOF"
+[client]
+user = root
+password = abxkl2904
+host = www.markhodges.com
+
+EOF
+cat temp >> ~/.my.cnf
+rm -f temp
+cat ~/.my.cnf
+
+
+# Check the connection to the database server
+mysql -h localhost -u root -p
+
+\q     # to quit.
+
+
+# Perform a test:
+mysql -h localhost -u root -p'abxkl2904' -e 'show databases;'
+
+
+You should now be able to dump a database without indicating the password using:
+
+mysqldump -h localhost -u root information_schema
+mysqldump -h localhost -u root mysql
+mysqldump -h localhost -u root performance_schema
+
+# WINDOWS WAMP:
+/c/wamp/bin/mysql/mysql5.6.17/bin/mysqldump -h localhost -u root <my_database_name>
+
+
+
+
+
+
+
+
+
+
+# =============================================================================
+# LAMP- Apache
+# =============================================================================
+
+SERVER_IP_ADDRESS_LOCAL=10.0.0.101
+SERVER_HOSTNAME=$(hostname --fqdn)
+SERVER_DOMAIN=markhodges.com
+WWW_DIR=${HOME}/www
+LINK_WIKI=http://www.${SERVER_DOMAIN}/mediawiki-1.32.0
+LINK_BB=http://www.${SERVER_DOMAIN}/phpBB3
+LINK_GIT_REPO=http://www.github.com/MarkFiveThousand
+
+# For debugging, restore http.conf from backup:
+# cp /etc/httpd/conf/httpd.conf.bak /etc/httpd/conf/httpd.conf
+
+
+# Set the hosts file.  Note that the IP address refers to the IP address of the
+# server on the local network.
+
+su
+
+# Back up the hosts file.
+if [[ -f /etc/hosts.bak ]]; then
+	cp /etc/hosts /etc/hosts.bak
+fi
+
+# *FIX: For Netbeans to work localhost must map to 127.0.0.1 (an IP equivalent
+# to localhost)  localhost must not refer to an IP address on the LAN.  Below
+# is the one that's working for me.  Also, remove all references to IPv6.
+#
+# 127.0.0.1    localhost localhost.localdomain localhost4 localhost4.localdomain4
+# 10.0.0.101   f28v2   f28v2.localdomain   www.markhodges.com   markhodges.com
+
+# IMPORTANT!  Consider the above note, next time through here.  1/21/2019
+# Update the hosts file with our server name and IP address.
+sed "s|127.0.0.1|${SERVER_IP_ADDRESS_LOCAL}|g" /etc/hosts > /etc/hosts_temp
+cp /etc/hosts_temp /etc/hosts
+rm /etc/hosts_temp
+echo "${SERVER_IP_ADDRESS_LOCAL}  ${SERVER_HOSTNAME}   ${SERVER_HOSTNAME}.localdomain   www.${SERVER_DOMAIN}   ${SERVER_DOMAIN}   ${SERVER_HOSTNAME}.${SERVER_DOMAIN}" >> /etc/hosts
+
+# Back up httpd.conf.
+if [[ ~ -f /etc/httpd/conf/httpd.conf.bak ]]; then
+	cp /etc/httpd/conf/httpd.conf /etc/httpd/conf/httpd.conf.bak
+fi
+
+sed "s|#ServerName www.example.com:80|ServerName www.${SERVER_DOMAIN}:80|g" /etc/httpd/conf/httpd.conf > /etc/httpd/conf/httpd.conf_temp1
+sed ':a;N;$!ba;s|#\n# Relax access to content within /var/www.\n#\n<Directory \"/var/www\">\n    AllowOverride None\n    # Allow open access:\n    Require all granted\n</Directory>\n\n||g' /etc/httpd/conf/httpd.conf_temp1 > /etc/httpd/conf/httpd.conf_temp2
+sed "s|/var/www/html|${WWW_DIR}|g" /etc/httpd/conf/httpd.conf_temp2 > /etc/httpd/conf/httpd.conf_temp3
+sed "s|Options Indexes FollowSymLinks|Options FollowSymLinks|g" /etc/httpd/conf/httpd.conf_temp3 > /etc/httpd/conf/httpd.conf
+rm -f /etc/httpd/conf/httpd.conf_temp?
+
+# Open firewall port 80 for http service
+firewall-cmd --permanent --add-service=http
+firewall-cmd --permanent --add-service=https
+firewall-cmd --reload
+
+# Set permissions:
+groupadd www				# Make www group.
+usermod -a -G www ${USER}	# Add user to www group.
+usermod -a -G www apache	# Add user apache to www group
+
+chgrp www ${HOME}	# For apache to access our www folder ${HOME} must be
+					# accessible to the www group.
+chmod 750 ${HOME}	# www group needs read and write access to serve pages from the
+					# child www directory.
+
+# Get ready to test it.
+cd ${WWW_DIR}
+echo "<HTML><BODY>Welcome to Mark's World.<br/><br/><a href="${LINK_WIKI}">Wiki</a><br/><br/><a href="${LINK_BB}">Bulletin Board</a><br/><br/><a href="${LINK_GIT_REPO}">Git Hub</a></BODY></HTML>" > index.html
+chown mhodges index.html
+
+# To share files with multiple domains (i.e. Apache, FTP, rsync, Samba) we must
+# recursively set the file context of all shared files to public_content_rw_t.
+chcon -R -t public_content_rw_t ${WWW_DIR}
+chgrp -R www ${WWW_DIR}		# Make 'www' group owner of ${WWW_DIR} and all children.
+chmod -R g+w ${WWW_DIR}		# Allow group 'www' write access
+
+# Allow Apache to modify public files used for public file transfer services.
+# *NOTE: Be patient.  The setsebool commands can take a while to execute.
+setsebool -P allow_httpd_anon_write on
+
+# Start and enable httpd service
+systemctl enable httpd.service
+systemctl start httpd.service
+# systemctl restart httpd.service
+
+# Open web browser to "localhost".
+firefox www.markhodges.com
+
+
+
+
+# =============================================================================
+# Install Dovecot Mail Server
+# =============================================================================
+# Source: https://docs.fedoraproject.org/en-US/fedora/f28/system-administrators-guide/servers/Mail_Servers/
+#
+# How to set up postfix with virtual domain names:
+# http://www.postfix.org/VIRTUAL_README.html
+#
+# NOTE: I added markhodges.com to /etc/hosts, but it didn't get it working, but
+# may have contributed to it's eventual success.  Do we really need that?
+
+# IMPORTANT: It seems Dovecot uses POP3/IMAP, and Postfix uses SMTP.  Which one
+# do we really want?
+
+
+
+sudo dnf -y install dovecot
+
+# Continue as root.
+su
+
+# The use of IMAP and POP is configured through the /etc/dovecot/dovecot.conf
+# configuration file; by default dovecot runs IMAP and POP3 together with their
+# secure versions using SSL. To configure dovecot to use POP, complete the
+# following steps:
+#
+npp /etc/dovecot/dovecot.conf
+
+# Edit the /etc/dovecot/dovecot.conf configuration file to make sure the
+# protocols variable is uncommented (remove the hash sign (#) at the beginning
+# of the line) and contains the pop3 argument. For example:
+
+if [[ ! -f /etc/dovecot/dovecot.conf.bak ]]; then
+	cp /etc/dovecot/dovecot.conf /etc/dovecot/dovecot.conf.bak
+fi
+
+# Enable POP3 and IMAP.  We're going to be using IMAP instead of POP3, so we
+# can probably eliminate this.
+sed "s|#protocols = imap pop3 lmtp|protocols = imap pop3 lmtp|g" < /etc/dovecot/dovecot.conf > temp.txt
+mv temp.txt /etc/dovecot/dovecot.conf
+
+# Make the change operational for the current session by running the following
+# commands as root:
+
+systemctl restart dovecot
+systemctl enable dovecot
+
+# Configure Postfix -----------------------------------------------------------
+#
+# NEXT TIME: Set up logging, too.
+#
+# Source http://www.postfix.org/BASIC_CONFIGURATION_README.html#syslog_howto
+
+
+sudo dnf -y install postfix
+
+# Fedora offers two primary MTAs: Postfix and Sendmail. Postfix is configured
+# as the default MTA and Sendmail is considered deprecated. If required to
+# switch the default MTA to Sendmail, you can either uninstall Postfix or use
+# the following command as root to switch to Sendmail:
+
+alternatives --config mta
+
+# Select sendmail.postfix
+
+su
+
+if [[ ! -f /etc/postfix/main.cf ]]; then
+	cp /etc/postfix/main.cf /etc/postfix/main.cf.bak
+fi
+
+MY_DOMAIN_NAME=markhodges.com
+MY_FULLY_QUALIFIED_HOSTNAME=$(hostname)
+
+sed "s|#mydomain = domain.tld|mydomain = ${MY_DOMAIN_NAME}|g" < /etc/postfix/main.cf > temp1.txt
+sed "s|#myorigin = \$mydomain|myorigin = \$mydomain|g" < temp1.txt > temp2.txt
+sed "s|#myhostname = virtual.domain.tld|myhostname = ${MY_FULLY_QUALIFIED_HOSTNAME}|g" < temp2.txt > temp3.txt
+
+# NOTE: This addition to this document here has not been tested.
+# *FIX: Please verify this sed command is working as expected.
+#
+# Comment this line out
+sed "s|mydestination = $myhostname, localhost.$mydomain, localhost|#mydestination = $myhostname, localhost.$mydomain, localhost|g"  < temp3.txt > temp4.txt
+# Replace a line.
+sed "s|#mydestination = $myhostname, localhost.$mydomain, localhost, $mydomain|mydestination = $myhostname, localhost.$mydomain, localhost, $mydomain, www.$mydomain.com|g"  < temp4.txt > temp5.txt
+
+
+# Uncomment the mynetworks line, and replace 168.100.189.0/28 with a valid
+# network setting for hosts that can connect to the server.
+
+sed "s|inet_interfaces = localhost|#inet_interfaces = localhost|g" < temp5.txt > temp6.txt
+sed "s|#inet_interfaces = all|inet_interfaces = all|g" < temp6.txt > temp7.txt
+
+mv temp7.txt /etc/postfix/main.cf
+
+rm temp?.txt
+
+restorecon -v /etc/postfix/main.cf
+postfix reload
+systemctl restart postfix
+
+# *FIX: Is this setting really required.  We are not using a web host to send
+# mail.
+setsebool -P httpd_can_sendmail=1
+
+# Now you should be able to send an email like the following:
+# echo "My message." | mail -s "My Subject" mhodges@mhodges.com
+
+# We should probably set this.  NOTE: These commands have not been tested.
+# *TODO: Verify these work, please.
+
+sed "s|postmaster:\troot|postmaster:\tmhodges@markhodges.com|g" < /etc/aliases > temp1.txt
+sed "s|#root:\t\tmarc|root:\t\tmhodges@markhodges.com|g" < temp1.txt > /etc/aliases
+mv temp1.txt /etc/aliases
+newaliases
+
+# Not sure if this is required, but just for good measure....
+systemctl restart postfix
+
+# Configure logging:
+# Source: http://www.postfix.org/BASIC_CONFIGURATION_README.html#syslog_howto
+
+
+
+
+
+
+
+# How to send/Receive email around the firewall:
+# Source: http://www.postfix.org/STANDARD_CONFIGURATION_README.html#intranet
+
+
+# NOTE: The below settings did not help me send/receive mail beyond the firewall.
+
+
+# NOTE: Firewall and selinux are disabled.  Still no luck.  :(
+
+
+
+# *TRYING: Add the following to /etc/postfix/transport
+# Source: https://superuser.com/questions/751938/cant-send-email-to-the-internet-from-postfix-mail-server-relay-access-denied
+
+# Internal delivery.
+markhodges.com      :
+.markhodges.com     :
+# External delivery.
+*                smtp:[gateway.markhodges.com]
+
+# Execute the command "postmap /etc/postfix/transport" whenever you edit the
+# transport table.
+
+postmap /etc/postfix/transport
+
+# *TRYING: Opened all smtp services in firewall.
+
+# TRYING: https://www.techotopia.com/index.php/Configuring_a_Fedora_Linux_Email_Server
+
+Changing:
+myhostname = f28v2.localdomain
+to:
+myhostname = f28v2.markhodges.com
+
+Changing:
+inet_interfaces = all
+to:
+inet_interfaces = $myhostname
+
+Changing:
+inet_protocols = all
+to:
+inet_protocols = ipv4
+
+# *TRYING: Going back to:
+inet_interfaces = all
+inet_protocols = ipv4
+# This made the error go away:
+...fatal: parameter inet_interfaces: no local interface found for 174.50.148.255
+
+# *TRYING: Added "f28v2.markhodges.com" to /etc/hosts.  I read somewhere that
+# this is required.
+
+postfix reload
+systemctl restart postfix
+
+# Source: https://kb.intermedia.net/Article/1317
+#
+# PTR records are mainly used to check if the server name is actually
+# associated with the IP address from where the connection was initiated.
+#
+# A Pointer (PTR) record resolves an IP address to a fully-qualified domain
+# name (FQDN) as an opposite to what A record does. PTR records are also
+# called Reverse DNS records.
+#
+# NOTE: When using external mail servers (e.g. Dedicated Web Server or Cloud
+# Server), you need to create a PTR record because it will help your server
+# pass some security tests when connecting to other mail servers. You
+# defnintely need reverse DNS look up to work (PTR).  Otherwise, mail servers
+# will refuse to send your mail, and you may be blacklisted.
+# To create one, you will need to contact the company which owns the IP address
+# of the server. 
+#
+# You can check your PTR record in external DNS lookup solutions like MX
+# Toolbox:  http://mxtoolbox.com/ReverseLookup.aspx
+#
+# I made an MX record with through my domain name provider with the following
+# information:
+#
+# Mail Server: f28v2.markhodges.com
+# TTL: 7200 (This was the default)
+# Numeric IP: 174.50.148.255  (This is the static IP address of my router.)
+
+
+
+# Your fully qualified domain name must have an MX record.  A mail exchanger
+# (MX) record is a type of DNS record that identifies which server will handle
+# the incoming mail for your domain. MX records always point to a domain; never
+# to an IP address.  MX ("Mail eXchange") records are used to determine the
+# delivery route for your e-mail. For example, if you want to host your own
+# mail server for the domain in your account, you must specify the mail server
+# names as MX records.
+#
+# My domain name provider is Network Solutions (www.networksolutions.com).
+#
+# Click Manage Account
+
+Under "Domain Names" select "Edit DNS"
+
+Select "markhodges.com", then "Edit DNS"
+
+Under "Advanced DNS Manager" click "Manage Advanced DNS Records"
+
+Notice that IP Address (A Records) contains: f28v2.markhodges.com
+This can be added or changed by clicking on "Edit A Records"
+
+Scroll down to: Mail Servers (MX Records).  Click "Edit MX Records" to add or
+change the MX record.  A period will be appended to fqdn as such:
+f28v2.markhodges.com.
+
+
+
+
+
+
+
+
+
+
+# Trying instructions from the following source:
+# https://docs.oracle.com/cd/E19455-01/806-0916/6ja8539gh/index.html#mailadmin-7
+
+
+
+
+
+
+
+
+
+# =============================================================================
+# Install MediaWiki
+# =============================================================================
+# Homepage: https://www.mediawiki.org/wiki/MediaWiki
+#
+# NOTE: If you're going to run more than one wiki, parsoid will have to be
+# configured differently.  See https://www.mediawiki.org/wiki/Parsoid/Setup#Configuration
+#
+
+
+# UPDATE AN OLD INSTALLATION OF MEDIAWIKI -------------------------------------
+#
+# These notes are not complete.
+#
+# To update MediaWiki: https://www.mediawiki.org/wiki/Download_from_Git#Fetch_external_libraries
+
+
+# PERFORM A FRESH INSTALLATION OF MEDIAWIKI -----------------------------------
+
+WWW_DIR=${HOME}
+DATABASE_NAME=mediawiki_1_32
+DATABASE_USER=mhodges
+DATABASE_USER_PASSWORD=ab29xlk
+DATABASE_USER_ROOT=root
+DATABASE_USER_ROOT_PASSWORD=abxkl2904
+COMPOSER_INSTALL_DIR=${HOME}/local/bin
+COMPOSER_EXTRACT_DIR=./temp
+LOGO_IMAGE=mylogo_135x135.png
+# PARSOID_SRC_DIR must be exported due to the way we're creating parsoid.service below.
+export PARSOID_SRC_DIR=${HOME}/local/src/parsoid
+
+if [[ ! -d ${WWW_DIR} ]]; then
+	mkdir -p ${WWW_DIR}
+fi
+
+# DOWNLOAD OPTION 1: Download a fairly recent build. --------------------------
+#
+# NOTE: At the time of this writing, VisualEditor requires the latest version
+# in Git v1.32.  If the loadmodule command in LocalSettings.php fails (make
+# sure you have error output turned on as noted at the start of this section)
+# you may have to download the latest version from Git.  See Option 2.
+
+VERSION_MAJOR=1
+VERSION_MINOR=31
+VERSION_PATCH=0
+WIKI_INSTALL_DIR=${WWW_DIR}/mediawiki-${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
+TAR_FILENAME=mediawiki-${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}.tar.gz
+
+# https://www.mediawiki.org/wiki/Download
+
+if [[ ! -f ${TAR_FILENAME} ]]; then
+	wget https://releases.wikimedia.org/mediawiki/${VERSION_MAJOR}.${VERSION_MINOR}/${TAR_FILENAME}
+fi
+tar xf ~/Downloads/${TAR_FILENAME} -C ${WWW_DIR}
+
+
+# DOWNLOAD OPTION 2: Clone the latest from the Git repository. ----------------
+#
+# WARNING! At the time of this writing 07/27/2018 this version v1.32 is still
+# in alpha.
+#
+# Source: https://www.mediawiki.org/wiki/Download_from_Git#Using_Git_to_download_MediaWiki_extensions
+#
+# Visit https://github.com/wikimedia/mediawiki to see what version you are
+# about to download, then set the following variables accordingly.
+
+VERSION_MAJOR=1
+VERSION_MINOR=32
+VERSION_PATCH=0
+WIKI_INSTALL_DIR=${WWW_DIR}/mediawiki-${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
+
+if [[ ! -d ${WIKI_INSTALL_DIR} ]]; then
+	mkdir ${WIKI_INSTALL_DIR}
+fi
+cd ${WIKI_INSTALL_DIR}
+
+git clone --depth=1 https://github.com/wikimedia/mediawiki.git
+
+mv ${WIKI_INSTALL_DIR}/mediawiki/* ${WIKI_INSTALL_DIR}
+mv ${WIKI_INSTALL_DIR}/mediawiki/.* ${WIKI_INSTALL_DIR}
+rmdir ${WIKI_INSTALL_DIR}/mediawiki
+
+git submodule update --init
+
+
+# INSTALL COMPOSER ------------------------------------------------------------
+#
+# MediaWiki uses Composer to manage external PHP libraries, all of which end up
+# in the vendor/ directory in your MediaWiki directory.
+#
+# Source: https://www.mediawiki.org/wiki/Download_from_Git#Fetch_external_libraries
+#         https://www.mediawiki.org/wiki/Composer
+#         https://getcomposer.org/doc/00-intro.md#installation-linux-unix-osx
+
+mkdir ${COMPOSER_EXTRACT_DIR}
+cd ${COMPOSER_EXTRACT_DIR}
+
+# Configure the installation directory.
+if [[ ! -d ${COMPOSER_INSTALL_DIR} ]]; then
+	mkdir -p ${COMPOSER_INSTALL_DIR}
+fi
+
+# YOUR BELOW INSTRUCTIONS WILL BE SLIGHTLY DIFFERENT.  You must follow the
+# instructions at: https://getcomposer.org/download/
+#
+# IMPORTANT! Change the line below that reads: 
+#     php composer-setup.php
+# to:
+#     php composer-setup.php --install-dir=${COMPOSER_INSTALL_DIR} --filename=composer
+#
+# Using a custom install directory may not work, since apache may not be aware
+# of our custom ~/local/bin.  If you run into problems, try installing composer
+# using the default settings (/bin/composer.)
+
+# Don't use these four lines.  Get yours from https://getcomposer.org/download/
+# These commands will be adjusted to reflect the version of composer that you
+# choose.
+
+php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+php -r "if (hash_file('SHA384', 'composer-setup.php') === '544e09ee996cdf60ece3804abc52599c22b1f40f4323403c44d44fdfdd586475ca9813a858088ffbc1f233e9b180f061') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+php composer-setup.php
+php -r "unlink('composer-setup.php');"
+
+composer update --no-dev
+
+
+# PREPARE LOCALSETTINGS.PHP FOR CHANGES ---------------------------------------
+#
+# Open the wiki in your web browser.  Answer all the questions.
+# LocalSettings.php will be downloaded.
+
+cp ${HOME}/Downloads/LocalSettings.php ${WIKI_INSTALL_DIR}
+chmod 766 ${WIKI_INSTALL_DIR}/LocalSettings.php
+
+# Back up LocalSettings.php.
+if [[ ! -f ${WIKI_INSTALL_DIR}/LocalSettings.php.bak ]]; then
+	cp ${WIKI_INSTALL_DIR}/LocalSettings.php ${WIKI_INSTALL_DIR}/LocalSettings.php.bak
+fi
+
+
+# INSTALL THE VECTOR SKIN -----------------------------------------------------
+
+# This may only be necessary when you get wikimedia from git.  If you don't 
+# have it you will receive a message to that affect when you first open your
+# wiki.  You can also look for it in the skins directory.
+
+cd ${WIKI_INSTALL_DIR}/skins
+git clone --depth=1 https://phabricator.wikimedia.org/diffusion/SVEC/Vector
+
+echo "wfLoadSkin( 'Vector' );" >> ${WIKI_INSTALL_DIR}/LocalSettings.php
+
+
+# SET SELINUX SECURITY PERMMISSIONS -------------------------------------------
+
+# There's a lot to be done.
+# Source: https://www.mediawiki.org/wiki/SELinux
+
+# Useful for debugging:  Use setenforce 0 to enter permissive mode; use
+# setenforce 1 to enter enforcing mode.  Use getenforce to view the status.
+
+cd ${WIKI_INSTALL_DIR}
+
+# The includes/GlobalFunctions.php script file (and possibly other .php files
+# in the MediaWiki install directory) must have the SELinux context type
+# httpd_sys_script_exec_t to permits use of the PHP function.mkdir command.
+chcon -t httpd_sys_script_exec_t includes/GlobalFunctions.php
+
+# Assuming the permissions (755) and owner (usually 'apache') on the images
+# directory are correct, the entire images directory tree must have the
+# httpd_sys_script_rw_t SELinux context type so that scripts (.php files)
+# running in the web server process are allowed read/write access.
+chcon -R -t httpd_user_rw_content_t images
+
+# Thumbnail generation may fail with error messages like ulimit: cpu time/
+# virtual memory/file size: cannot modify limit: Permission denied. To allow
+# this you should enable httpd_setrlimit:
+setsebool -P httpd_setrlimit 1
+
+# If you want to enable the InstantCommons feature:
+setsebool -P httpd_can_network_connect on
+
+# Enable emails from the webserver:
+setsebool -P httpd_can_sendmail on
+
+# Changes made by using chcon are only temporary, in that they will be
+# overwritten by any subsequent action which relabels the files (e.g.
+# restorecon, make relabel, etc). To avoid this, you can add custom context
+# entries to your local policy using the semanage utility. These entries are
+# stored in a separate file, file_contexts.local, which is not part of the base
+# SELinux policy. The entries in this file always override the entries in the
+# base policy.
+semanage fcontext -a -t httpd_user_content_t '${WIKI_INSTALL_DIR}(/.*)?'
+semanage fcontext -a -t httpd_user_script_exec_t '${WIKI_INSTALL_DIR}/.*\/php5?'
+semanage fcontext -a -t httpd_user_script_exec_t '${WIKI_INSTALL_DIR}/includes/.*\.php5?'
+semanage fcontext -a -t httpd_user_rw_content_t '${WIKI_INSTALL_DIR}/images(/.*)?'
+semanage fcontext -a -t httpd_user_rw_content_t '${WIKI_INSTALL_DIR}/cache(/.*)?'
+
+
+# CREATE USER -----------------------------------------------------------------
+# DEPRICATED: Skip this section.  We're just using the administrator account,
+# root, to modify the database.
+
+# Php will use this user account INTERNALLY to access the database.
+
+echo "CREATE USER '${DATABASE_USER}'@'localhost' IDENTIFIED BY '${DATABASE_USER_PASSWORD}';" > temp.sql
+mysql -u ${DATABASE_USER_ROOT} -p${DATABASE_USER_ROOT_PASSWORD} < temp.sql
+rm temp.sql
+
+# This also creates a user. The % is a wildcard, but doesn't include localhost.
+echo "GRANT ALL PRIVILEGES ON ${DATABASE_NAME}.* to ${DATABASE_USER}@'%' IDENTIFIED BY '${DATABASE_USER_PASSWORD}';" > temp.sql
+mysql -u ${DATABASE_USER_ROOT} -p${DATABASE_USER_ROOT_PASSWORD} < temp.sql
+rm temp.sql
+
+echo "GRANT ALL PRIVILEGES ON ${DATABASE_NAME}.* to ${DATABASE_USER}@'localhost' IDENTIFIED BY '${DATABASE_USER_PASSWORD}';" > temp.sql
+mysql -u ${DATABASE_USER_ROOT} -p${DATABASE_USER_ROOT_PASSWORD} < temp.sql
+rm temp.sql
+
+
+# REQUIRE AN EMAIL ADDRESS UPON REGISTRATION ----------------------------------
+
+https://www.mediawiki.org/wiki/Manual:$wgEmailConfirmToEdit
+
+
+# REPLACE THE LOGO IMAGE ------------------------------------------------------
+
+# Copy your logo image to the ${WIKI_INSTALL_DIR}/resources/assets/ directory.
+
+sed 's|$wgLogo = "$wgResourceBasePath/resources/assets/wiki.png";|$wgLogo = "$wgResourceBasePath/resources/assets/'"${LOGO_IMAGE}"'";|g' ${WIKI_INSTALL_DIR}/LocalSettings.php > ${WIKI_INSTALL_DIR}/LocalSettings.php_tmp
+mv ${WIKI_INSTALL_DIR}/LocalSettings.php_tmp ${WIKI_INSTALL_DIR}/LocalSettings.php
+
+
+# ENABLE FILE UPLOADING -------------------------------------------------------
+
+chmod -R 777 ${WIKI_INSTALL_DIR}/images
+
+
+# COMPRESS REVISIONS ----------------------------------------------------------
+
+echo "\$wgCompressRevisions = true;" >> ${WIKI_INSTALL_DIR}/LocalSettings.php
+
+
+
+# CREATE A NEW MAIN PAGE ------------------------------------------------------
+#
+# You need to be logged in to edit pages.  Enter the name of the page that you
+# would like to create into the search box at the top-right of any wiki page.
+# To give the name of the page, the format is: <site name>:<page name>.  Try
+# Mark's Development Environment:Main Page.  On the search results page, click
+# on the link to create the page.
+
+
+
+# INSTALL AND CONFIGURE PARSOID -----------------------------------------------
+#
+# Parsoid is an application which can translate back and forth, at runtime,
+# between MediaWiki's wikitext syntax and an equivalent HTML/RDFa document
+# model with enhanced support for automated processing and rich editing.  It's
+# required by VisualEditor.
+#
+# Install the Parsoid service manually from source because official packages
+# are only available for Ubuntu/Debian based operating systems as of 7/9/2018.
+
+if [[ ! -d ${PARSOID_SRC_DIR} ]]; then
+	mkdir -p ${PARSOID_SRC_DIR}
+fi
+cd ${PARSOID_SRC_DIR}
+
+git clone --depth=1 https://gerrit.wikimedia.org/r/p/mediawiki/services/parsoid ${PARSOID_SRC_DIR}
+
+# Copy the default configuration file. It directs Parsoid server to listen at
+# http://localhost:8000.
+if [[ ! -f ${PARSOID_SRC_DIR}/config.yaml.bak ]]; then
+	cp config.yaml config.yaml.bak
+fi
+cp config.example.yaml config.yaml
+
+# Modify the uri parameter to point to the correct location of our api.php.
+sed "s|uri: 'http://localhost/w/api.php'|uri: 'http://localhost/mediawiki-${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}/api.php'|g" ${PARSOID_SRC_DIR}/config.yaml > ${PARSOID_SRC_DIR}/config.yaml_temp
+mv config.yaml_temp config.yaml
+
+# npm is a package manager for the JavaScript programming language. It is the
+# default package manager for the JavaScript runtime environment Node.js. 
+# https://en.wikipedia.org/wiki/Npm_(software)
+# https://en.wikipedia.org/wiki/Node.js
+
+sudo dnf -y install nodejs npm
+# Install the javascript dependencies.
+npm install
+
+# For the purpose of testing, start the server from the command line. This will
+# block.  We'll configure it to start automatically upon boot up next.
+node bin/server.js
+
+# To configure parsoid to start automatically, create the parsoid.service file.
+cat > temp << "EOF"
+[Unit]
+Description=Mediawiki Parsoid web service on node.js
+Documentation=http://www.mediawiki.org/wiki/Parsoid
+Wants=local-fs.target network.target
+After=local-fs.target network.target
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=${PARSOID_SRC_DIR}
+# EnvironmentFile=-/etc/parsoid/parsoid.env
+ExecStart=/bin/node ${PARSOID_SRC_DIR}/bin/server.js
+KillMode=process
+Restart=on-success
+PrivateTmp=true
+StandardOutput=syslog
+EOF
+cat temp | envsubst > parsoid.service
+rm -f temp
+
+# Since ${PARSOID_SRC_DIR} isn't defined for root, we'll pass it via a temp file.
+echo ${PARSOID_SRC_DIR} > /tmp/parsoid_src_dir
+
+su
+
+PARSOID_SRC_DIR=$(cat /tmp/parsoid_src_dir)
+rm /tmp/parsoid_src_dir
+
+# Copying by root will make parsoid.service owned by root.
+cp ${PARSOID_SRC_DIR}/parsoid.service /etc/systemd/system
+
+chmod 777 /etc/systemd/system/parsoid.service
+
+systemctl daemon-reload				# Reparse the service files.
+systemctl enable parsoid.service	# Enable parsoid to start automatically upon boot.
+systemctl start parsoid.service		# Start it now.
+
+# NOTE: Enabling/diabling a service creates/removes a link to parsoid.service at:
+# /etc/systemd/system/multi-user.target.wants/parsoid.service
+#
+# If parsoid fails to enable or start or you get an error, check the status:
+#
+# systemctl -l status parsoid.service and journalctl -xe
+#
+# Here's a great overview on system services:
+# https://www.digitalocean.com/community/tutorials/how-to-use-systemctl-to-manage-systemd-services-and-units
+
+
+
+# INSTALL VISUALEDITOR --------------------------------------------------------
+#
+# Source: https://www.mediawiki.org/wiki/Extension:VisualEditor
+#         https://www.howtoforge.com/tutorial/how-to-install-visualeditor-for-mediawiki-on-centos-7/
+#         https://www.mediawiki.org/wiki/Extension:VisualEditor#Expanding_visual_editor
+
+# Get VisualEditor from Git.
+cd ${WIKI_INSTALL_DIR}/extensions
+
+git clone --depth=1 https://gerrit.wikimedia.org/r/p/mediawiki/extensions/VisualEditor.git
+cd VisualEditor
+git submodule update --init
+
+# Set up the Parsoid service: It writes wikitext so we can save files.
+
+# Append Parsoid settings to LocalSettings.php.
+cat > temp << "EOF"
+
+wfLoadExtension( 'VisualEditor' );
+
+// Enable by default for everybody
+$wgDefaultUserOptions['visualeditor-enable'] = 1;
+
+// Optional: Set VisualEditor as the default for anonymous users
+// otherwise they will have to switch to VE
+// $wgDefaultUserOptions['visualeditor-editor'] = "visualeditor";
+
+// Don't allow users to disable it
+$wgHiddenPrefs[] = 'visualeditor-enable';
+
+// OPTIONAL: Enable VisualEditor's experimental code features
+$wgDefaultUserOptions['visualeditor-enable-experimental'] = 1;
+
+// Get VisualEditor to talk to Parsoid
+$wgVirtualRestConfig['modules']['parsoid'] = array(
+    // URL to the Parsoid instance
+    // Use port 8142 if you use the Debian package
+    'url' => 'http://localhost:8000',
+    // Parsoid "domain", see below (optional)
+    'domain' => 'localhost',
+    // Parsoid "prefix", see below (optional)
+    'prefix' => 'localhost'
+);
+
+EOF
+cat temp >> ${WIKI_INSTALL_DIR}/LocalSettings.php
+rm -f temp
+
+
+# INSTALL MATH A EXTENSION ----------------------------------------------------
+
+https://www.mediawiki.org/wiki/Extension:Math
+
+
+
+
+# POST INSTALL CLEAN UP -------------------------------------------------------
+#
+# Don't forget to remove any debugging changes that you may have added to the
+# top of LocalSettings.php and index.php.
+#
+# Make sure selinux is enabled using setenforce 1.
+
+
+# DEBUGGING -------------------------------------------------------------------
+#
+# To allow Apache to write to the log file, the permissions on the mediawiki
+# directory must be set to allow the Apache group to write to it.  Also, the
+# directory must have group write permissions.
+
+chgrp www ${WIKI_INSTALL_DIR}
+chmod 775 ${WIKI_INSTALL_DIR}
+
+#
+# NOTE: To see PHP errors, add these settings to the top (right below the
+# <?php) of LocalSettings.php (Source: https://www.mediawiki.org/wiki/Manual:How_to_debug).
+# Then uncomment the desired settings.
+
+sed ':a;N;$!ba;s|<?php\n|<?php\n# error_reporting( -1 );\n# ini_set( 'display__startup_errors', 1 );\n# ini_set( 'display_errors', 1 );\n# \$wgDebugToolbar = true;\n# \$wgShowDebug = true;\n# \$wgShowSQLErrors = true;\n# \$wgDebugDumpSql = true;\n# $wgShowDBErrorBacktrace = true;\n# \$wgDebugLogFile = \"/home/mhodges/www/mediawiki-1.32.0/debug-{\$wgDBname}.log\";\n\n|g' ${WIKI_INSTALL_DIR}/LocalSettings.php > ${WIKI_INSTALL_DIR}/LocalSettings.php_temp
+mv ${WIKI_INSTALL_DIR}/LocalSettings.php_temp ${WIKI_INSTALL_DIR}/LocalSettings.php
+
+# Enable debug output in index.php, then uncomment the desired settings.:
+
+sed ':a;N;$!ba;s|<?php\n|<?php\n# error_reporting( -1 );\n# ini_set( 'display_startup_errors', 1 );\n# ini_set( 'display_errors', 1 );\n\n|g' ${WIKI_INSTALL_DIR}/index.php > ${WIKI_INSTALL_DIR}/index.php_temp
+mv ${WIKI_INSTALL_DIR}/index.php_temp ${WIKI_INSTALL_DIR}/index.php
+
+
+
+# =============================================================================
+# Install and Configure a Minimal Mail Server
+# =============================================================================
+#
+# Source: https://www.howtoforge.com/tutorial/configure-postfix-to-use-gmail-as-a-mail-relay/
+#
+# All the below commands must be excuted as root:
+
+su
+
+# Step 1: Install the required packages:
+# --------------------------------------
+
+dnf update && dnf install postfix mailx
+
+
+# Step 2: Configure Gmail Authentication:
+# ---------------------------------------
+#
+# Create or modify a password file which will be used by Postfix to establish
+# authentication with Gmail. In the authentication information below, replace
+# username with your Gmail username and password with your Gmail password. If
+# you are using a custom Gmail Apps domain name, you may replace gmail.com with
+# your Google Apps domain.
+#
+# The password file will reside in the Postfix configuration directory. The
+# file can be named whatever you like, but the recommended filename is
+# sasl_passwd.
+#
+# Postfix configuration files reside in the directory /etc/postfix. Create or
+# edit the password file:
+
+npp /etc/postfix/sasl_passwd
+
+# Add the line:
+
+[smtp.gmail.com]:587    username@gmail.com:password
+
+# Save and close the file. Your Gmail password is stored as plaintext, so make
+# the file accessible only by root:
+
+chmod 600 /etc/postfix/sasl_passwd
+
+
+# Step 3: Configure Postfix:
+# --------------------------
+#
+# There are six parameters which must be set in the Postfix configuration file
+# main.cf. The parameters are:
+#
+# relayhost, which specifies the mail relay host and port number. The host name
+# will be enclosed in brackets to specify that no MX lookup is required.
+#
+# smtp_use_tls, which enables (or disables) transport layer security.
+#
+# smtp_sasl_auth_enable, which enables (or disables) SASL authentication.
+#
+# smtp_sasl_security_options, which in the following configuration will be set
+# to empty, to ensure that no Gmail-incompatible security options are used.
+#
+# smtp_sasl_password_maps, which specifies the password file to use. This file
+# will be compiled and hashed by postmap in a later step.
+#
+# smtp_tls_CAfile, which specifies the list of certificate authorities to use
+# when verifying server identity.
+
+# Edit the main Postfix configuration file:
+
+npp /etc/postfix/main.cf
+
+# Add or modify the following values:
+
+relayhost = [smtp.gmail.com]:587
+smtp_use_tls = yes
+smtp_sasl_auth_enable = yes
+smtp_sasl_security_options =
+smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd
+smtp_tls_CAfile = /etc/ssl/certs/ca-bundle.crt
+
+# Save and close the file.
+
+
+# Step 4: Process the Password File:
+# ----------------------------------
+#
+# Use postmap to compile and hash the contents of sasl_passwd. The results will
+# be stored in your Postfix configuration directory in the file sasl_passwd.db.
+
+postmap /etc/postfix/sasl_passwd
+
+
+# Step 5: Restart Postfix:
+# ------------------------
+#
+# Restart the Postfix service, putting your changes into effect.
+
+systemctl restart postfix.service
+
+
+# Step 6: Enable "Less Secure Apps" In Gmail
+# ------------------------------------------
+#
+# By default, only the most secure sign-ins, such as logging in to Gmail on the
+# web, are allowed for your Gmail account. To permit relay requests, log in to
+# your Gmail account and turn on Allow less secure apps.
+#
+# For more information, review the Google Support document "Allowing less
+# secure apps to access your account." at:
+# https://support.google.com/accounts/answer/6010255
+#
+# Did you make the adjustment at the above link?  It's required, if you would
+# like to proceed.
+
+
+# Step 7: Send A Test Email:
+# --------------------------
+#
+# Test your new configuration by sending an email using the mail command. Run:
+
+mail -s "Test subject" recipient@domain.com
+
+# You will be presented with a blank line (or a CC: field, which you can bypass
+# by pressing Enter). Type the body of your message, pressing Enter for new
+# lines. When you are finished composing the email, type CTRL-D to send it. To
+# cancel the email, press CTRL-C twice.
+#
+# To send a precomposed email, use the command:
+
+mail -s "Subject Here" recipient@domain.com < textfile
+
+
+# Troubleshooting:
+# ----------------
+#
+# If it's not working, check the logs for any Postfix errors:
+
+journalctl
+
+# If you receive authentication errors from Gmail, verify that Allow Less
+# Secure Apps is turned on in your Gmail account settings, as specified in
+# Step 6.
+#
+# Verify that the password file sasl_passwd exists, and that its contents are
+# formatted correctly, as specified in Step 2. If you make any changes to the
+# password file, make sure to repeat Steps 4 and 5 to hash the new password
+# file and restart Postfix.
+#
+# If you see any TLS errors, double check the configuration in main.cf as
+# specified in Step 3. If you make any configuration changes, restart Postfix
+# as specified in Step 5.
+
+
+
+
+
+
+# =============================================================================
+# Install PhpBBS
+# =============================================================================
+#
+# IMPORTANT NOTE: In order for phpBBS to be truely functional, you need to set
+# up a mail server first.  For details see:
+# https://www.howtoforge.com/tutorial/configure-postfix-to-use-gmail-as-a-mail-relay/
+# 
+# Download phpBB from here:
+#
+# https://www.phpbb.com/downloads/
+# /home/mhodges/Downloads/phpBB-3.2.2.zip
+
+
+# IMPORTANT! this isn't really all that important.  We would prefer to have the
+# database name be in the form phpbb_x_x_x, or along those lines, so it's names
+# similar to the other databases.  You'll need to dig through the below
+# instructions to make that change.
+
+cd ${HOME}/Downloads
+unzip phpBB-3.2.2.zip
+mv /home/mhodges/Downloads/phpBB3 ${HOME}/www
+
+PHPBB_INSTALL_DIR=${HOME}/www/phpBB3
+
+# Create the database.
+cat > temp.sql << "EOF"
+create database if not exists phpbb
+EOF
+mysql --user=root --password=${CRED_PASSWORD_ROOT} < temp.sql
+rm temp.sql
+
+
+# IMPORTANT SOURCE: https://www.phpbb.com/support/docs/en/3.0/kb/article/phpbb3-chmod-permissions/
+#
+# Correct Chmod Values
+#
+# config.php
+#	666 before installation
+#	644 after installation
+# All other files - 644
+# All directories - 755
+#	There are some exceptions when it comes to directory permissions,
+#		The files directory - 777
+#		The cache directory - 777
+#		The store directory - 777
+#		The images/avatars/upload directory - 777
+
+chmod 666 ${PHPBB_INSTALL_DIR}/config.php
+chmod -R 666 $(find ${PHPBB_INSTALL_DIR} -type f)
+chmod 777 ${PHPBB_INSTALL_DIR}/files
+chmod 777 ${PHPBB_INSTALL_DIR}/cache
+chmod 777 ${PHPBB_INSTALL_DIR}/store
+chmod 777 ${PHPBB_INSTALL_DIR}/images/avatars/upload
+chcon -R -t httpd_sys_content_rw_t ${PHPBB_INSTALL_DIR}
+
+# Navigate to:
+# www.markhodges.com/phpBB3/install
+#
+# Follow the instructions at:
+#
+# http://www.markhodges.com/phpBB3/docs/INSTALL.html
+
+
+# AFTER INSTALLATION:
+
+chmod 644 ${PHPBB_INSTALL_DIR}/config.php
+rm -rf ${PHPBB_INSTALL_DIR}/install
+
+# More post-install setup is recommended:
+# file:///home/mhodges/www/phpBB3/docs/INSTALL.html#postinstall
+
+# Try logging out, then back in.  I was unable to log in!  If that is the case
+# for you, clear all the cookies in your web browser then try again.  This
+# fixed it for me.
+
+# If you cannot log into your administrator account, which apparently is not
+# uncommon, for what reason I do not know, the following steps will allow you
+# work around this.
+#
+# Source: https://www.phpbb.com/community/viewtopic.php?f=556&t=2448611
+#
+# phpMyAdmin is a tool for modifying databases.  We are going to go in and
+# create a new administrator user to reset the administrator's password.
+#
+# Open phpMyAdmin in your web browser:
+#
+# http://localhost/phpmyadmin/index.php
+#
+# Log in.
+# 
+# Click on the tab at the top titled "SQL" and paste the following SQL commands
+# to create a new user "Admin1" with password "admin".  NOTE: When you are
+# finished, this account must be deleted, or else it will pose a security
+# hazard.
+#
+# Paste the following:
+
+use phpbb;
+INSERT INTO phpbb_users (user_type, group_id, username, username_clean, user_regdate, user_password, user_email, user_lang, user_style, user_rank, user_colour, user_posts, user_permissions, user_ip, user_birthday, user_lastpage, user_last_confirm_key, user_post_sortby_type, user_post_sortby_dir, user_topic_sortby_type, user_topic_sortby_dir, user_avatar, user_sig, user_sig_bbcode_uid, user_jabber, user_actkey, user_newpasswd) VALUES (3, 5, 'Admin1', 'admin1', 0, '21232f297a57a5a743894a0e4a801fc3', 'admin@example.com', 'en', 1, 1, 'AA0000', 1, '', '', '', '', '', 't', 'a', 't', 'd', '', '', '', '', '', '');
+
+# Click on the "Go" button to the lower-right.
+#
+# You should see a message similar to the following:
+#
+# MySQL returned an empty result set (i.e. zero rows). (Query took 0.0000 seconds.)
+#
+# ... and also:
+#
+# Error: #1046 No database selected
+#
+# It's safe to ignore this message.  Navigate to your phpBB page.  The URL is
+# probably something like:
+#
+# http://www.markhodges.com/phpBB3
+#
+# *FIX: Are these instructions exactly correct?
+# At the upper-left, click on ACP.  That's the Administrator Control Panel,
+# where we can reset your password.  Log in, again, as Admin1 using password
+# "admin".
+# 
+# Once logged in, click "Manage users" near the upper-left.  Enter your user
+# name, not "Admin1", but the user name you created the site with, and are 
+# trying to fix the login password for.  Enter your password under "New
+# password" and "Confirm password".  Then click "Submit".  Then click "Back to
+# previous page".  At the upper-left click on "Logout".
+# 
+# Verify that you can now login using your user name and password, as expected.
+#
+# Assuming that all went well, you need to delete the Admin1 account, or else
+# anyone can login and make administrative changes to the site.  Click on "ACP"
+# again.  Enter your password, then click on "Manage users".  This time enter
+# "Admin1", then click "submit".
+#
+# Under "Founder:", select "No", then click "Submit", then click "Back to
+# previous page".
+#
+# Scroll all the way down to "Delete user".  Make sure username at the top is
+# "Admin1"  Then, under "Delete user" click "Submit".  Click "Yes" to confirm,
+# then "Back to previous page".
+#
+# You're on your own from here.  There is more to learn.  This is as far as
+# I've gone.  Search for more documentation related to securing phpBB and
+# protecting against spam.
+#
+# IMPORTANT NOTE: An email server must be configured so notifications can be
+# sent out.  This is necessary even for when users request to reset their
+# password.  Without being able to send out emails, the site is really not
+# completely functional.  There's more work to be done here, but that's as far
+# as I've gone.  If you get a minimal mail server going, please post details so
+# can all benefit.
+#
+# For details on how to, see:
+# https://www.howtoforge.com/tutorial/configure-postfix-to-use-gmail-as-a-mail-relay/
+
+
+
+
+
+# =============================================================================
+# LAMP- PHP
+# =============================================================================
+
+WWW_DIR=${HOME}/www
+
+# Become user mhodges and verify that it works.  Create info.php file.
+cd ${WWW_DIR}
+echo "<?php phpinfo(); ?>" > info.php
+
+# Open web browser to "localhost/info.php".
+firefox localhost/info.php
+
+# Delete info.php so that others cannot see your configuration.
+rm info.php
+
+
+
+
+# =============================================================================
+# LAMP- PHPMYADMIN
+# =============================================================================
+
+# Verify localhost/phpmyadmin works:
+firefox localhost/phpmyadmin
+
+# Why don't these work?
+# Open web browser to http://webserver/phpmyadmin
+# Open web browser to http://www.markhodges.com/phpmyadmin/
+
+# LOGIN: root
+# PWD: usual root password
+
+npp /etc/httpd/conf.d/phpMyAdmin.conf
+
+Modify the 2 "Require ip" lines to allow access from your other local computers:
+-----------------------------------------------------------
+BEGIN
+-----------------------------------------------------------
+<Directory /usr/share/phpMyAdmin/>
+   <IfModule mod_authz_core.c>
+     # Apache 2.4
+     <RequireAny>
+
+# Mark: original
+#	   Require ip 127.0.0.1
+# Linksys router:
+	   Require ip 127.0.0.1 192.168.1.120 192.168.1.121
+# xfinity Router:
+       Require ip 10.0.0.6
+
+       Require ip ::1
+     </RequireAny>
+   </IfModule>
+   <IfModule !mod_authz_core.c>
+     # Apache 2.2
+     Order Deny,Allow
+     Deny from All
+     Allow from 127.0.0.1
+     Allow from ::1
+   </IfModule>
+</Directory>
+
+<Directory /usr/share/phpMyAdmin/setup/>
+   <IfModule mod_authz_core.c>
+     # Apache 2.4
+     <RequireAny>
+
+# Mark: original
+#	   Require ip 127.0.0.1
+# Linksys router:
+	   Require ip 127.0.0.1 192.168.1.120 192.168.1.121
+# xfinity Router:
+       Require ip 10.0.0.6
+
+       Require ip ::1
+     </RequireAny>
+   </IfModule>
+   <IfModule !mod_authz_core.c>
+     # Apache 2.2
+     Order Deny,Allow
+     Deny from All
+     Allow from 127.0.0.1
+     Allow from ::1
+   </IfModule>
+</Directory>
+-----------------------------------------------------------
+END
+-----------------------------------------------------------
+
+# Restart Apache:
+systemctl restart httpd.service
+
+
+ERRORS?
+If you get something like Error #2002 try retarting mysql:
+systemctl restart mariadb.service
+
+
+
+# =============================================================================
+# Install Netbeans IDE for C++ & PHP Development
+# =============================================================================
+# Source: https://www.youtube.com/watch?v=XWLgOWhEUME
+
+# IMPORTANT!  This installation procedure has not been runn fully all the way
+# through.  Please update these docs as needed.
+
+gem_netbeans_version_major=10
+gem_netbeans_version_minor=0
+gem_netbeans_version=${gem_netbeans_version_major}.${gem_netbeans_version_minor}
+gem_netbeans_fullpath_install=${HOME}/apps/netbeans-${gem_netbeans_version}
+
+# Go to the below link to determine which mirror to download from:
+#
+# https://www.apache.org/dyn/closer.cgi/incubator/netbeans/incubating-netbeans/incubating-10.0
+
+# There, a mirror will be recommended for you.  This one was recommended for me:
+gem_netbeans_url_mirror=http://mirrors.gigenet.com/apache/incubator/netbeans/incubating-netbeans/incubating-${gem_netbeans_version}
+gem_netbeans_filename_zip=incubating-netbeans-${gem_netbeans_version}-bin.zip
+
+mkdir -p ${gem_netbeans_fullpath_install}
+cd ${gem_netbeans_fullpath_install}
+
+
+wget ${gem_netbeans_url_mirror}/${gem_netbeans_filename_zip}
+unzip ${gem_netbeans_filename_zip}
+mv ./netbeans/* .
+rmdir ./netbeans
+
+# Clean Up
+rm ${gem_netbeans_filename_zip}
+
+# Create a .desktop file:
+
+mkdir -p /tmp
+cd /tmp
+
+
+# Clean for debugging only...
+rm /usr/share/applications/netbeans.desktop
+lxpanelctl restart
+
+
+cat > gem_netbeans_create_tmp_desktop_file.txt << EOF
+
+[Desktop Entry]
+Encoding=UTF-8
+Type=Application
+Name=NetBeans IDE
+Name[en_US]=NetBeans IDE
+Exec=${gem_netbeans_fullpath_install}/bin/netbeans
+Comment[en_US]=NetBeans IDE
+StartupNotify=true
+Categories=Development
+Icon=/home/mhodges/apps/netbeans-${gem_netbeans_version}/harness/nbi/stub/ext/components/products/helloworld/data/icon48.png
+EOF
+
+suc 'cp gem_netbeans_create_tmp_desktop_file.txt /usr/share/applications/netbeans.desktop ; chmod go+r /usr/share/applications/netbeans.desktop ; lxpanelctl restart'
+
+
+# IMPORTANT! The following lines must be run seperately from those above.
+# Entering the root password above will halt script execution.
+
+cd netbeans
+./netbeans
+
+# Close the start up tab.
+
+# Tools->Plugins
+# Click the Updates tab, then Check for Updates.
+
+
+# -----------------------------------------------------------------------------
+# Install xdebug.
+# -----------------------------------------------------------------------------
+# 
+# NOTE: This install will install and configure xdebug to be tested from
+# Netbeans running on Linux.  After you confirm that you can debug on Linux
+# We will change it to debug remotely from Windows.
+#
+
+# Create phpinfo.php to show our php settings:
+
+echo "<?PHP phpinfo();?>" > ${HOME}/www/_phpinfo.php
+
+# Open localhost/_phpinfo.php
+
+su
+
+# 2 methods are the result of merging.  Which one is best to keep?
+# --------------------------------------------------------------------------------------------
+# Method 1- Just Install It
+# --------------------------------------------------------------------------------------------
+
+# *FIX: I think this line should work.  Please verify and remove the
+# longer instructions for building xdebug.
+
+pecl install xdebug
+
+# --------------------------------------------------------------------------------------------
+# Method 2- Build It
+# --------------------------------------------------------------------------------------------
+# Download the xdebug-2.4.0beta1.tgz(or whatever version it is) using the link
+# found at:
+# 
+# http://xdebug.org/wizard.php
+# 
+# cd to the folder containing the download, then:
+# Build XDebug
+mkdir temp
+cp xdebug-* temp
+cd temp
+tar -xvzf ./xdebug-*.tgz
+cd xdebug-2.4.0beta1
+phpize
+./configure
+make
+cp modules/xdebug.so /usr/lib/php/modules
+cd ../..
+rm -rf temp
+cd /usr/lib/php/modules
+ls
+# .....................................................................
+
+
+# Verify that xdebug.so is there.
+
+
+# -----------------------------------------------------------------------------
+# Edit etc/php.ini
+# -----------------------------------------------------------------------------
+
+cp /etc/php.ini /etc/php.ini.bak
+
+# It looks like this isn't enough.   Even for local debugging, we ned all the
+# further below settings...?
+#printf "\n\n; ======\n; XDebug\n; ======\nzend_extension=/usr/lib64/php/modules/xdebug.so\n\n" >> /etc/php.ini
+
+# Trying this instead.
+cat > \tmp\gem_xdebug_to_php_ini.txt << EOF
+
+; =============================================================================
+; XDebug - For Gem
+; =============================================================================
+[xdebug]
+zend_extension=/usr/lib64/php/modules/xdebug.so
+xdebug.remote_enable=on
+xdebug.remote_host=localhost      ; Must be localhost or 127.0.0.1 for local debugging.
+xdebug.remote_port=9000
+xdebug.remote_autostart=on
+xdebug.idekey="netbeans-xdebug"
+
+EOF
+cat \tmp\gem_xdebug_to_php_ini.txt >> /etc/php.ini
+rm -f \tmp\gem_xdebug_to_php_ini.txt
+
+
+# --------------------------------------------------------------------------------------------
+# Here's another try.  This was also the result of merging.  Which whay is best?
+# --------------------------------------------------------------------------------------------
+# Set up xdebug to work with Netbeans in Linux before Windows:
+cd /home/mhodges/Desktop
+cp /etc/php.ini /etc/php.ini.bak
+cat > temp << "EOF"
+
+zend_extension = /usr/lib/php/modules/xdebug.so
+xdebug.remote_enable = 1
+xdebug.remote_handler = dbgp
+xdebug.remote_mode = req
+xdebug.remote_host = 10.0.0.100    ; IP address of the PC running Netbeans here.
+xdebug.remote_port = 9000
+EOF
+cat temp >> /etc/php.ini
+rm -f temp
+/bin/systemctl restart httpd.service
+
+# Now go to Netbeans, test then return here to prepare to test from Windows.
+# --------------------------------------------------------------------------------------------
+
+/bin/systemctl restart httpd.service
+
+# Reload localhost/_phpinfo.php.
+#
+# NOTE: Restarting httpd didn't do it for me.  I had to reboot.
+#
+# Look for the info on the Xdebug module. If you see it next to the Zend logo,
+# you have been successful! You can also use 'php -m' if you have a command
+# line version of PHP, it lists all loaded modules. Xdebug should appear twice
+# there (once under 'PHP Modules' and once under 'Zend Modules').
+
+
+# -----------------------------------------------------------------------------
+# Set required permissions to allow Apache (in group www) to write files.
+# -----------------------------------------------------------------------------
+
+su
+
+chgrp -R www ${HOME}/www
+chmod g+w ${HOME}/www
+chcon -R -t httpd_sys_rw_content_t ${HOME}/www
+
+# -----------------------------------------------------------------------------
+# Test XDebug on Linux
+# -----------------------------------------------------------------------------
+# Create a project that includes a .php file.  Set a breakpoint and verify
+# that halts at the breakpoint.
+
+# -----------------------------------------------------------------------------
+# Troubleshooting
+# -----------------------------------------------------------------------------
+# Source: http://www.devside.net/wamp-server/netbeans-waiting-for-connection-netbeans-xdebug-issue
+
+# Netbeans is preferring on IPv6 over IPv4
+# NOTE: Make sure ${gem_netbeans_fullpath_install} is still defined.  It's set
+# at the start of the Netbeans installation instructions.
+
+
+# These settings are here just for debugging.  Remove them.
+gem_netbeans_version_major=10
+gem_netbeans_version_minor=0
+gem_netbeans_version=${gem_netbeans_version_major}.${gem_netbeans_version_minor}
+gem_netbeans_fullpath_install=/home/mhodges/apps/netbeans-${gem_netbeans_version}
+
+# This didn't seem to be necessary because we have Fedora set up for IPv4 only.
+# We'll leave it here in case we run into conflicts with IPv6 in the future.
+# leafpad ${gem_netbeans_fullpath_install}/etc/netbeans.conf
+#
+# Replace 'netbeans_default_options="' with 'netbeans_default_options=-J-# Djava.net.preferIPv4Stack=true "'
+
+
+# Works with all of these.  Which to remove?
+# xdebug.remote_autostart=on
+# xdebug.remote_enable=on
+# xdebug.remote_handler="dbgp"
+# xdebug.remote_mode=req
+# xdebug.idekey="netbeans-xdebug"
+# xdebug.remote_connect_back=1		; Insecure
+
+
+# =============================================================================
+# Troubleshooting /var/www/html
+# =============================================================================
+# I am putting this together because about a year after I updated Fedora, I lost
+# the ability to connect to my Linux /var/www/html directory.  This *might* be
+# related to copying over my backed up html folder *after* recursively making
+# samba setting that were supposed to grant access to client folder.  I don't
+# know what change precipitated this, but I'm trying all kinds of things to get
+# it going again.
+# 
+# Make sure directory /var/www/html is in group www:
+# chgrp -R www /var/www/html
+# 
+# Make user mhodges the owner.
+# chown mhodges /var/www/html
+
+
+
+
+
+
+
+
+
+
+# =============================================================================
+# Custom Error Web Pages
+# =============================================================================
+Create a folder for your custom error pages:
+
+su
+leafpad /etc/httpd/conf/httpd.conf
+Search for "#ErrorDocument 500" to find the examples.
+
+
+Add the following entries below:
+ErrorDocument 403 /error/403_http_forbidden.html
+ErrorDocument 404 /error/404_http_file_not_found.html
+ErrorDocument 500 /error/500_http_internal_server_error.html
+
+You can paste these to get up and going quickly:
+<html><head></head><body>Error 403: Forbidden.</body></html>
+<html><head></head><body>Error 404: File not found.</body></html>
+<html><head></head><body>Error 500: Internal server error.</body></html>
+
+Place your files under:
+/var/www/error/
+
+
+
+
+
+
+# =============================================================================
+# Install Video Downloader 
+# =============================================================================
+
+tar xf net.downloadhelper.coapp-1.2.4-1_amd64.tar.gz -C ~
+
+~/net.downloadhelper.coapp-1.2.4/bin/net.downloadhelper.coapp-linux-64 install --user
+
+
+
+
+
+# =============================================================================
+# Install Netbeans
+# =============================================================================
+# 
+# Download Netbeans from this web page:
+# 
+# https://netbeans.org/downloads/start.html?platform=linux&lang=en&option=cpp&bits=x86
+# 
+# My version as of 11/13/2015 is v8.1
+# 
+# The downloaded file is an install shell script.  Copy from download directory to desktop.
+# Run the install script.
+
+# Make the script writable.
+chmod u+x netbeans-8.1-cpp-linux-x86.sh
+# Execute the script to install.
+/home/mhodges/Desktop/netbeans-8.1-cpp-linux-x86.sh
+
+# Verify that you have a netbeans icon under:
+# Linux->Applications->Programming->Netbeans IDE
+# 
+# I installed the C/C++ version.  Make sure you also have the php features enabled:
+# Tools -> Plugins -> (tab) Available Plugins:
+# 
+# PHP     : Provides tools and support for PHP development. Includes PHP editor,
+#           debugger, samples and documentation.
+
+
+
+# Debugging Notes
+# -------------------------------------
+# 
+# Run Netbeans.
+# Open project: /var/www/html/gem/1_0/starter_project
+# Set a breakpoint in: server.php
+# 
+# Open Chrome browser to:
+# http://www.markhodges.com/gem/1_0/starter_project/
+# 
+# Below are some important debugging settings:
+# 
+# 1.) Tools-> Options -> Debugging(tab)
+#     Maybe leave "Stop at First Line" until you get it working.
+# 2.) Right-click Project Properties -> Run Configuration (on the left.)
+#     a.) Configuration (at the top) allows you to switch the domain.
+#     b.) "Run As" should always be set to Local Web Site, even on Titan.
+#     c.) Make sure Project URL and Index File are correct.  They should be.
+# 3.) Advanced button.
+#     a.) Select Default to have Netbeans launch a new browser tab every time.
+#         You may want to change it to Do Not Open Web Browser to debug
+#         HttpRequests.  Maybe just leave it for now.
+
+
+
+# Test XDebug on Windows
+# -------------------------------------
+# NOTE: The following assumes
+# Linux:   10.0.0.100
+# Windows: 10.0.0.6
+
+sed 's/xdebug.remote_host = 10.0.0.100./xdebug.remote_host = 10.0.0.6/g' /etc/php.ini > /etc/php.ini_temp
+rm -rf /etc/php.ini
+mv /etc/php.ini_temp /etc/php.ini
+/bin/systemctl restart httpd.service
+
+
+# Which one of these do we prefer?
+
+firewall-cmd --direct -permanent --add-rule ipv4 filter INPUT 0 -p tcp --dport 9000 -j ACCEPT
+firewall-cmd --reload
+
+firewall-cmd --zone=public --add-port=9000/tcp --permanent
+firewall-cmd --reload
+
+
+
+# Is this necessary?  It gives:
+# ValueError: Port tcp/9000 already defined
+semanage port -a -t http_port_t -p tcp 9000
+
+
+cp -r ~/oldwebserver/mount_html/* /var/www/html
+
+
+
+
+
+
+# =============================================================================
+# FTP - VSFTPD
+# =============================================================================
+
+su
+
+# NOTE: All the following can be pasted to the command line.
+
+# NOTE:  You may have already created ftp user during the samba section, if you
+# wanted to copy files from an old webserver to the new one.
+
+# NOTE: The anonymous change didn't seem to take affect for me.  Same with the
+# two listen changes. Please check it.
+
+# Create a new user and group:
+useradd guest
+
+# NEW (all from command line):
+# Reference: http://www.systutorials.com/39549/changing-linux-users-password-in-one-command-line/
+echo -e "abcdefgh\nabcdefgh" | passwd guest
+
+# Allow vsftpd to modify public files used for public file transfer services.
+# *NOTE: Be patient.  The setsebool commands can take a while to execute.
+setsebool -P allow_ftpd_full_access on
+
+# Open ftp in the firewall.
+firewall-cmd --permanent --add-service=ftp
+systemctl restart firewalld
+
+# Back up the original.
+rm -f /etc/vsftpd/vsftpd.conf.bak
+cp /etc/vsftpd/vsftpd.conf /etc/vsftpd/vsftpd.conf.bak
+
+# Change: "anonymous_enable=YES"
+# To: "anonymous_enable=NO"
+sed 's/anonymous_enable=YES/anonymous_enable=NO/g' /etc/vsftpd/vsftpd.conf > /etc/vsftpd/vsftpd.conf_temp1
+
+# Change: listen=NO
+# To: listen=YES
+sed 's/listen=NO/listen=YES/g' /etc/vsftpd/vsftpd.conf_temp1 > /etc/vsftpd/vsftpd.conf_temp2
+
+# Change: listen_ipv6=YES
+# To: listen_ipv6=NO
+sed 's/listen_ipv6=YES/listen_ipv6=NO/g' /etc/vsftpd/vsftpd.conf_temp2 > /etc/vsftpd/vsftpd.conf_temp3
+
+# Finalize and clean up.
+rm -f /etc/vsftpd/vsftpd.conf
+cp /etc/vsftpd/vsftpd.conf_temp3 /etc/vsftpd/vsftpd.conf
+rm -f /etc/vsftpd/vsftpd.conf_temp1
+rm -f /etc/vsftpd/vsftpd.conf_temp2
+rm -f /etc/vsftpd/vsftpd.conf_temp3
+
+# MORE CHANGES REQUIRED BY HAND FOR NOW.  AUTOMATE THESE!:
+# To configure passive mode for vsftpd you need to set some parameters in vsftpd.conf.
+# 
+# pasv_enable=Yes
+# pasv_min_port=10090
+# pasv_max_port=10100
+# 
+# This enables passive mode and restricts it to using the eleven ports for data
+# connections. This is useful as you need to open these ports on your firewall.
+# 
+# Find your zone:
+# 
+# firewall-cmd --get-active-zones
+# public
+#   interfaces: wlp1s0
+# 
+# My zone is 'public', so I set my zone to public, add the port range, and
+# after that we reload:
+# 
+# firewall-cmd --permanent --zone=public --add-port=10090-10100/tcp
+# 
+# MARK: Verify the one further below works fine, then update docs.
+# firewall-cmd --reload
+# MARK!  ... or is it more correctly?:
+# systemctl restart firewalld
+
+
+
+# Enable and start the service:
+systemctl enable vsftpd.service
+systemctl start vsftpd.service
+systemctl restart vsftpd.service
+
+
+
+
+
+
+# =============================================================================
+# Git
+# =============================================================================
+# Quick reference can be found here:
+# https://fedoraproject.org/wiki/Git_quick_reference
+
+# Setup your global git settings:
+git config --global user.name "Mark Hodges"
+git config --global user.email "markhodges5000@gmail.com"
+git config --global color.ui auto
+
+# Should you wish to change your details later on, you can manually edit
+# the ~/.gitconfig file for global settings, or edit .git/config to change
+# settings on a particular repo. Alternatively, you can simply run the
+# above commands again with new details.
+
+
+
+# Git- SmartGitHg
+# -------------------------------------
+# Download it from:
+# http://www.syntevo.com/smartgithg/
+# http://www.syntevo.com/smartgit/download
+
+
+su
+
+# NOTICE: The version will likely be different.
+xarchiver /home/mhodges/Desktop/smartgit-generic-7_0_4.tar.gz
+
+# Uncompress the folder into (This is where we install packages):
+/usr/share/
+
+
+# To add a menu item under programming, run:
+cd /usr/share/smartgit/bin
+./add-menuitem.sh
+
+
+
+# =============================================================================
+# How To Add Items to the "Start Menu"
+# =============================================================================
+Resources:
+https://specifications.freedesktop.org/menu-spec/menu-spec-1.0.html
+http://wiki.lxde.org/en/LXPanel
+http://wiki.lxde.org/en/Main_Menu
+
+Adding LXDE start menu entries and desktop shortcuts
+https://lkubaski.wordpress.com/2012/06/29/adding-lxde-start-menu-and-desktop-shortcuts/
+
+
+Our .desktop files are located here:
+/usr/share/applications
+
+Here's a list of categories:
+http://standards.freedesktop.org/menu-spec/latest/apa.html
+
+Here's one I made for Android Studio.  You can use it as a template:
+
+su
+
+cat > /usr/share/applications/android-studio.desktop << "EOF"
+
+[Desktop Entry]
+Encoding=UTF-8
+Type=Application
+Name=Android Studio
+Name[en_US]=Android Studio
+Exec=/home/mhodges/android/android-studio/bin/studio.sh
+Comment[en_US]=Android Studio
+StartupNotify=true
+Categories=Development
+Icon=/home/mhodges/android/android-studio/bin/studio.png
+EOF
+
+lxpanelctl restart
+exit
+
+
+
+
+
+# =============================================================================
+# Install Eclipse
+# =============================================================================
+
+dnf group install Eclipse
+
+Install the ADT plugin for Android development:
+
+1.) Start Eclipse, then select Help > Install New Software.
+2.) Click Add, in the top-right corner.
+3.) In the Add Repository dialog that appears, enter "ADT Plugin" for the Name
+    and the following URL for the Location: https://dl-ssl.google.com/android/eclipse/
+4.) Click OK.
+5.) In the Available Software dialog, select the checkbox next to Developer
+    Tools and click Next.
+6.) In the next window, you'll see a list of the tools to be downloaded. Click
+    Next.
+7.) Read and accept the license agreements, then click Finish. If you get a
+    security warning saying that the authenticity or validity of the software
+	can't be established, click OK
+8.) When the installation completes, restart Eclipse.
+
+

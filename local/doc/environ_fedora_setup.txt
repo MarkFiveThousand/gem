@@ -46,19 +46,22 @@ selinux appendix as appropriate.
 # NOTE: Some parts of this document are old, and may refer to commands that are
 # now deprecated, though hopefully these have all been removed or update.
 #
-# Throughout this document lists of commands are provided.  They may be copied
+# Throughout this document lists of commands are listed.  They may be copied
 # from this document by selecting the text, copying using ctrl-c, then pasting
-# into a command terminal by middle-clicking in the terminal window.
+# into a command terminal by middle-clicking in the terminal window.  Double-
+# clicking on text selects a block of text delineated by spaces.
 #
 # Many commands are prefaced with "sudo".  Sudo is short for "super user do".
 # Super user is a user with administrator rights, typically a user named
 # "root".  We'll give our user the right to execute a subset of commands as
-# administrator by adding our user to the /etc/sudoers file.  A user may also
-# execute commands as administer by temporarily assuming the identiy of root
-# user by entering the "su" command followed by the administrator password.  The
-# command "exit" will return the user to their own identity.  Wherever you see
-# "su" within a block of commands, you must enter root's password from the
-# keyboard before proceeding with the commands that follow.
+# administrator by adding our user to the /etc/sudoers file.
+#
+# A user may also execute commands as administer by temporarily assuming the
+# identiy of root user by entering the "su" command, pressing Enter, followed
+# by entering the administrator password.  The command "exit" will return the
+# user to their own identity.  Wherever you see "su" within a block of
+# commands, you must enter root's password from the keyboard before proceeding
+# with the commands that follow.
 
 
 # Linux Commands:
@@ -85,10 +88,24 @@ selinux appendix as appropriate.
 # Install VirtualBox Guest Additions
 # Terminal Settings
 # File Manager Settings
+# Set Hostname
 # LXQt Appearance
 # Customize the Window Border
 # Customize Desktop and Login Backgrounds
+# Change the Login Screen Background
+# Change the Bootup Theme (Animation)
 # Sudo
+# Install Packages
+# Change LXQt Clock Time Display to 12 hour rather than 24 hour
+# Configure RXVT Terminal
+# Add Quick Links to Panel
+# File Associations
+# Remove Unwanted Applications and Directories
+# Autostart
+# Install Audio & Video Codecs
+# Install & Configure Oracle Java
+# Configure Git Revision Control
+# Download Gem
 #
 # Appendix A: Repositories
 # Appendix B: Grouplists
@@ -659,6 +676,49 @@ exit
 # Click Ok.
 #
 # Close PCManFM-Qt File Manager
+
+
+
+
+# ================================================================================= 
+# Set Hostname
+# ================================================================================= 
+#
+# Set gem_fedora_hostname to your desired name for your system.  I have multiple
+# installations, so chose f30v4 for my 4th installation of Fedora 30.
+
+gem_fedora_hostname=f30v4
+
+# In /etc/hostname replace localhost.localdomain with ${gem_hostname}.localdomain.
+# 
+# WARNING: Only run this once.
+# 
+# NOTE: The .localdomain suffix is required in the hostname file.  This makes
+# it a fully qualified domain name (FQDM).  When it shows up in windows, it
+# only shows the first portion.  If you leave off the .localdomain suffix Windows
+# will not be able to see the linux machine on the network.
+
+# To view your current hostname, run the hostname command.  The default
+# hostname is localhost.localdomain.
+
+hostname
+
+su
+
+gem_fedora_hostname=f30v4
+
+if [[ ! -f /etc/hostname.backup ]]; then
+	\cp -f /etc/hostname /etc/hostname.backup
+fi
+sed -i "s|localhost.localdomain|${gem_fedora_hostname}.localdomain|g" /etc/hostname
+sed -i "s|f30v1.localdomain|${gem_fedora_hostname}.localdomain|g" /etc/hostname
+
+# View the new contents of /etc/hostname:
+
+cat /etc/hostname
+
+# Reboot to make the change take effect.
+
 
 
 
@@ -1292,7 +1352,7 @@ sudo dnf -y install tigervnc-server x11vnc
 
 
 # =============================================================================
-# Configure rxvt Terminal
+# Configure RXVT Terminal
 # =============================================================================
 # Source: http://www.askapache.com/linux/rxvt-xresources.html
 # 
@@ -1505,7 +1565,7 @@ exit
 
 
 # =============================================================================
-# Remove Unwanted Packages and Directories
+# Remove Unwanted Applications and Directories
 # =============================================================================
 
 # *FIX: At some point, on the right side of the panel/taskbar, we lost the icon
@@ -1564,7 +1624,7 @@ EOF
 
 
 # =============================================================================
-# Codecs
+# Install Audio & Video Codecs
 # =============================================================================
 
 # NOTE: Starting in Fedora 27 running easylife produced errors.  Installing
@@ -1626,12 +1686,11 @@ rm /home/mhodges/Downloads/easylife-?.?-?.noarch.rpm
 
 
 # =============================================================================
-# Oracle Java
+# Install & Configure Oracle Java
 # =============================================================================
 
 # Download the JDK from here:
 http://www.oracle.com/technetwork/java/javase/downloads/index.html
-
 
 
 su
@@ -1677,7 +1736,7 @@ sudo alternatives --config jar
 
 
 # =============================================================================
-# Git
+# Configure Git Revision Control
 # =============================================================================
 # Quick reference to commands can be found here:
 # https://fedoraproject.org/wiki/Git_quick_reference

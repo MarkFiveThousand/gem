@@ -57,7 +57,7 @@ function gem_bash_init_Main()
 
             export GEM_OS_HOST_BUILD="GEM_OS_HOST_BUILD_MINGW"
 	        export PATH=${gem_fullpath_gem}/local_x86_64-w64-mingw32/release/bin:${PATH}
-#	        export PATH=/c/msys64/mingw64/bin:${PATH}
+	        export PATH=/c/msys64/mingw64/bin:${PATH}
 
         elif [[ ${gem_uname_kernel_name} == *"CYGWIN"* ]]; then
 
