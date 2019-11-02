@@ -20,6 +20,9 @@ function gem_v_SetDefaults
 	if [[ $(uname -s) == "MINGW64"* ]]; then	# MinGW shell on Windows.
 		gem_host=mingw
 #		gem_host=msvc
+	elif [[ $(uname -s) == "CYGWIN"* ]]; then	# MinGW shell on Windows.
+		gem_host=cygwin
+#		gem_host=mingw
 	elif [[ $(uname -s) == "Linux"* ]]; then	# Linux shell.
 		gem_host=linux
 #		gem_host=mingw
