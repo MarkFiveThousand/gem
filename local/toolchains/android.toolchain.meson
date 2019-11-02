@@ -1,0 +1,36 @@
+# GEM_DIR_STANDALONE_TOOLCHAIN will be replaced in a copy of this file placed in the
+# build directory.  GEM_PLATFORM_HOST will also be replaced.
+
+[binaries]
+c = 'GEM_DIR_STANDALONE_TOOLCHAIN/bin/GEM_PLATFORM_HOST-gcc'
+cpp = 'GEM_DIR_STANDALONE_TOOLCHAIN/bin/GEM_PLATFORM_HOST-g++'
+ar = 'GEM_DIR_STANDALONE_TOOLCHAIN/bin/GEM_PLATFORM_HOST-ar'
+strip = 'GEM_DIR_STANDALONE_TOOLCHAIN/bin/GEM_PLATFORM_HOST-strip'
+pkgconfig = 'GEM_FULLPATH_PKGCONFIG_EXE'
+
+
+[properties]
+# Directory that contains 'bin', 'lib', etc
+root = 'GEM_DIR_STANDALONE_TOOLCHAIN/'
+
+# Directory that contains 'bin', 'lib', etc for the toolchain and system libraries
+sys_root = 'GEM_DIR_STANDALONE_TOOLCHAIN/bin'
+
+GEM_C_ARGS
+GEM_CPP_ARGS
+GEM_C_LINK_ARGS
+GEM_CPP_LINK_ARGS
+
+
+# We'll see if the detected values work before messing with these.
+#[host_machine]
+#system = 'windows'
+#cpu_family = 'x86_64'
+#cpu = 'x86_64'
+#endian = 'little'
+
+[host_machine]
+system = 'linux'
+cpu_family = 'aarch64'	# aarch64:64 bit ARM processor,arm:32 bit ARM processor, https://mesonbuild.com/Reference-tables.html
+cpu = 'armv8-a'         # Does cpu = armv7 work?
+endian = 'little'

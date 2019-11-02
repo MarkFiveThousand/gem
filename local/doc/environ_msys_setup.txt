@@ -193,15 +193,32 @@ rm /etc/passwd_temp1
 # -----------------------------------------------------------------------------
 # Source: https://github.com/msys2/msys2/wiki/Using-packages
 #
-# This takes about 30 minutes.  Please update this if it changes.
-
+# This takes about 30 minutes, on my machine.  A reinstall takes about 3
+# minutes.  Please note the difference in the two date timestamps, and update
+# here with an accurate ellapsed time to install.  Thank you.
+#
 # We're installing the mingw-w64-x86_64-* packages before the others.  When
 # they're available, we favor the mingw-w64-x86_64-* variant.
+#
+# IMPORTANT: For some reason we sometimes receive the following kinds of
+# errors:
+#
+# error: failed to update mingw32 (unable to lock database)
+# error: failed to update mingw64 (unable to lock database)
+# error: failed to update msys (unable to lock database)
+#
+# If you receive errors with the "(unable to lock database)" message refer
+# the the secion titled "Database Lock Issues" above.  If you are certain a
+# simultaneous installation is not taking place, then it's safe to delete the
+# lock file.  This seems to be a known issue.
+#
+# rm -f /var/lib/pacman/db.lck
 
 date
-pacman -Sy mingw-w64-x86_64-python3 mingw-w64-x86_64-toolchain mingw-w64-x86_64-ninja mingw-w64-x86_64-clang 
-pacman -Sy base-devel p7zip zip unzip git mercurial cvs svn meson
+pacman -Sy --noconfirm python3 mingw-w64-x86_64-toolchain mingw-w64-x86_64-ninja mingw-w64-x86_64-clang base-devel p7zip zip unzip git mercurial cvs svn meson
 date
+
+
 
 # CMake doesn't get along well with msys.  CMake-gui requires Qt to be
 # installed, which is ~3GB.  We're going to favor the Windows version instead.
@@ -395,18 +412,35 @@ mkdir ~/gem/mnt/f29v1_root
 
 
 
+# *FIX: Move this to gem/local/doc/environ_network.txt.
+# Download 7-Zip to extract .tar and .gz compressed files on Windows.
+#
 # =============================================================================
 # fping
 # =============================================================================
-# We use fping in gem_bash_init to determine if a pc is up on the network prior
-# to attempting to mount its shared folder.
-#
+# Homepage:
 # http://fping.org/
 #
-# Download from either source and install:
+# We use fping to determine if a pc is up on the network prior to attempting to
+# mount its shared folder.
 #
-# Source 1:
-# http://www.bdtinc.com/pub/software/network/fping300/x64%20(64%20bit)/
+# NOTE: This requires that development tools have been already been installed,
+# as we're going to build fping from source files.
+#
+# Download the latest fping version of the source code from:
+# https://fping.org/dist/
+#
+# Set gem_filename_remote_gz to the filename of the latest version we're going to
+# download from https://fping.org/dist.
+
+
+
+gem_filename_remote_gz=fping-4.2.tar.gz
+
+
+
+mkdir -p ${gem_fullpath_gem}/
+
 
 cp /c/Users/Mark/Downloads/Fping.exe /bin/fping.exe
 
@@ -468,7 +502,7 @@ function gem_bash_init_main()
 
     # =========================================================================
     # Path & Environment Variables
-    # ==============Path===========================================================
+    # =========================================================================
     export PATH="/usr/local/bin:/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/sbin:\${HOME}/gem/local/sbin"
 
     # *FIX: Move ~/sbin/* to /usr/local/sbin so everyone can use the scripts instead doing this crap!
