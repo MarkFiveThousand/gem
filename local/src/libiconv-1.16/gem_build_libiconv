@@ -13,14 +13,14 @@ function gem_v_SetDefaults
 	gem_c_standard="-std=gnu11"	# c90, c99, c11, gnu90, gnu99, gnu11
 
 #	gem_build_script="cmake"
-#	gem_build_script="autotools"
-	gem_build_script="meson"
+	gem_build_script="autotools"
+#	gem_build_script="meson"
 
 	# Common Defaults
-	if [[ $(uname -s) == *"MINGW64"* ]]; then	# MinGW shell on Windows.
+	if [[ $(uname -s) == "MINGW64"* ]]; then	# MinGW shell on Windows.
 		gem_host=mingw
 #		gem_host=msvc
-	elif [[ $(uname -s) == *"Linux"* ]]; then	# Linux shell.
+	elif [[ $(uname -s) == "Linux"* ]]; then	# Linux shell.
 		gem_host=linux
 #		gem_host=mingw
 #		gem_host=android_arm64_v8a
@@ -36,12 +36,12 @@ function gem_v_SetDefaults
 	gem_flags_ld=
 
 
-	gem_filename_pkg=glib
-	gem_filename_version=2.63.0
-	gem_filename_exten=tar.xz
+	gem_filename_pkg=libiconv
+	gem_filename_version=1.16
+	gem_filename_exten=tar.gz
 	gem_filename_base=${gem_filename_pkg}-${gem_filename_version}
 	gem_filename_archive=${gem_filename_base}.${gem_filename_exten}
-	gem_filename_url=http://ftp.gnome.org/pub/gnome/sources/glib/2.63/${gem_filename_archive}
+	gem_filename_url=http://ftp.gnu.org/pub/gnu/libiconv/${gem_filename_archive}
 }
 
 function gem_v_DownloadSource
@@ -84,31 +84,7 @@ function gem_v_OnConfigure
 	# gem_flags_ld. To remove a flag:
 	# flags=$(printf '%s\n' "${flags//-byebye/}")
 
-	# SEE CONFIGURATION OPTIONS:
-	# https://developer.gnome.org/glib/stable/glib-building.html
-
-	# The following settings are available:
-	#
-	# bsymbolic_functions
-	# charsetalias_dir
-	# dtrace
-	# force_posix_threads
-	# fam
-	# gio_module_dir
-	# gtk_doc
-	# installed_tests
-	# iconv
-	# internal_pcre
-	# libmount
-	# man
-	# nls
-	# runtime_libdir
-	# selinux
-	# systemtap
-	# tapset_install_dir
-	# xattr
-
-	gem_flags_configure="-Dinternal_pcre=true -Dgtk_doc=false -Dman=false -Dlibmount=false ${gem_flags_configure}"
+	gem_flags_configure="${gem_flags_configure}"
 
 	gem_v_DebugDumpVars
 	gem_build_OnConfigure
@@ -135,32 +111,13 @@ function gem_v_OnInstall
 	# gem_flags_ld. To remove a flag:
 	# flags=$(printf '%s\n' "${flags//-byebye/}")
 	gem_build_OnInstall
-<<<<<<< HEAD
 
 
-=======
->>>>>>> ed78ed502e025171bfc2fa6928b99da386c8b237
 }
 
 function gem_v_OnUninstall
 {
 	gem_build_OnUninstall
-
-	gem_fullpath_share=${gem_fullpath_install}/share
-	gem_fullpath_share_locale=${gem_fullpath_share}/locale
-
-	gem_strlist_locales="af am an ar as ast az be be@latin bg bn bn_IN bs ca ca@valencia cs cy da de dz el en_CA en_GB en@shaw eo es et eu fa fi fr fur ga gd gl gu he hi hr hu hy id is it ja ka kk kn ko ku lt lv mai mg mk ml mn mr ms nb nds ne nl nn oc or pa pl ps pt pt_BR ro ru rw si sk sl sq sr sr@ije sr@latin sv ta te tg th tl tr tt ug uk vi wa xh yi zh_CN zh_HK zh_TW"
-	for locale in ${gem_strlist_locales}; do
-		gem_fullpath_locale=${gem_fullpath_share_locale}/${locale}
-		gem_fullpath_lcmessages=${gem_fullpath_locale}/LC_MESSAGES
-
-		gem_script_rm -f ${gem_fullpath_lcmessages}/glib20.mo
-
-		gem_script_rmdir_IfEmpty ${gem_fullpath_lcmessages}
-		gem_script_rmdir_IfEmpty ${gem_fullpath_locale}
-	done
-	gem_script_rmdir_IfEmpty ${gem_fullpath_share_locale}
-	gem_script_rmdir_IfEmpty ${gem_fullpath_share}
 }
 
 function gem_v_OnClean

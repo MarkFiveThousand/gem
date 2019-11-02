@@ -9,6 +9,7 @@
 /local_x86_64-w64-mingw32/
 /local_x86_64-pc-windows-msvc/
 /local_x86_64-pc-linux-gnu/
+/local_x86_64-pc-cygwin/
 /local_aarch64-linux-android_ndk_18b_api_28_stl_libc++_arch_arm64/
 /local_aarch64-linux-android_ndk_17b_api_28_stl_libc++_arch_arm64/
 
@@ -16,11 +17,25 @@
 
 /local/src/examples/cmake_executable/build
 
-/local/src/glib/build
-/local/src/glib/src
-/local/src/glib/glib-*.xz
+local/src/libffi-*/build
+local/src/libffi-*/src
+local/src/libffi-*/libffi-*.gz
 
-/local/src/meson/meson-*/
+local/src/libiconv-*/build
+local/src/libiconv-*/src
+local/src/libiconv-*/libiconv-*.gz
+local/src/libiconv-*/buildtool
+
+local/src/gettext-*/build
+local/src/gettext-*/src
+local/src/gettext-*/gettext-*.gz
+local/src/gettext-*/buildtool
+local/src/gettext-*/ReadMe.txt
+
+/local/src/glib-*/build
+/local/src/glib-*/src
+/local/src/glib-*/glib-*.xz
+/local/src/glib-*/buildtool.orig
 
 /local/src/ogre/v1-12-0/2019_03_02/build/
 
@@ -28,8 +43,9 @@
 /local/src/pkg-config/src
 /local/src/pkg-config/pkg-config-*.gz
 
-/local/src/zlib/build
-/local/src/zlib/src/.vs
+/local/src/zlib-*/build
+/local/src/zlib-*/src
+/local/src/zlib-*/zlib-*.gz
 
 /mnt/
 /tmp/
