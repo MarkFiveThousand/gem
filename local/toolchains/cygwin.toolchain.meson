@@ -1,0 +1,30 @@
+# This file seems a little messed up.  The 32- and 64-bit stuff needs to be
+# sorted out properly.  I've brought this file here only to use as a reference
+# while figuring out how to integrate meson builds into buildtool script.
+
+[binaries]
+c = '/usr/bin/gcc'
+cpp = '/usr/bin/g++'
+ar = '/usr/bin/ar'
+strip = '/usr/bin/strip'
+pkgconfig = 'GEM_FULLPATH_PKGCONFIG_EXE'
+
+[properties]
+# Directory that contains 'bin', 'lib', etc
+root = '/usr'
+
+# Directory that contains 'bin', 'lib', etc for the toolchain and system libraries
+sys_root = '/usr'
+
+GEM_C_ARGS
+GEM_CPP_ARGS
+GEM_C_LINK_ARGS
+GEM_CPP_LINK_ARGS
+
+
+[host_machine]
+system = 'cygwin'
+cpu_family = 'x86_64'
+cpu = 'x86_64'
+endian = 'little'
+

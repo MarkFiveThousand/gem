@@ -62,7 +62,7 @@ function gem_bash_init_Main()
         elif [[ ${gem_uname_kernel_name} == *"CYGWIN"* ]]; then
 
             export GEM_OS_HOST_BUILD="GEM_OS_HOST_BUILD_CYGWIN"
-	        export PATH=${gem_fullpath_gem}/local_x86_64-w64-cygwin/release/bin:${PATH}
+	        export PATH=${gem_fullpath_gem}/local_x86_64-pc-cygwin/release/bin:${PATH}
         else
             echo "$BASH_SOURCE(${LINENO}) ERROR: Operating system ${gem_uname_kernel_name} is not supported."; return 0
         fi
