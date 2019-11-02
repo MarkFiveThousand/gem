@@ -140,6 +140,7 @@ git remote add origin git@github.com:MarkFiveThousand/gem
 git config master.remote origin
 git config master.merge refs/heads/master
 
+git push --set-upstream origin master
 
 
 # =============================================================================
