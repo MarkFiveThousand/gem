@@ -399,6 +399,7 @@ function gem_build_DebugDumpVars
 	gem_v_Msg "gem_fullpath_build =   ${gem_fullpath_build}"
 	gem_v_Msg "gem_fullpath_install = ${gem_fullpath_install}"
 	gem_v_Msg "gem_fullpath_toolchain=${gem_fullpath_toolchain}"
+	gem_v_Msg "gem_fullpath_sysroot= ${gem_fullpath_sysroot}"
 	if [[ ${gem_host} == *"android"* ]]; then
 		gem_v_Msg "gem_android_ndk_version =  ${gem_android_ndk_version}"
 		gem_v_Msg "gem_android_api_level =	   ${gem_android_api_level}"
