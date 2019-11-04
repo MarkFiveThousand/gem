@@ -360,6 +360,14 @@ function gem_build_ValidateCompatibility
 	fi
 }
 
+function gem_v_ValidateBuildTools { gem_build_ValidateBuildTools ;}
+function gem_build_ValidateBuildTools
+{
+	gem_script_ValidateFiles "${CC} ${CXX} ${LD} ${AR} ${AS} ${NM} ${STRIP} ${RANLIB} ${OBJDUMP}"
+	if [[ ${gem_os} == "MINGW64"* || ${gem_os} == "CYGWIN"* ]]; then
+		gem_script_ValidateFiles "${DLLTOOL} ${RESCOMP}"
+	fi
+}
 
 function gem_v_SelectCMakeGenerator { gem_build_SelectCMakeGenerator ;}
 function gem_build_SelectCMakeGenerator
@@ -514,7 +522,6 @@ function gem_build_SetHost_linux
 		NM=${gem_fullpath_toolchain}/bin/nm
 		STRIP=${gem_fullpath_toolchain}/bin/strip
 		RANLIB=${gem_fullpath_toolchain}/bin/ranlib
-		DLLTOOL=${gem_fullpath_toolchain}/bin/dlltool
 		OBJDUMP=${gem_fullpath_toolchain}/bin/objdump
 
 	elif [[ ${gem_build_script} == "meson" ]]; then
@@ -543,20 +550,20 @@ function gem_build_SetHost_cygwin
 		gem_flags_ld="${gem_flags_ld}"
 
 		if [[ ${gem_use_clang} == 0 ]]; then
-			CC=${gem_fullpath_toolchain}/bin/gcc
-			CXX=${gem_fullpath_toolchain}/bin/g++
+			CC=${gem_fullpath_toolchain}/bin/x86_64-pc-cygwin-gcc
+			CXX=${gem_fullpath_toolchain}/bin/x86_64-pc-cygwin-g++
 		else	# clang
 			CC=${gem_fullpath_toolchain}/bin/clang
 			CXX=${gem_fullpath_toolchain}/bin/clang++
 		fi
 		LD=${gem_fullpath_toolchain}/bin/ld
-		AR=${gem_fullpath_toolchain}/bin/ar
+		AR=${gem_fullpath_toolchain}/bin/x86_64-pc-cygwin-gcc-ar
 		AS=${gem_fullpath_toolchain}/bin/as
-		NM=${gem_fullpath_toolchain}/bin/nm
+		NM=${gem_fullpath_toolchain}/bin/x86_64-pc-cygwin-gcc-nm
 		STRIP=${gem_fullpath_toolchain}/bin/strip
-		RANLIB=${gem_fullpath_toolchain}/bin/ranlib
-		DLLTOOL=${gem_fullpath_toolchain}/bin/dlltool
+		RANLIB=${gem_fullpath_toolchain}/bin/x86_64-pc-cygwin-gcc-ranlib
 		OBJDUMP=${gem_fullpath_toolchain}/bin/objdump
+		DLLTOOL=${gem_fullpath_toolchain}/bin/dlltool
 		RESCOMP=${gem_fullpath_toolchain}/bin/windres
 
 	elif [[ ${gem_build_script} == "meson" ]]; then
@@ -575,6 +582,8 @@ function gem_build_SetHost_mingw
 		gem_fullpath_toolchain=/mingw64
 		gem_fullpath_sysroot=/mingw64
 	elif [[ ${gem_os} == "CYGWIN"* ]]; then	# MinGW under Cygwin on Windows.
+		gem_fullpath_toolchain=
+		gem_fullpath_sysroot=
 		gem_v_Error "ERROR: gem_build_SetHost_mingw: Need to implement building mingw under cygwin."
 	elif [[ ${gem_os} == "Linux" ]]; then		# MinGW on Linux
 		gem_fullpath_toolchain=/usr/${gem_platform_host}
@@ -588,12 +597,34 @@ function gem_build_SetHost_mingw
 
 	elif [[ ${gem_build_script} == "autotools" ]]; then
 
+		# Find the compiler's library directory.  The gcc library directory
+		# name includes an ever changing version number, so we'll enter the
+		# parent directory, then search for a file expected to be present (i.e.
+		# libgcc.a.)
+		if [[ ${gem_os} == "CYGWIN"* || ${gem_os} == "Linux" ]]; then
+			pushd /usr/lib/gcc/x86_64-w64-mingw32
+		elif [[ ${gem_os} == "MINGW64"* ]]; then
+			# Not cross compiling.
+			pushd /mingw64/lib/gcc/x86_64-w64-mingw32
+#			gem_fullpath_gcc_libs=${gem_fullpath_sysroot}/mingw/lib
+		else
+			gem_v_Error "ERROR: gem_build_SetHost_mingw: Unrecognized shell: ${gem_os}."
+		fi
+		gem_path_found=$(find -name libgcc.a)
+		if [[ ${gem_path_found}x == "x" ]]; then
+			gem_v_Error "ERROR: gem_build_SetHost_mingw(): Failed to determine library directory."
+		fi
+		gem_fullpath_gcc_libs=$(pwd)/$(dirname ${gem_path_found})
+		popd
+		if [[ ! -d ${gem_fullpath_gcc_libs} ]]; then
+			gem_v_Error "ERROR: gem_build_SetHost_mingw(): Library path does not exist: ${gem_fullpath_gcc_libs}.  Did the version number change?"
+		fi
+
 		gem_flags_common="-march=x86-64 -msse4.2 -mpopcnt -m64 -mtune=intel"
 		gem_flags_c="${gem_flags_c} ${gem_flags_common}"
 		gem_flags_cpp="${gem_flags_cpp} ${gem_flags_common}"
 		gem_flags_cxx="${gem_flags_cxx} ${gem_flags_common}"
-		gem_flags_ld="${gem_flags_ld} -L/usr/lib/gcc/x86_64-w64-mingw32/7.3.0"
-		gem_flags_ld="${gem_flags_ld} -L${gem_fullpath_sysroot}/mingw/lib"
+		gem_flags_ld="${gem_flags_ld} -L${gem_fullpath_gcc_libs}"
 
 		if [[ ${gem_use_clang} == 0 ]]; then
 			if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW on Windows
@@ -619,8 +650,8 @@ function gem_build_SetHost_mingw
 		NM=${gem_fullpath_toolchain}/bin/nm
 		STRIP=${gem_fullpath_toolchain}/bin/strip
 		RANLIB=${gem_fullpath_toolchain}/bin/ranlib
-		DLLTOOL=${gem_fullpath_toolchain}/bin/dlltool
 		OBJDUMP=${gem_fullpath_toolchain}/bin/objdump
+		DLLTOOL=${gem_fullpath_toolchain}/bin/dlltool
 		if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW on Windows
 			RESCOMP=${gem_fullpath_toolchain}/bin/windres
 		elif [[ ${gem_os} == "CYGWIN"* ]]; then	# MinGW under Cygwin on Windows.
@@ -1594,6 +1625,7 @@ function gem_build_Main
 	gem_script_Main "$@"	# Process all the arguments
 
 	gem_v_SetHost_${gem_host}
+	gem_v_ValidateBuildTools
 	gem_v_SetBuildType_${gem_build_type}
 	gem_v_SelectCMakeGenerator
 	gem_v_ValidateCompatibility
