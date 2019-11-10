@@ -11,7 +11,7 @@ function gem_bash_init_Main()
     # =========================================================================
     # Query System Info
     # =========================================================================
-    export gem_uname_kernel_name=$(uname -s)
+    export gem_os=$(uname -s)
     export gem_uname_machine=$(uname -m)
 
 
@@ -37,33 +37,37 @@ function gem_bash_init_Main()
     # than /bin.  It's not clear if this is going have other side effects.
     # -4/16/2019.
 
+
+
+    # *FIX: gem_bash_init should not be overriding the client's PATH!
+
+    echo "*FIX: gem_bash_init should not be overriding the client's PATH!"
     export PATH="/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin"
 
     # =========================================================================
     # Gem
     # =========================================================================
 
+    # Add Gem's executable scripts to PATH.
     export PATH=${PATH}:${gem_fullpath_gem}/local/sbin
 
     # Determine the OS we are building on.  Allow our build tools to be found
 	# prior to installed tools.
     if [[ ${gem_uname_machine} == "x86_64" ]]; then
-        if [[ ${gem_uname_kernel_name} == "Linux" ]]; then
+        if [[ ${gem_os} == "Linux" ]]; then
 
             export GEM_OS_HOST_BUILD="GEM_OS_HOST_BUILD_LINUX"
 	        export PATH=${gem_fullpath_gem}/local_x86_64-pc-linux-gnu/release/bin:${PATH}
 
-        elif [[ ${gem_uname_kernel_name} == *"MINGW64"* ]]; then
+        elif [[ ${gem_os} == *"MINGW64"* ]]; then
 
-            export GEM_OS_HOST_BUILD="GEM_OS_HOST_BUILD_MINGW"
 	        export PATH=${gem_fullpath_gem}/local_x86_64-w64-mingw32/release/bin:${PATH}
 	        export PATH=/c/msys64/mingw64/bin:${PATH}
             export PATH=${PATH}:/c/Windows/System32 # Need this for clip.exe
 
 
-        elif [[ ${gem_uname_kernel_name} == *"CYGWIN"* ]]; then
+        elif [[ ${gem_os} == *"CYGWIN"* ]]; then
 
-            export GEM_OS_HOST_BUILD="GEM_OS_HOST_BUILD_CYGWIN"
 	        export PATH=${gem_fullpath_gem}/local_x86_64-pc-cygwin/release/bin:${PATH}
         else
             echo "$BASH_SOURCE(${LINENO}) ERROR: Operating system ${gem_uname_kernel_name} is not supported."; return 0
