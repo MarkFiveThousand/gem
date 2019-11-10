@@ -619,6 +619,23 @@ df
 # Next, we will continue to make the linux environment more comfortable.
 
 
+
+
+
+
+
+# =============================================================================
+* FIX: Avoid the temporary gem_colors() function below by cloning the Gem repo
+# very early, similar to how we do in environ_cygwin_setup.txt.
+
+# =============================================================================
+
+
+
+
+
+
+
 # =============================================================================
 # Terminal Settings
 # =============================================================================
@@ -1049,13 +1066,8 @@ sudo dnf -y install policycoreutils-gui and system-* xarchiver wine
 # rxvt-unicode is a nicer terminal.
 # samba allows us to share files with other computers on our local network.
 
-sudo dnf -y install rxvt-unicode samba
+sudo dnf -y install rxvt-unicode samba xclip
 sudo dnf -y groupinstall "Administration Tools"
-
-
-# Firefox
-# -------
-sudo dnf -y install firefox
 
 
 # Google Chrome
@@ -1066,6 +1078,10 @@ sudo dnf config-manager --set-enabled google-chrome
 
 sudo dnf -y install google-chrome-stable
 
+
+# Firefox
+# -------
+sudo dnf -y install firefox
 
 
 # Gimp Image Editor
@@ -1736,40 +1752,6 @@ sudo alternatives --config jar
 
 
 # =============================================================================
-# Configure Git Revision Control
-# =============================================================================
-# Quick reference to commands can be found here:
-# https://fedoraproject.org/wiki/Git_quick_reference
-#
-# Many beginner references exist:
-# https://guides.github.com/
-# https://guides.github.com/introduction/git-handbook/
-
-
-# Setup your global git settings:
-#
-# NOTE: These operations configure your installed git application.  They do not
-# directly affect any specific repository.  Set gem_user_name and gem_user_email
-# below as appropriate for your user.
-
-gem_user_name="First Last"
-gem_user_email="your@email.address"
-
-git config --global user.name "${gem_username}"
-git config --global user.email "${gem_user_email}"
-git config --global color.ui auto
-
-# Should you wish to change your details later on, you can manually edit
-# the ~/.gitconfig file for global settings, or edit .git/config to change
-# settings on a particular repo. Most simply, you can run the above commands
-# again with new details.
-
-
-
-
-
-
-# =============================================================================
 # Download Gem
 # =============================================================================
 
@@ -1788,6 +1770,135 @@ git clone https://github.com/MarkFiveThousand/gem.git
 # NOTE: The clone operation will fail if you already have a gem directory.  If
 # you do, you'll either need to rename your existing gem directory, or perform
 # a "git pull" from within your gem directory to update it from github.
+
+
+
+
+
+# =============================================================================
+# Initialize Git
+# =============================================================================
+# Git Handbook: https://www.git-tower.com/learn/git/ebook/en/command-line/remote-repositories/integrating-remote-changes#start
+
+# The following commands must be executed in the gem directory.
+cd ${gem_fullpath_gem_parent}/gem
+
+# Identify yourself to Git by setting the my_email and my_name variables below
+# to your information.
+
+gem_user_name="First Last"
+gem_user_email="your@email.address"
+
+# I use the following:
+# gem_user_name="Mark Hodges"
+# gem_user_email="markhodges5000@gmail.com"
+
+git config --global user.email ${gem_user_email}
+git config --global user.name ${gem_user_name}
+
+# Direct Git to our Gem repository.
+git remote rm origin
+git remote add origin git@github.com:MarkFiveThousand/gem
+git config master.remote origin
+git config master.merge refs/heads/master
+
+
+# Should you wish to change your details later on, you can manually edit
+# the ~/.gitconfig file for global settings, or edit .git/config to change
+# settings on a particular repo. Most simply, you can run the above commands
+# again with new details.
+
+
+
+# =============================================================================
+# Enable Write Access to Gem Repository
+# =============================================================================
+# Source: https://www.git-tower.com/learn/git/ebook/en/command-line/advanced-topics/ssh-public-keys
+# Source: https://stackoverflow.com/questions/749544/pipe-to-from-the-clipboard-in-bash-script
+#
+# This will require cooperation with the Git repository maintainer,
+# markhodges5000@gmail.com.
+#
+# Run the ssh-keygen command shown below, replacing "john@example.com" with
+# your own email address.
+
+ssh-keygen -t rsa -C "your@email.address"
+
+# The following section is mostly quoted from the above link:
+#
+# With the "-t" flag, we demand an "RSA" type key, which is one of the newest
+# and safest types. With the "-C" flag, we provide a comment which you can
+# think of as a kind of description or label for this key. Using your email
+# address, e.g., lets you identify it more easily later.
+# After confirming this command, you'll be asked to:
+#
+# (1) Enter a name for this new key. Just hit RETURN to accept the default name
+# and location.
+#
+# (2) Provide a passphrase. Although SSH public key authentication can be used
+# safely without any password, you should nonetheless enter a strong passphrase
+# to enhance security even further.
+#
+# Now, two files will have been created for you: "id_rsa.pub" (your public key)
+# and "id_rsa" (your private key). If you're on a [Linux-based system], you'll
+# find these in the ".ssh" folder inside your home directory (~./ssh/).
+#
+# If you take a look at the actual contents of your public key file, you'll see
+# something like this:
+
+cat ~/.ssh/id_rsa.pub
+
+# ssh-rsa AAAB3nZaC1aycAAEU+/ZdulUJoeuchOUU02/j18L7fo+ltQ0f322+Au/9yy9oaABBRCrH
+# N/yo88BC0AB3nZaC1aycAAEU+/ZdulUJoeuchOUU02/j18L7fo+ltQ0f322AB3nZaC1aycAAEU+/Z
+# dulUJoeuchOUU02/j18L7fo+ltQ0f322AB3nZaC1aycAAEU+/ZdulUJoeuchOUU02/j18L7fo+ltQ
+# 0f322AB3nZaC1aycAAEU+/ZdulUJoeuchOUU02/j18L7fo+ltQ0f322klCi0/aEBBc02N+JJP you
+# r@email.address
+#
+# It's this output that needs to be installed on the Git GitHub server you want
+# to get access to. You'll have to provide this to the Git maintainer,
+# markhodges5000@gmail.com.
+#
+# You have to copy the content of the public key file exactly as it is - no
+# whitespace or the like is accepted. To make this as safe and easy as
+# possible, you can use the following commands to have this copied to your
+# clipboard:
+
+function gem_copy_id_rsa_pub()
+{
+    gem_fullpath_id_rsa_pub=~/.ssh/id_rsa.pub
+    if [[ ! -f ${gem_fullpath_id_rsa_pub} ]]; then
+        echo "ERROR: Public key does not exist: ${gem_fullpath_id_rsa_pub}."; return
+    fi
+    gem_os=$(uname -s)
+    if [[ ${gem_os} == "MINGW64"* ]]; then
+        gem_fullpath_clip_exe=/c/Windows/System32/clip
+    elif [[ ${gem_os} == "CYGWIN"* ]]; then
+        gem_fullpath_clip_exe=/cygdrive/c/Windows/System32/clip
+    elif [[ ${gem_os} == "Linux" ]]; then
+        gem_fullpath_clip_exe="$(which xclip)"
+        gem_clip_params="-selection c"
+    else
+        echo "ERROR: Failed to recognise os: ${gem_os}."; return
+    fi
+    if [[ ! -f ${gem_fullpath_clip_exe} ]]; then
+        echo "ERROR: Failed to locate executable: ${gem_fullpath_clip_exe}."; return
+    fi
+    cat ${gem_fullpath_id_rsa_pub} | ${gem_fullpath_clip_exe} ${gem_clip_params}
+}
+gem_copy_id_rsa_pub
+
+
+# Finally, paste the contents of the clipboard into the body of an email to the
+# Git maintainer, markhodges5000@gmail.com.
+
+# Wait for the Git maintainer to add your key to the reposotory, thereby
+# allowing you to perform push operations.
+
+
+# Add upstream (tracking) reference, used by argument-less git-pull and other
+# commands.  It tells git fetch/git pull which branch to merge.
+
+git push --set-upstream origin master
 
 
 

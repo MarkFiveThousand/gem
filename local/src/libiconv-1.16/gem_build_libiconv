@@ -87,7 +87,12 @@ function gem_v_OnConfigure
 	# gem_flags_ld. To remove a flag:
 	# flags=$(printf '%s\n' "${flags//-byebye/}")
 
-	gem_flags_configure="${gem_flags_configure}"
+	gem_flags_configure=" \
+--enable-relocatable \
+--enable-static \
+--disable-rpath \
+LIBS="-liconv" \
+${gem_flags_configure}"
 
 	gem_v_DebugDumpVars
 	gem_build_OnConfigure
