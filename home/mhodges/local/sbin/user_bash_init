@@ -42,7 +42,7 @@ function gem_bash_init_Main()
     # Android SDK
     # =========================================================================
 
-    if [[ ${gem_uname_kernel_name} == *"MINGW64"* || ${gem_uname_kernel_name} == *"CYGWIN"* ]]; then
+    if [[ ${gem_os} == *"MINGW64"* || ${gem_os} == *"CYGWIN"* ]]; then
 
         export gem_fullpath_android=$(cygpath "c:\android")
         export gem_fullpath_android_sdk=${gem_fullpath_android}/sdk-tools-windows-4333796
@@ -50,7 +50,7 @@ function gem_bash_init_Main()
         export gem_fullpath_android_sdk_tools=${gem_fullpath_android_sdk}/tools
         export ANDROID_SDK=${gem_fullpath_android_sdk}
 
-    elif [[ ${gem_uname_kernel_name} == "Linux" ]]; then
+    elif [[ ${gem_os} == "Linux" ]]; then
 
         export gem_fullpath_android=${HOME}/android
         export gem_fullpath_android_sdk=${gem_fullpath_android}/Sdk
@@ -59,7 +59,7 @@ function gem_bash_init_Main()
         export ANDROID_SDK=${gem_fullpath_android_sdk}
 
     else
-        echo "$BASH_SOURCE(${LINENO}) ERROR: GEM_OS_HOST_BUILD value of \"${GEM_OS_HOST_BUILD}\" not supported.  Aborting script." && return 0
+		echo "ERROR: Build platform not supported: ${gem_os}"
     fi
 
     # Validate android sdk directories.
@@ -80,13 +80,13 @@ function gem_bash_init_Main()
     # VS Code
     # =========================================================================
     # Validate VS Code is installed.
-    if [[ ${gem_uname_kernel_name} == *"MINGW64"* || ${gem_uname_kernel_name} == *"CYGWIN"* ]]; then
+    if [[ ${gem_os} == *"MINGW64"* || ${gem_os} == *"CYGWIN"* ]]; then
 
         gem_fullpath_vscode="$(cygpath $LOCALAPPDATA)/Programs/Microsoft VS Code/Code.exe"
         if [[ ! -f ${gem_fullpath_vscode} ]]; then
             echo "$BASH_SOURCE(${LINENO}) WARNING: Failed to find Visual Studio Code in directory: ${gem_fullpath_vscode}"
         fi
-    elif [[ ${gem_uname_kernel_name} == "Linux" ]]; then
+    elif [[ ${gem_os} == "Linux" ]]; then
 
         which code &>/dev/null
         if [[ $? -ne 0 ]]; then
@@ -98,9 +98,9 @@ function gem_bash_init_Main()
     # =========================================================================
     # KDiff3
     # =========================================================================
-    if [[ ${gem_uname_kernel_name} == *"MINGW64"* ]]; then
+    if [[ ${gem_os} == *"MINGW64"* ]]; then
         export PATH=${PATH}:"/c/Program Files/KDiff3"
-    elif [[ ${gem_uname_kernel_name} == *"CYGWIN"* ]]; then
+    elif [[ ${gem_os} == *"CYGWIN"* ]]; then
         export PATH=${PATH}:"/cygdrive/c/Program Files/KDiff3"
     fi
     # Validate kdiff3 is installed.
@@ -113,7 +113,7 @@ function gem_bash_init_Main()
     # =========================================================================
     # CMake
     # =========================================================================
-    if [[ ${gem_uname_kernel_name} == *"MINGW64"* ]]; then
+    if [[ ${gem_os} == *"MINGW64"* ]]; then
         export PATH=${PATH}:"/c/Program Files/CMake/bin"
     #elif Cygwin: Don't use Windows cmake.  Must use cygwin cmake.
     fi
@@ -130,10 +130,10 @@ function gem_bash_init_Main()
     alias ls='ls -al --color=auto'
     alias gitpush="git push git@github.com:MarkFiveThousand/gem.git"
     alias gitpull="git pull git@github.com:MarkFiveThousand/gem.git"
-    if [[ ${gem_uname_kernel_name} == *"MINGW64"* || ${gem_uname_kernel_name} == *"CYGWIN"* ]]; then
+    if [[ ${gem_os} == *"MINGW64"* || ${gem_os} == *"CYGWIN"* ]]; then
         # Escape spaces.
-        gem_fullpath_vscode=$(echo ${gem_fullpath_vscode} | sed 's/ /\\ /g')
-        alias code=${gem_fullpath_vscode}
+        gem_fullpath_vscode_exe=$(echo ${gem_fullpath_vscode} | sed 's/ /\\ /g')
+        alias code='${gem_fullpath_vscode_exe} --user-data-dir=${HOME}/.config/Code/'
     fi
 
 

@@ -1,0 +1,295 @@
+-------------------------------------------------------------------------------
+URGENT!
+-------------------------------------------------------------------------------
+
+All environments must be run with their respective default $PATH setings.  In
+gem_bash_init we *must not* override $PATH.  This means Cygwin and MSys will
+have the Windows directory in their paths.  In each environ.*.txt file, under
+the section referring to obtaining write access to Git we define the function
+that copies from stdin to the clipboard.  Full paths for Windows installs
+should be removed.
+
+
+
+
+-------------------------------------------------------------------------------
+Uncategorized
+-------------------------------------------------------------------------------
+
+
+
+-------------------------------------------------------------------------------
+Gem Environment
+-------------------------------------------------------------------------------
+
+The code for redirecting a file to the clipboard should be moved from
+gem/local/doc/environ_*_setup.txt to gem_script.
+
+Rename gem/local/doc/environ_*_setup.txt to environ_*_install.txt.
+
+Get all mount scripts working again.
+
+Create a reference user under gem/home/$USER.
+
+Update gem_backup and make happen automatically.
+
+Move user-specific gem/local/sbin/ scripts to gem/local/home/$USER/local/sbin.
+
+Rename gem_bash_init to gem_init_bash in ~/gem and /gem/home/$USER/local/sbin.
+Update all references in the documentation.
+
+gem_fullpath_gem has finally been defined in .bashrc.
+* Change all occurances of GEM_FULLPATH_GEM, GEM_LOCAL, and GEM_FULLPATH_LOCAL
+  that may exist.
+* Remove all references to hard-coded paths to ~/gem/.
+
+Change all references to $(uname -s), and similar calls, to refer to the
+variables in gem_bash_init.
+
+Clean up gem/local/doc.  Only the relavant ones should be there.
+
+Can we remove all references to GEM_OS_HOST_BUILD?  It's used in CMakeFile.txt
+files.  Anywhere else.
+
+
+-------------------------------------------------------------------------------
+Cygwin Environment
+-------------------------------------------------------------------------------
+Where are the instructions for pinning the icons to the task bar using the
+files in gem\local\media?  They need to included here.
+
+Get gem_mount working again.
+
+
+
+
+-------------------------------------------------------------------------------
+MSys/MinGW Environment
+-------------------------------------------------------------------------------
+Where are the instructions for pinning the icons to the task bar using the
+files in gem\local\media?  They need to included here.
+
+Get gem_mount working again.
+
+Remove the embedded gem_bash_init file within this file.
+
+
+
+-------------------------------------------------------------------------------
+Fedora Environment
+-------------------------------------------------------------------------------
+
+Get gem_mount working again.
+
+
+
+
+-------------------------------------------------------------------------------
+WSL Environment
+-------------------------------------------------------------------------------
+
+Build under Windows using WSL (Windows Subsystem for Linux).  You can retrieve
+applications from the Ubuntu repository.  I hear this terminal works well:
+https://github.com/mintty/wsltty.  There are likely others.  You can even
+install an X Server on Windows:
+https://www.google.com/search?source=hp&ei=-LMhXYypO5jVtAa9wKOoBA&q=x+server+for+windows+10+wsl&oq=x+server+for+windows+10+wsl&gs_l=psy-ab.3..35i39.1228.1228..2402...0.0..0.254.363.0j1j1......0....2j1..gws-wiz.....0.n-uGAox6oUE
+
+Get the alias to VSCode working under wsl.  How to differentiate
+between fedora and wsl?
+
+Make the wsl .bashrc files check for the existance of and invoke gem_bash_init
+as is done in msys2.
+
+Where are the instructions for pinning the icons to the task bar using the
+files in gem\local\media?  They need to included here.
+
+Get gem_mount working.
+
+
+
+
+-------------------------------------------------------------------------------
+gem_mount
+-------------------------------------------------------------------------------
+Get gem_mount working again in Python.
+
+Update references to gem_bash_init, gem_mountall, gem_umountall, etc. in
+msys.txt and Fedora_30.txt.  Do a full text search for mountall and umountall
+to make sure we've found all occurances.
+
+Move gem/mnt/ and  gem/local/sbin/gem_mount* to gem/local/home/$USER/.
+
+
+
+
+
+-------------------------------------------------------------------------------
+gem_build
+-------------------------------------------------------------------------------
+
+* In gem_build_ValidateBuildTools validate *all* the tools.
+
+* Do CC, CXX, LD, etc. need to be exported?
+
+* Replace gem_host with gem_platform_host
+
+* Change gem_build to accepting params of the form "-host msvc" to "-host=msvc"
+
+* Catch build errors.  When a build with -m fails, if -b is included, it should
+  not build.
+
+* What if there is a failure in gem_script or gem_build?  Their including
+  scripts ought to handle these cases.  For example, what happens if a function
+  defined in gem_script calls gem_v_ExitMsg()?  Does the including script
+  continue executing or terminate?
+
+* Change all occurances of mkdir->gem_script_mkdir, cd->gem_script_cd, and
+  cp->gem_script_cp.  Are there any others?
+
+* Determine if we can change the many " -ne 0" with " != 0".
+
+* Across the build files, change "ERROR: func: " to "ERROR: func()".
+
+* gem_script_mkdir, gem_script_cd, gem_script_cp, etc. should support relative
+  paths, but still verify they are operating within .../gem/.
+
+* Move gem_os from gem_build to gem_script.  Repleace all occurances of
+  $(uname -s) with gem_os.
+
+Migrate all the build scripts to python.
+
+Build scripts need to support building on cygwin.  What should the name of the
+build directory be called.  vscode_cygwin.bat file is adding the binary output
+directory to the path so we can run our cygwin-built executables from the
+command line.
+
+When building for android, gem_build should give a descriptive message
+detailing which environment variables need to be defined, if they're not.  We
+don't want to define those in gem/local/sbin/gem_bash_init.  Our personal one
+would be more appropriate.
+    * Is ANDROID_SDK required?  Are we using it?
+    * Is ANDROID_NDK required?  Are we using it?
+
+Get pre-compiled headers working.  Look into
+mingw64/mingw-w64-x86_64-cotire 1.8.0_3.15-1 found using "pacman -Ss cmake"
+
+
+
+
+-------------------------------------------------------------------------------
+Documentation
+-------------------------------------------------------------------------------
+
+Remove all references to password in Fedora_30.txt.  Remove all previous copies
+of Fedora_??.txt, as they contain copies of our root password.
+
+Move nodejs instructions out of cygwin set up instructions document.
+
+Install Doxygen, or else a similar documentation system.  Does Doxygen work for
+bash and python files, too?
+
+Update environment set up instructions to *not* overwrite .bashrc.  We should
+only set $gem_fullpath_gem and source gem_bash_init.
+
+Give environment setup scripts a consistant name.
+
+Rename gem_bash_init to gem_init_bash in ~/gem and /gem/home/$USER/local/sbin.
+Update all references in the documentation.
+
+Make a tool for modifying the clipboard as Danny Gorlin did.  Support leading
+comment markings.
+
+Update the path instruction under section Path & Environment Variables in
+msys.txt.  It looks like we need to update the msys.txt instructions for
+creating gem_bash_init.  Do the same for cygwin.
+
+Remove Database Maintenance Support section from
+gem/home/mhodges/local/sbin/gem_bash_init, also present in msys.txt.
+
+
+
+
+
+-------------------------------------------------------------------------------
+Web Server
+-------------------------------------------------------------------------------
+
+Install lastest mediawiki.
+
+
+
+
+-------------------------------------------------------------------------------
+Git
+-------------------------------------------------------------------------------
+
+Set $EDITOR, in gem_bash_init, to reference vscode.  Change all references to
+npp to refernce $EDITOR.  We should not require vscode.
+
+Reset gem repo on GiuHub.
+
+VSCode reports,  "No source control providers registered."
+
+Configure the git merge tool.  Maybe something like this:
+git config--global merge.tool kdiff3
+git config--global mergetool.kdiff3.path "C:/Program Files/kdiff3/kdiff3.exe "
+
+
+
+
+-------------------------------------------------------------------------------
+Meson
+-------------------------------------------------------------------------------
+Requires Windows Python.  Chockes with msys2 Python.  We need to remove msys2
+Python (better to install it prior to anything else.)  I'm still working on
+this.  msys2.txt may have more recent documentation.
+
+
+
+-------------------------------------------------------------------------------
+glib
+-------------------------------------------------------------------------------
+Restore file name \gem\local\src\glib\src\_subprojects.
+
+Verify that if we don't use -with-internal-glib and we don't supply glib, then
+we will get linker errors as expected.  This will verify that we really are
+using our own glib.
+
+
+
+-------------------------------------------------------------------------------
+zlib
+-------------------------------------------------------------------------------
+In zlib.pc, sharedlibdir indicates the wrong directory.  .dlls are installed in
+the bin/.  In Linux, the .so files *are* stored under lib/, but not on Windows.
+
+zlib.pc:
+
+    prefix=/home/mhodges/gem/local_x86_64-w64-mingw32/release
+    exec_prefix=/home/mhodges/gem/local_x86_64-w64-mingw32/release
+    libdir=/home/mhodges/gem/local_x86_64-w64-mingw32/release/lib
+    sharedlibdir=/home/mhodges/gem/local_x86_64-w64-mingw32/release/lib
+    includedir=/home/mhodges/gem/local_x86_64-w64-mingw32/release/include
+
+    Name: zlib
+    Description: zlib compression library
+    Version: 1.2.11
+
+    Requires:
+    Libs: -L${libdir} -L${sharedlibdir} -lz
+    Cflags: -I${includedir}
+
+
+
+-------------------------------------------------------------------------------
+Fedora Box
+-------------------------------------------------------------------------------
+
+Finish installing Fedora 30.
+
+Buy a KVM switch.
+
+
+
+
+

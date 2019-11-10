@@ -119,7 +119,22 @@ function gem_script_ValidatePaths
 	for gem_path in ${gem_colon_separated_list}
 	do
 		if [[ ! -d ${gem_path} ]]; then
-			gem_v_Error "Path contains an invalid entry: ${gem_path}"
+			gem_v_Error "ERROR: gem_script_ValidatePaths(): Directory does not exist: ${gem_path}"
+		fi
+	done
+	IFS=${gem_ifs_saved}
+}
+
+# Verify that all the files in a space-separated list exist.
+function gem_script_ValidateFiles
+{
+	local gem_space_separated_list=${1}
+	local gem_ifs_saved=${IFS}
+	IFS=" "
+	for gem_file in ${gem_space_separated_list}
+	do
+		if [[ ! -f ${gem_file} ]]; then
+			gem_v_Error "ERROR: gem_script_ValidateFiles(): File does not exist: ${gem_file}"
 		fi
 	done
 	IFS=${gem_ifs_saved}
