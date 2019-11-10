@@ -75,6 +75,18 @@ function gem_v_DownloadSource
 		gem_script_rm -rf ${gem_fullpath_src}/${gem_filename_base}
 	fi
 
+	pushd ${gem_fullpath_src}
+	# Correct for library being put into a lib64 directory instead of the correct
+	# lib directory.  Source: https://ghc.haskell.org/trac/ghc/ticket/9620
+	sed 's:@toolexeclibdir@:$(libdir):g' -i Makefile.in
+
+	# Make package install headers into the conventional ${PREFIX}/include instead
+	# of ${PREFIX}/lib/libffi-3.2.1/include.
+	# Source: http://zwyuan.github.io/2016/07/17/cross-compile-glib-for-android/
+	sed -e '/^includesdir/ s/$(libdir).*$/$(includedir)/' -i include/Makefile.in
+	sed -e '/^includedir/ s/=.*$/=@includedir@/' -e 's/^Cflags: -I${includedir}/Cflags:/' -i libffi.pc.in
+	popd
+
 	gem_build_DownloadSource
 }
 
