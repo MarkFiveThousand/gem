@@ -127,6 +127,50 @@ Move gem/mnt/ and  gem/local/sbin/gem_mount* to gem/local/home/$USER/.
 gem_build
 -------------------------------------------------------------------------------
 
+ ./gem_build_libiconv -c -m produces weird results.  We need to define what
+ "clean" means. Does that only clean build files, or does it also remove the
+ downloaded source tar ball?  I think it should only clean the build files.
+ This gives rise to another questions, does "scrub" delete the downloaded
+ source files?
+
+gem_Msg should automatically output "MESSAGE: ", and gem_Error should output
+"ERROR: ", etc.
+
+* The download of the source package should be perfomred during configure, so
+  that we're not generating messages concerning downloading during build and
+  install time.
+
+* Rename functions such as gem_v_OnCommandLine_Configure_CMake to
+  gem_v_OnConfigure_OnCommandLine_CMake.
+
+* Move the pkg-config stuff from gem_v_BuildFilePaths into something like
+    gem_v_BuildFilePaths_pkgconfig.
+
+* gem_os and gem_build_platform should be merged.  Use uname very early to
+  set gem_os to be the gem_build_platform string.  Since we have a gem_host
+  variable, it's symmetric to have a gem_build variable containing similarly
+  identified platforms.  
+
+* Document all the variables.  Include the meaning of "build" being the
+  architecture we are building on, and "host" being the architecture the code
+  is intended to run on.
+
+* Employ Doxygen to generate code for our scripts.
+
+* gem_bash_init shouldn't add the android paths to $PATH.  That should be done
+  in gem_build, or perhaps in the gem_bash_init in the gem/home directory.  The
+  gem_build script should verify that is has been set appropriately.   Is
+  gem_bash_init adding anything else that would better be loclated in gem_build?
+
+* Rename gem_v_Cmd_Build to gem_build_v_Cmd_Build, so readers know where the
+  base implementation being overridden is located.  Do likewise for similarly
+  mis-named functions in gem_script.  Make sure you test all our build scripts
+  to be certain we have caught all instances.
+
+* Change the sbin filenames from the likes of gem_script, to gem_bash_script,
+  or else add the .sh extension, so we don't mix them up with the forthcoming
+  python implementations.
+
 * In gem_build_ValidateBuildTools validate *all* the tools.
 
 * Do CC, CXX, LD, etc. need to be exported?

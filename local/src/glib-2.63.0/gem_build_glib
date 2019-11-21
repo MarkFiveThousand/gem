@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Detailed Source: http://soc.if.usp.br/manual/libglib2.0-doc/glib/glib-building.html
+
 . gem_script
 . gem_build
 

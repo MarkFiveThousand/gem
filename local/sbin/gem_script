@@ -218,9 +218,10 @@ function gem_script_rm
 	gem_script_ValidateFileParams ${@}
 
 	local gem_cmd_line="rm ${@}"
-	${gem_cmd_line}
+	eval ${gem_cmd_line}
 	local gem_result=$?
 	if [[ ${gem_result} -ne 0 ]]; then
+		gem_v_Error "ERROR: Result=${gem_result}"
 		gem_v_Error "ERROR: gem_script_rm failed to remove file(s).  Command line \"${gem_cmd_line}\"."
 	fi
 }
@@ -230,7 +231,7 @@ function gem_script_mkdir
 	gem_script_ValidateFileParams ${@}
 
 	local gem_cmd_line="mkdir ${@}"
-	${gem_cmd_line}
+	eval ${gem_cmd_line}
 	local gem_result=$?
 	if [[ ${gem_result} -ne 0 ]]; then
 		gem_v_Error "ERROR: gem_script_mkdir failed to create directory.  Command line \"${gem_cmd_line}\"."
@@ -242,7 +243,7 @@ function gem_script_rmdir
 	gem_script_ValidateFileParams ${@}
 
 	local gem_cmd_line="rmdir ${@}"
-	${gem_cmd_line}
+	eval ${gem_cmd_line}
 	local gem_result=$?
 	if [[ ${gem_result} -ne 0 ]]; then
 		gem_v_Error "ERROR: gem_script_rmdir failed to remove directory.  Command line \"${gem_cmd_line}\"."

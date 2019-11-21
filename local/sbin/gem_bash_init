@@ -40,35 +40,34 @@ function gem_bash_init_Main()
 
 
     # *FIX: gem_bash_init should not be overriding the client's PATH!
-
-    echo "*FIX: gem_bash_init should not be overriding the client's PATH!"
-    export PATH="/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin"
+#    export PATH="/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin"
 
     # =========================================================================
     # Gem
     # =========================================================================
 
     # Add Gem's executable scripts to PATH.
-    export PATH=${PATH}:${gem_fullpath_gem}/local/sbin
+    export PATH=${gem_fullpath_gem}/local/sbin:${PATH}
 
     # Determine the OS we are building on.  Allow our build tools to be found
 	# prior to installed tools.
     if [[ ${gem_uname_machine} == "x86_64" ]]; then
         if [[ ${gem_os} == "Linux" ]]; then
 
-            export GEM_OS_HOST_BUILD="GEM_OS_HOST_BUILD_LINUX"
-	        export PATH=${gem_fullpath_gem}/local_x86_64-pc-linux-gnu/release/bin:${PATH}
+	        export PATH=${PATH}:${gem_fullpath_gem}/local_x86_64-pc-linux-gnu/release/bin
 
         elif [[ ${gem_os} == *"MINGW64"* ]]; then
 
-	        export PATH=${gem_fullpath_gem}/local_x86_64-w64-mingw32/release/bin:${PATH}
+	        export PATH=${PATH}:${gem_fullpath_gem}/local_x86_64-w64-mingw32/release/bin
 	        export PATH=/c/msys64/mingw64/bin:${PATH}
             export PATH=${PATH}:/c/Windows/System32 # Need this for clip.exe
 
 
         elif [[ ${gem_os} == *"CYGWIN"* ]]; then
-
-	        export PATH=${gem_fullpath_gem}/local_x86_64-pc-cygwin/release/bin:${PATH}
+            # IMPORTANT! Our tools binary directory used to come before the
+            # rest of the path.  That caused gcc to stop working after
+            # installing our own iconv library (cygiconv-2.dll)
+	        export PATH=${PATH}:${gem_fullpath_gem}/local_x86_64-pc-cygwin/release/bin
         else
             echo "$BASH_SOURCE(${LINENO}) ERROR: Operating system ${gem_uname_kernel_name} is not supported."; return 0
         fi
