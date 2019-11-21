@@ -10,20 +10,21 @@ function gem_v_SetDefaults
 	gem_download_src=1
 
 	# Need gnu extensions for compile asm code.
-	gem_c_standard="-std=gnu11"	# c90, c99, c11, gnu90, gnu99, gnu11
+	# Tried: c11, c90
+	gem_c_standard="-std=gnu90"	# c90, c99, c11, c17, c2x, gnu90, gnu99, gnu11
 
 #	gem_build_script="cmake"
 	gem_build_script="autotools"
 #	gem_build_script="meson"
 
 	# Common Defaults
-	if [[ $(uname -s) == "MINGW64"* ]]; then	# MinGW shell on Windows.
+	if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW shell on Windows.
 		gem_host=mingw
 #		gem_host=msvc
-	elif [[ $(uname -s) == "CYGWIN"* ]]; then	# MinGW shell on Windows.
+	elif [[ ${gem_os} == "CYGWIN"* ]]; then	# MinGW shell on Windows.
 		gem_host=cygwin
 #		gem_host=mingw
-	elif [[ $(uname -s) == "Linux"* ]]; then	# Linux shell.
+	elif [[ ${gem_os} == "Linux"* ]]; then	# Linux shell.
 		gem_host=linux
 #		gem_host=mingw
 #		gem_host=android_arm64_v8a
@@ -32,12 +33,19 @@ function gem_v_SetDefaults
 	gem_build_type=release
 #	gem_build_type=debug
 
-	gem_flags_configure=
-	gem_flags_c=
-	gem_flags_cpp=
-	gem_flags_cxx=
-	gem_flags_ld=
+#-flto \
+#-fPIC \
 
+#--enable-relocatable \
+#--enable-static \
+#--disable-rpath \
+
+	gem_flags_configure="${gem_flags_configure}"
+	gem_flags_c="${gem_flags_c}"
+	gem_flags_cpp="${gem_flags_cpp}"
+	gem_flags_cxx="${gem_flags_cxx}"
+	gem_flags_ld="${gem_flags_ld}"
+	gem_flags_common="${gem_flags_common}"
 
 	gem_filename_pkg=libiconv
 	gem_filename_version=1.16
@@ -58,7 +66,7 @@ function gem_v_DownloadSource
 	fi
 	# Decompress
 	if [[ -d ${gem_fullpath_src} ]]; then
-		gem_v_Msg "ALERT: src directory already exists.  Archive not uncompressed."
+		gem_v_Msg "MESSAGE: src directory already exists.  Archive not uncompressed."
 	else
 		gem_script_mkdir -p ${gem_fullpath_src}
 		gem_flags_tar="<undefined>"
@@ -87,21 +95,17 @@ function gem_v_OnConfigure
 	# gem_flags_ld. To remove a flag:
 	# flags=$(printf '%s\n' "${flags//-byebye/}")
 
-	gem_flags_configure=" \
---enable-relocatable \
---enable-static \
---disable-rpath \
-LIBS="-liconv" \
-${gem_flags_configure}"
-
 	gem_v_DebugDumpVars
-	gem_build_OnConfigure
-}
 
-function gem_v_build_CommandLine_Build
-{
-	gem_build_CommandLine_Build
-#	printf "\ngem_cmd_line_build=\n\n${gem_cmd_line_build}\n\n"
+
+#	gem_build_OnConfigure
+
+pushd ${gem_fullpath_build}
+${gem_fullpath_src}/configure --host=x86_64-pc-cygwin --prefix=/home/mhodges/gem/local_x86_64-pc-cygwin/release \
+            CC=x86_64-pc-cygwin-gcc \
+            CPPFLAGS="-I/usr/include -Wall" \
+            LDFLAGS="-L/usr/lib"
+popd
 }
 
 function gem_v_OnBuild
@@ -109,8 +113,68 @@ function gem_v_OnBuild
 	# gem_flags_configure, gem_flags_c, gem_flags_cpp, gem_flags_cxx,
 	# gem_flags_ld. To remove a flag:
 	# flags=$(printf '%s\n' "${flags//-byebye/}")
+
 	gem_v_DebugDumpVars
 	gem_build_OnBuild
+}
+
+function gem_v_build_OnCommandLine_Build
+{
+	gem_build_OnCommandLine_Build
+
+# DOESN'T WORK #1, Original.
+#		gem_cmd_line_build="make -j${gem_num_jobs} \
+#${gem_fullpath_autotools_makefile} \
+#CFLAGS=\"${gem_flags_c}\" \
+#CPPFLAGS=\"${gem_flags_cpp}\" \
+#CXXFLAGS=\"${gem_flags_cxx}\" \
+#LDFLAGS=\"${gem_flags_ld}\" \
+#${gem_error_ignore_build_errors}"
+
+
+
+# DOES WORK #1, Simple.
+#		make
+
+# WORKS!  It excludes LDFLAGS.
+#	gem_cmd_line_build="make -j${gem_num_jobs} \
+#${gem_fullpath_autotools_makefile} \
+#CFLAGS=\"-std=gnu90 -march=x86-64 -msse4.2 -mpopcnt -m64 -mtune=intel -O2\" \
+#CPPFLAGS=\" -march=x86-64 -msse4.2 -mpopcnt -m64 -mtune=intel -O2\" \
+#CXXFLAGS=\" -march=x86-64 -msse4.2 -mpopcnt -m64 -mtune=intel -O2\" \
+#${gem_error_ignore_build_errors}"
+
+# WORKS! Try adding in the gem_flags_... variables, but still exclude LDFLAGS:
+#		gem_cmd_line_build="make -j${gem_num_jobs} \
+#${gem_fullpath_autotools_makefile} \
+#CFLAGS=\"${gem_flags_c}\" \
+#CPPFLAGS=\"${gem_flags_cpp}\" \
+#CXXFLAGS=\"${gem_flags_cxx}\" \
+#${gem_error_ignore_build_errors}"
+
+# FAILS! Added LDFLAGS="".
+#		gem_cmd_line_build="make -j${gem_num_jobs} \
+#${gem_fullpath_autotools_makefile} \
+#CFLAGS=\"${gem_flags_c}\" \
+#CPPFLAGS=\"${gem_flags_cpp}\" \
+#CXXFLAGS=\"${gem_flags_cxx}\" \
+#LDFLAGS=\"\" \
+#${gem_error_ignore_build_errors}"
+
+# WORKS! Try only adding non-empty flags.
+#		gem_cmd_line_build="make -j${gem_num_jobs} ${gem_fullpath_autotools_makefile}"
+#		if [[ ${gem_flags_c}x != "x" ]]; then
+#			gem_cmd_line_build="${gem_cmd_line_build} CFLAGS=\"${gem_flags_c}\" ${CFLAGS}"
+#		fi
+#		if [[ ${gem_flags_cpp}x != "x" ]]; then
+#			gem_cmd_line_build="${gem_cmd_line_build} CPPFLAGS=\"${gem_flags_cpp}\""
+#		fi
+#		if [[ ${gem_flags_cxx}x != "x" ]]; then
+#			gem_cmd_line_build="${gem_cmd_line_build} CXXFLAGS=\"${gem_flags_cxx}\""
+#		fi
+#		if [[ ${gem_flags_ld}x != "x" ]]; then
+#			gem_cmd_line_build="${gem_cmd_line_build} LDFLAGS=\"${gem_flags_ld}\""
+#		fi
 }
 
 function gem_v_OnInstall
@@ -119,13 +183,68 @@ function gem_v_OnInstall
 	# gem_flags_ld. To remove a flag:
 	# flags=$(printf '%s\n' "${flags//-byebye/}")
 	gem_build_OnInstall
-
-
 }
 
 function gem_v_OnUninstall
 {
-	gem_build_OnUninstall
+	# build a colon-separated list of all files installed, less the
+	# gem_fullpath_install prefix.
+	if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW shell on Windows.
+		gem_v_Error "ERROR: Uninstall not yet implemented for Mingw."
+	elif [[ ${gem_os} == "CYGWIN"* ]]; then	# Cygwin shell on Windows.
+		local gem_colon_separated_list="\
+bin/cygcharset-1.dll:\
+bin/cygiconv-2.dll:\
+bin/iconv.exe:\
+include/iconv.h:\
+include/libcharset.h:\
+include/localcharset.h:\
+lib/libcharset.a:\
+lib/libcharset.dll.a:\
+lib/libcharset.la:\
+lib/libiconv.a:\
+lib/libiconv.dll.a:\
+lib/libiconv.la:\
+share/doc/iconv.1.html:\
+share/doc/iconv.3.html:\
+share/doc/iconv_close.3.html:\
+share/doc/iconv_open.3.html:\
+share/doc/iconv_open_into.3.html:\
+share/doc/iconvctl.3.html:\
+share/man/man1/iconv.1:\
+share/man/man3/iconv.3:\
+share/man/man3/iconv_close.3:\
+share/man/man3/iconv_open.3:\
+share/man/man3/iconv_open_into.3:\
+share/man/man3/iconvctl.3"
+	elif [[ ${gem_os} == "Linux" ]]; then	# Linux shell.
+		gem_v_Error "ERROR: Uninstall not yet implemented for Linux."
+	else
+		gem_v_Error "ERROR: Build platform not supported: ${gem_os}"
+	fi
+
+	local gem_ifs_saved=${IFS}
+	IFS=":"
+	for gem_file in ${gem_colon_separated_list}
+	do
+		gem_fullpath_installed_file=${gem_fullpath_install}/${gem_file}
+		if [[ -f ${gem_fullpath_installed_file} ]]; then
+			gem_script_rm ${gem_fullpath_installed_file}
+		fi
+	done
+	IFS=${gem_ifs_saved}
+
+	gem_script_rmdir_IfEmpty ${gem_fullpath_install}/bin
+	gem_script_rmdir_IfEmpty ${gem_fullpath_install}/include
+	gem_script_rmdir_IfEmpty ${gem_fullpath_install}/lib
+	gem_script_rmdir_IfEmpty ${gem_fullpath_install}/share
+	gem_script_rmdir_IfEmpty ${gem_fullpath_install}/share/doc
+	gem_script_rmdir_IfEmpty ${gem_fullpath_install}/share/man/man1
+	gem_script_rmdir_IfEmpty ${gem_fullpath_install}/share/man/man3
+	gem_script_rmdir_IfEmpty ${gem_fullpath_install}/share/man
+	gem_script_rmdir_IfEmpty ${gem_fullpath_install}/share
+
+#	gem_build_OnUninstall
 }
 
 function gem_v_OnClean
@@ -133,7 +252,7 @@ function gem_v_OnClean
 	# gem_flags_configure, gem_flags_c, gem_flags_cpp, gem_flags_cxx,
 	# gem_flags_ld. To remove a flag:
 	# flags=$(printf '%s\n' "${flags//-byebye/}")
-	gem_build_Cmd_OnClean
+	gem_build_OnClean
 }
 
 # =============================================================================

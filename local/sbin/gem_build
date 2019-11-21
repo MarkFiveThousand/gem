@@ -139,8 +139,8 @@ function gem_build_SetDefaults
 
 	gem_use_clang=0			# Else gcc.
 	gem_is_cplusplus=0
-	gem_c_standard="-std=c11"	# c90, c99, c11, gnu90, gnu99, gnu11
-	gem_cxx_standard="-std=c++11"	# What others are available?
+	gem_c_standard="-std=c11"	# c90, c99, c11, c17, c2x, gnu90, gnu99, gnu11
+	gem_cxx_standard="-std=c++11"	# c++98, c++03, c++14, c++17, gnu++98, gnu++11, gnu++14, gnu++17
 
 #	gem_build_script="autotools"
 #	gem_build_script="meson"
@@ -156,10 +156,14 @@ function gem_build_SetDefaults
 	# Common Defaults
 	if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW shell on Windows.
 		gem_host=mingw
-	elif [[ ${gem_os} == "CYGWIN"* ]]; then	# Cygwin shell on Windows.
+#		gem_host=msvc
+	elif [[ ${gem_os} == "CYGWIN"* ]]; then	# MinGW shell on Windows.
 		gem_host=cygwin
+#		gem_host=mingw
 	elif [[ ${gem_os} == "Linux"* ]]; then	# Linux shell.
 		gem_host=linux
+#		gem_host=mingw
+#		gem_host=android_arm64_v8a
 	fi
 
 	# NOTE: ${gem_build_type} is passed to CMake. If you want to change these,
@@ -195,6 +199,9 @@ function gem_build_SetDefaults
 
 	# Application Defaults
 	gem_filename_project_exe="<undefined>"
+
+	# Initialize variables
+	gem_str_not_implemented="ERROR: Operation for host \"${gem_host}\" on OS \"${gem_os}\" is not yet implemented."
 }
 
 function gem_v_DownloadSource { gem_build_DownloadSource ;}
@@ -221,8 +228,7 @@ function gem_build_BuildFilePaths
 	gem_fullpath_install=${gem_fullpath_local}_${gem_path_suffix}
 
 	# Always use the pkg-config for the build machine, *not* for the host."
-	# *FIX: Shouldn't we be using local_${gem_platform_host} instead of
-	# local_x86_64-w64-mingw32, local_x86_64-pc-cygwin, and local_x86_64-pc-linux-gnu below?
+	# local_x86_64-w64-mingw32, local_x86_64-pc-cygwin, and local_x86_64-pc-linux-gnu
 	if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW shell on Windows.
 		gem_fullpath_tool_bin=${gem_fullpath_local}/../local_x86_64-w64-mingw32/release/bin
 	elif [[ ${gem_os} == "CYGWIN"* ]]; then	# Cygwin shell on Windows.
@@ -292,18 +298,19 @@ function gem_build_BuildFilePaths
 		fi
 	elif  [[ ${gem_os} == "CYGWIN"* ]]; then	# Running in Cygwin Windows.
 		if [[ ${gem_host} == "cygwin" ]]; then	# Building for Cygwin.
-			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=/usr/include
-			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=/lib
+	noop=0
+#			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=/usr/include
+#			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=/lib
 		elif [[ ${gem_host} == "mingw" ]]; then	# Building for MinGW.
 			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=/usr/x86_64-w64-mingw32/sys-root/mingw/include
 			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=/usr/x86_64-w64-mingw32/sys-root/mingw/lib
 		fi
 	fi
-	gem_script_ValidatePaths ${PKG_CONFIG_SYSTEM_INCLUDE_PATH}:${PKG_CONFIG_SYSTEM_LIBRARY_PATH}
+#	gem_script_ValidatePaths ${PKG_CONFIG_SYSTEM_INCLUDE_PATH}:${PKG_CONFIG_SYSTEM_LIBRARY_PATH}
 
 	# These must be reset to stay away from system libraries while cross compiling.
-	export PKG_CONFIG_PATH=
-	export PKG_CONFIG_DIR=
+#	export PKG_CONFIG_PATH=
+#	export PKG_CONFIG_DIR=
 
 #echo
 #echo "----------------"
@@ -503,7 +510,7 @@ function gem_build_SetHost_linux
 		gem_fullpath_toolchain=/usr
 		gem_fullpath_sysroot=/
 
-		gem_flags_common="-march=x86-64 -msse4.2 -mpopcnt -m64 -mtune=intel"
+		gem_flags_common="-march=x86-64 -msse4.2 -mpopcnt -m64 -mtune=intel ${gem_flags_common}"
 		gem_flags_c="${gem_flags_c} ${gem_flags_common}"
 		gem_flags_cpp="${gem_flags_cpp} ${gem_flags_common}"
 		gem_flags_cxx="${gem_flags_cxx} ${gem_flags_common}"
@@ -543,7 +550,7 @@ function gem_build_SetHost_cygwin
 		gem_fullpath_toolchain=/usr
 		gem_fullpath_sysroot=/usr
 
-		gem_flags_common="-march=x86-64 -msse4.2 -mpopcnt -m64 -mtune=intel"
+		gem_flags_common="-march=x86-64 -msse4.2 -mpopcnt -m64 -mtune=intel ${gem_flags_common}"
 		gem_flags_c="${gem_flags_c} ${gem_flags_common}"
 		gem_flags_cpp="${gem_flags_cpp} ${gem_flags_common}"
 		gem_flags_cxx="${gem_flags_cxx} ${gem_flags_common}"
@@ -620,7 +627,7 @@ function gem_build_SetHost_mingw
 			gem_v_Error "ERROR: gem_build_SetHost_mingw(): Library path does not exist: ${gem_fullpath_gcc_libs}.  Did the version number change?"
 		fi
 
-		gem_flags_common="-march=x86-64 -msse4.2 -mpopcnt -m64 -mtune=intel"
+		gem_flags_common="-march=x86-64 -msse4.2 -mpopcnt -m64 -mtune=intel ${gem_flags_common}"
 		gem_flags_c="${gem_flags_c} ${gem_flags_common}"
 		gem_flags_cpp="${gem_flags_cpp} ${gem_flags_common}"
 		gem_flags_cxx="${gem_flags_cxx} ${gem_flags_common}"
@@ -885,6 +892,26 @@ function gem_build_SetBuildType_relwithdebinfo
 # =============================================================================
 #                                   Configure
 # =============================================================================
+# Topmost-level invoked Configure command.
+function gem_v_Cmd_Configure { gem_build_Cmd_Configure ;}
+function gem_build_Cmd_Configure
+{
+	# Clean build directory.
+	if [[ ${gem_fullpath_build}x == "x" ]]; then
+		gem_v_Error "ERROR: gem_build_Cmd_Configure: gem_fullpath_build not defined in $(basename ${0})."
+	fi
+	if [[ -d ${gem_fullpath_build} ]]; then
+		gem_script_rm -rf ${gem_fullpath_build}/*
+	else
+		gem_script_mkdir -p ${gem_fullpath_build}
+	fi
+
+	gem_script_cd ${gem_fullpath_build}
+
+	gem_v_OnConfigure
+	gem_v_CheckLogForErrors ${gem_filename_log_configure}
+}
+
 function gem_v_OnConfigure { gem_build_OnConfigure ;}
 function gem_build_OnConfigure
 {
@@ -897,6 +924,23 @@ function gem_build_OnConfigure
 	eval "${gem_cmd_line_configure} ${gem_redirect_suffix_configure}"
 }
 
+function gem_build_OnCommandLine_Configure
+{
+	if [[ ${gem_build_script} == "cmake" ]]; then
+
+		gem_v_OnCommandLine_Configure_CMake
+
+	elif [[ ${gem_build_script} == "autotools" ]]; then
+
+		gem_v_OnCommandLine_Configure_Autotools
+
+	elif [[ ${gem_build_script} == "meson" ]]; then
+
+		gem_v_OnCommandLine_Configure_Meson
+	fi
+}
+
+function gem_v_OnCommandLine_Configure_CMake { gem_build_OnCommandLine_Configure_CMake ;}
 function gem_build_OnCommandLine_Configure_CMake
 {
 	if [[ ${gem_host} == *"android"* ]]; then
@@ -933,15 +977,9 @@ ${gem_cmake_params_extra}"
 ${gem_cmake_params_extra}"
 }
 
+function gem_v_OnCommandLine_Configure_Autotools { gem_build_OnCommandLine_Configure_Autotools ;}
 function gem_build_OnCommandLine_Configure_Autotools
 {
-	# Identify the platform we're build on.
-	if [[ ${gem_os} == "Linux" ]]; then
-	#	export gem_platform_build=$(uname -m)-redhat-linux	# Fedora uses this prefix in /usr/bin/.
-		gem_platform_build=$(uname -m)-pc-linux-gnu	# This is reported by configure scripts.
-	elif [[ ${gem_os} == "MINGW64"* ]]; then
-		gem_platform_build=$(uname -m)-w64-mingw32	# Fedora uses this prefix in /usr/bin/.
-	fi
 	gem_cmd_line_configure="${gem_fullpath_src}/configure \
 --prefix=${gem_fullpath_install} \
 --host=${gem_platform_host} \
@@ -955,6 +993,7 @@ LDFLAGS=\"${gem_flags_ld}\" \
 ${gem_flags_configure}"
 }
 
+function gem_v_OnCommandLine_Configure_Meson { gem_build_OnCommandLine_Configure_Meson ;}
 function gem_build_OnCommandLine_Configure_Meson
 {
 	# ~/gem/local/src/meson/meson-0.50.0/meson.py setup --help
@@ -1193,55 +1232,37 @@ function gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_android
 	fi
 }
 
-function gem_build_OnCommandLine_Configure
-{
-	if [[ ${gem_build_script} == "cmake" ]]; then
-
-		gem_build_OnCommandLine_Configure_CMake
-
-	elif [[ ${gem_build_script} == "autotools" ]]; then
-
-		gem_build_OnCommandLine_Configure_Autotools
-
-	elif [[ ${gem_build_script} == "meson" ]]; then
-
-		gem_build_OnCommandLine_Configure_Meson
-	fi
-}
-
-# Topmost-level invoked Configure command.
-function gem_v_Cmd_Configure { gem_build_Cmd_Configure ;}
-function gem_build_Cmd_Configure
-{
-	# Clean build directory.
-	if [[ ${gem_fullpath_build}x == "x" ]]; then
-		gem_v_Error "ERROR: gem_build_Cmd_Configure: gem_fullpath_build not defined in $(basename ${0})."
-	fi
-	if [[ -d ${gem_fullpath_build} ]]; then
-		gem_script_rm -rf ${gem_fullpath_build}/*
-	else
-		gem_script_mkdir -p ${gem_fullpath_build}
-	fi
-
-	gem_script_cd ${gem_fullpath_build}
-
-	gem_v_OnConfigure
-	gem_v_CheckLogForErrors ${gem_filename_log_configure}
-}
 
 # =============================================================================
 #                                     Build
 # =============================================================================
 
+# *FIX: Rename gem_v_Cmd_Build to gem_build_v_Cmd_Build, so readers know where
+# the base implementation being overridden is located.
+function gem_v_Cmd_Build { gem_build_Cmd_Build ;}
+function gem_build_Cmd_Build
+{
+	if [[ ! -d ${gem_fullpath_build} ]]; then
+		gem_v_Msg "ERROR: Cannot build.  the build directory does not exist.  The project must be configured first."
+		return 0
+	fi
+	gem_script_cd ${gem_fullpath_build}
+
+	gem_v_OnBuild
+	gem_v_CheckLogForErrors ${gem_filename_log_build}
+}
+
 function gem_v_OnBuild { gem_build_OnBuild ;}
 function gem_build_OnBuild
 {
+	echo "In gem_build, gem_v_OnBuild:"
+
 	# gem_flags_configure, gem_flags_c, gem_flags_cpp, gem_flags_cxx,
 	# gem_flags_ld. To remove a flag:
 	# flags=$(printf '%s\n' "${flags//-byebye/}")
 
 	gem_v_build_OnCommandLine_Build
-#	echo ${gem_cmd_line_build}
+
 	eval "${gem_cmd_line_build} ${gem_redirect_suffix_build}"
 }
 
@@ -1264,39 +1285,56 @@ function gem_build_OnCommandLine_Build
 			gem_fullpath_autotools_makefile="-f ${gem_fullpath_autotools_makefile}"
 		fi
 
-		gem_cmd_line_build="make -j${gem_num_jobs} \
-${gem_fullpath_autotools_makefile} \
-CFLAGS=\"${gem_flags_c}\" \
-CPPFLAGS=\"${gem_flags_cpp}\" \
-CXXFLAGS=\"${gem_flags_cxx}\" \
-LDFLAGS=\"${gem_flags_ld}\" \
-${gem_error_ignore_build_errors}"
+#		gem_cmd_line_build="make -j${gem_num_jobs} \
+#${gem_fullpath_autotools_makefile} \
+#CFLAGS=\"${gem_flags_c}\" \
+#CPPFLAGS=\"${gem_flags_cpp}\" \
+#CXXFLAGS=\"${gem_flags_cxx}\" \
+#LDFLAGS=\"${gem_flags_ld}\" \
+#${gem_error_ignore_build_errors}"
+
+		gem_cmd_line_build="make -j${gem_num_jobs} ${gem_fullpath_autotools_makefile}"
+		if [[ ${gem_flags_c}x != "x" ]]; then
+			gem_cmd_line_build="${gem_cmd_line_build} CFLAGS=\"${gem_flags_c}\" ${CFLAGS}"
+		fi
+		if [[ ${gem_flags_cpp}x != "x" ]]; then
+			gem_cmd_line_build="${gem_cmd_line_build} CPPFLAGS=\"${gem_flags_cpp}\""
+		fi
+		if [[ ${gem_flags_cxx}x != "x" ]]; then
+			gem_cmd_line_build="${gem_cmd_line_build} CXXFLAGS=\"${gem_flags_cxx}\""
+		fi
+		if [[ ${gem_flags_ld}x != "x" ]]; then
+			gem_cmd_line_build="${gem_cmd_line_build} LDFLAGS=\"${gem_flags_ld}\""
+		fi
+		if [[ ${gem_error_ignore_build_errors}x != "x" ]]; then
+			gem_cmd_line_build="${gem_cmd_line_build} ${gem_error_ignore_build_errors}"
+		fi
 
 	elif [[ ${gem_build_script} == "meson" ]]; then
 		flags="${gem_flags_cpp} ${gem_flags_c} ${gem_flags_ld}"
 
 		gem_cmd_line_build="ninja -C ."
 	fi
-}
 
-# *FIX: Rename gem_v_Cmd_Build to gem_build_v_Cmd_Build, so readers know where
-# the base implementation being overridden is located.
-function gem_v_Cmd_Build { gem_build_Cmd_Build ;}
-function gem_build_Cmd_Build
-{
-	if [[ ! -d ${gem_fullpath_build} ]]; then
-		gem_v_Msg "ERROR: Cannot build.  Project must be configured first."
-		return 0
-	fi
-	gem_script_cd ${gem_fullpath_build}
-
-	gem_v_OnBuild
-	gem_v_CheckLogForErrors ${gem_filename_log_build}
+	echo "In gem_build, gem_build_OnCommandLine_Build:"
 }
 
 # =============================================================================
 #                                      Install
 # =============================================================================
+function gem_v_Cmd_Install { gem_build_Cmd_Install ;}
+function gem_build_Cmd_Install
+{
+	if [[ ! -d ${gem_fullpath_build} ]]; then
+		gem_v_Msg "ERROR: Cannot install.  Build directory does not exist."
+		return 0
+	fi
+	gem_script_cd ${gem_fullpath_build}
+
+	gem_v_OnInstall
+	gem_v_CheckLogForErrors ${gem_filename_log_install}
+}
+
 function gem_v_OnInstall { gem_build_OnInstall ;}
 function gem_build_OnInstall
 {
@@ -1322,22 +1360,22 @@ function gem_build_OnCommandLine_Install
 	fi
 }
 
-function gem_v_Cmd_Install { gem_build_Cmd_Install ;}
-function gem_build_Cmd_Install
+# =============================================================================
+#                                     Uninstall
+# =============================================================================
+function gem_v_Cmd_Uninstall { gem_build_Cmd_Uninstall ;}
+function gem_build_Cmd_Uninstall
 {
 	if [[ ! -d ${gem_fullpath_build} ]]; then
-		gem_v_Msg "ERROR: Cannot install.  Build directory does not exist."
+		gem_v_Msg "ERROR: Cannot uninstall.  Build directory does not exist."
 		return 0
 	fi
 	gem_script_cd ${gem_fullpath_build}
 
-	gem_v_OnInstall
-	gem_v_CheckLogForErrors ${gem_filename_log_install}
+	gem_v_OnUninstall
+	gem_v_CheckLogForErrors ${gem_filename_log_uninstall}
 }
 
-# =============================================================================
-#                                     Uninstall
-# =============================================================================
 function gem_v_OnUninstall { gem_build_OnUninstall ;}
 function gem_build_OnUninstall
 {
@@ -1363,34 +1401,9 @@ function gem_build_OnCommandLine_Uninstall
 	fi
 }
 
-function gem_v_Cmd_Uninstall { gem_build_Cmd_Uninstall ;}
-function gem_build_Cmd_Uninstall
-{
-	if [[ ! -d ${gem_fullpath_build} ]]; then
-		gem_v_Msg "ERROR: Cannot uninstall.  Build directory does not exist."
-		return 0
-	fi
-	gem_script_cd ${gem_fullpath_build}
-
-	gem_v_OnUninstall
-	gem_v_CheckLogForErrors ${gem_filename_log_uninstall}
-}
-
 # =============================================================================
 #                                      Clean
 # =============================================================================
-function gem_v_OnClean { gem_build_OnClean ;}
-function gem_build_OnClean
-{
-	# gem_flags_configure, gem_flags_c, gem_flags_cpp, gem_flags_cxx,
-	# gem_flags_ld. To remove a flag:
-	# flags=$(printf '%s\n' "${flags//-byebye/}")
-
-	gem_build_OnCommandLine_Clean
-#	echo ${gem_cmd_line_clean}
-	eval "${gem_cmd_line_clean} ${gem_redirect_suffix_clean}"
-}
-
 function gem_build_OnCommandLine_Clean
 {
 	if [[ ${gem_build_script} == "cmake" ]]; then
@@ -1402,6 +1415,18 @@ function gem_build_OnCommandLine_Clean
 	elif [[ ${gem_build_script} == "meson" ]]; then
 		gem_cmd_line_clean="ninja -C . clean"
 	fi
+}
+
+function gem_v_OnClean { gem_build_OnClean ;}
+function gem_build_OnClean
+{
+	# gem_flags_configure, gem_flags_c, gem_flags_cpp, gem_flags_cxx,
+	# gem_flags_ld. To remove a flag:
+	# flags=$(printf '%s\n' "${flags//-byebye/}")
+
+	gem_build_OnCommandLine_Clean
+#	echo ${gem_cmd_line_clean}
+	eval "${gem_cmd_line_clean} ${gem_redirect_suffix_clean}"
 }
 
 function gem_v_Cmd_Clean { gem_build_Cmd_Clean ;}
@@ -1420,6 +1445,18 @@ function gem_build_Cmd_Clean
 # =============================================================================
 #                                      Scrub
 # =============================================================================
+function gem_v_Cmd_Scrub { gem_build_Cmd_Scrub ;}
+function gem_build_Cmd_Scrub
+{
+	if [[ ! -d ${gem_fullpath_build} ]]; then
+		return 0
+	fi
+	gem_script_cd ${gem_fullpath_build}
+
+	gem_v_OnScrub
+	gem_v_CheckLogForErrors ${gem_filename_log_scrub}
+}
+
 function gem_v_OnScrub { gem_build_OnScrub ;}
 function gem_build_OnScrub
 {
@@ -1439,18 +1476,6 @@ function gem_build_OnCommandLine_Scrub
 	if [[ -d ${gem_fullpath_build} ]]; then
 		gem_script_rm -rf ${gem_fullpath_build}
 	fi
-}
-
-function gem_v_Cmd_Scrub { gem_build_Cmd_Scrub ;}
-function gem_build_Cmd_Scrub
-{
-	if [[ ! -d ${gem_fullpath_build} ]]; then
-		return 0
-	fi
-	gem_script_cd ${gem_fullpath_build}
-
-	gem_v_OnScrub
-	gem_v_CheckLogForErrors ${gem_filename_log_scrub}
 }
 
 # =============================================================================
@@ -1623,6 +1648,18 @@ function gem_build_Main
 	gem_v_SetDefaults
 
 	gem_script_Main "$@"	# Process all the arguments
+
+	# Set gem_platform_build.  *FIX: Move this!
+	if [[ ${gem_os} == "Linux" ]]; then
+		# $(uname -m)-redhat-linux	# Fedora uses this prefix in /usr/bin/.
+		gem_platform_build=$(uname -m)-pc-linux-gnu	# This is reported by configure scripts.
+	elif  [[ ${gem_os} == "CYGWIN"* ]]; then	# Running in Cygwin Windows
+		gem_platform_build=$(uname -m)-pc-cygwin
+	elif [[ ${gem_os} == "MINGW64"* ]]; then
+		gem_platform_build=$(uname -m)-w64-mingw32	# Fedora uses this prefix in /usr/bin/.
+	else
+		gem_v_Error ${gem_str_not_implemented}
+	fi
 
 	gem_v_SetHost_${gem_host}
 	gem_v_ValidateBuildTools
