@@ -66,6 +66,13 @@
 # targets built in, and it will examine the system at runtime to decide what
 # should be used
 
+# For building with msvc, from libiconv's INSTALL.windows file:
+#
+# This recipe requires MS Visual C/C++ 9.0 or newer.
+#   You don't need the Visual Studio IDE, just the C/C++ tool chain.
+#   As of 2016, you can install the MS Visual C/C++ 14.0 tool chain from
+#   http://landinghub.visualstudio.com/visual-cpp-build-tools (it's the file
+#   visualcppbuildtools_full.exe).
 
 function gem_v_ExitHelp { gem_build_ExitHelp "$@";}
 function gem_build_ExitHelp
@@ -165,6 +172,11 @@ function gem_build_SetDefaults
 #		gem_host=mingw
 #		gem_host=android_arm64_v8a
 	fi
+
+	gem_flags_c="${CFLAGS}"
+	gem_flags_cpp="${CPPFLAGS}"
+	gem_flags_cxx="${CXXFLAGS}"
+	gem_flags_ld="${LDFLAGS}"
 
 	# NOTE: ${gem_build_type} is passed to CMake. If you want to change these,
 	# you'll have to map your new values to these expected values when you run
@@ -608,30 +620,36 @@ function gem_build_SetHost_mingw
 		# name includes an ever changing version number, so we'll enter the
 		# parent directory, then search for a file expected to be present (i.e.
 		# libgcc.a.)
-		if [[ ${gem_os} == "CYGWIN"* || ${gem_os} == "Linux" ]]; then
-			pushd /usr/lib/gcc/x86_64-w64-mingw32
-		elif [[ ${gem_os} == "MINGW64"* ]]; then
-			# Not cross compiling.
-			pushd /mingw64/lib/gcc/x86_64-w64-mingw32
-#			gem_fullpath_gcc_libs=${gem_fullpath_sysroot}/mingw/lib
-		else
-			gem_v_Error "ERROR: gem_build_SetHost_mingw: Unrecognized shell: ${gem_os}."
-		fi
-		gem_path_found=$(find -name libgcc.a)
-		if [[ ${gem_path_found}x == "x" ]]; then
-			gem_v_Error "ERROR: gem_build_SetHost_mingw(): Failed to determine library directory."
-		fi
-		gem_fullpath_gcc_libs=$(pwd)/$(dirname ${gem_path_found})
-		popd
-		if [[ ! -d ${gem_fullpath_gcc_libs} ]]; then
-			gem_v_Error "ERROR: gem_build_SetHost_mingw(): Library path does not exist: ${gem_fullpath_gcc_libs}.  Did the version number change?"
+		# Temporarily(?) disabling because adding LDFLAGS=" -L/mingw64/lib/gcc/x86_64-w64-mingw32/./9.2.0"
+		# causes link errors when building libiconv.  If removing it breaks
+		# other projects, then we'll have to figure out how to remove this in
+		# gem_build_libiconv.
+		if [[ ${gem_os} != "MINGW64"* ]]; then
+			if [[ ${gem_os} == "CYGWIN"* || ${gem_os} == "Linux" ]]; then
+				pushd /usr/lib/gcc/x86_64-w64-mingw32
+			elif [[ ${gem_os} == "MINGW64"* ]]; then
+				# Not cross compiling.
+				pushd /mingw64/lib/gcc/x86_64-w64-mingw32
+	#			gem_fullpath_gcc_libs=${gem_fullpath_sysroot}/mingw/lib
+			else
+				gem_v_Error "ERROR: gem_build_SetHost_mingw: Unrecognized shell: ${gem_os}."
+			fi
+			gem_path_found=$(find -name libgcc.a)
+			if [[ ${gem_path_found}x == "x" ]]; then
+				gem_v_Error "ERROR: gem_build_SetHost_mingw(): Failed to determine library directory."
+			fi
+			gem_fullpath_gcc_libs=$(pwd)/$(dirname ${gem_path_found})
+			popd
+			if [[ ! -d ${gem_fullpath_gcc_libs} ]]; then
+				gem_v_Error "ERROR: gem_build_SetHost_mingw(): Library path does not exist: ${gem_fullpath_gcc_libs}.  Did the version number change?"
+			fi
+			gem_flags_ld="${gem_flags_ld} -L${gem_fullpath_gcc_libs}"
 		fi
 
 		gem_flags_common="-march=x86-64 -msse4.2 -mpopcnt -m64 -mtune=intel ${gem_flags_common}"
 		gem_flags_c="${gem_flags_c} ${gem_flags_common}"
 		gem_flags_cpp="${gem_flags_cpp} ${gem_flags_common}"
 		gem_flags_cxx="${gem_flags_cxx} ${gem_flags_common}"
-		gem_flags_ld="${gem_flags_ld} -L${gem_fullpath_gcc_libs}"
 
 		if [[ ${gem_use_clang} == 0 ]]; then
 			if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW on Windows
@@ -678,6 +696,7 @@ function gem_v_SetHost_msvc { gem_build_SetHost_msvc ;}
 function gem_build_SetHost_msvc
 {
 	if [[ ${gem_build_script} == "cmake" ]]; then
+		gem_v_Error "NOT REALLY AN ERROR: In gem_build_SetHost_msvc(), did we mean to reference the mingw toolchain file?  Look into this."
 		gem_filename_cmake_toolchain=${gem_fullpath_local}/toolchains/mingw.toolchain.cmake
 	elif [[ ${gem_build_script} == "autotools" ]]; then
 		noop=0
@@ -1298,13 +1317,13 @@ function gem_build_OnCommandLine_Build
 			gem_cmd_line_build="${gem_cmd_line_build} CFLAGS=\"${gem_flags_c}\" ${CFLAGS}"
 		fi
 		if [[ ${gem_flags_cpp}x != "x" ]]; then
-			gem_cmd_line_build="${gem_cmd_line_build} CPPFLAGS=\"${gem_flags_cpp}\""
+			gem_cmd_line_build="${gem_cmd_line_build} CPPFLAGS=\"${gem_flags_cpp}\" ${CPPFLAGS}"
 		fi
 		if [[ ${gem_flags_cxx}x != "x" ]]; then
-			gem_cmd_line_build="${gem_cmd_line_build} CXXFLAGS=\"${gem_flags_cxx}\""
+			gem_cmd_line_build="${gem_cmd_line_build} CXXFLAGS=\"${gem_flags_cxx}\" ${CXXFLAGS}"
 		fi
 		if [[ ${gem_flags_ld}x != "x" ]]; then
-			gem_cmd_line_build="${gem_cmd_line_build} LDFLAGS=\"${gem_flags_ld}\""
+			gem_cmd_line_build="${gem_cmd_line_build} LDFLAGS=\"${gem_flags_ld}\" ${LDFLAGS}"
 		fi
 		if [[ ${gem_error_ignore_build_errors}x != "x" ]]; then
 			gem_cmd_line_build="${gem_cmd_line_build} ${gem_error_ignore_build_errors}"
