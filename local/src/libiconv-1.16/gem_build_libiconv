@@ -96,17 +96,27 @@ function gem_v_OnConfigure
 	# flags=$(printf '%s\n' "${flags//-byebye/}")
 
 	gem_v_DebugDumpVars
-
-
-#	gem_build_OnConfigure
-
-pushd ${gem_fullpath_build}
-${gem_fullpath_src}/configure --host=x86_64-pc-cygwin --prefix=/home/mhodges/gem/local_x86_64-pc-cygwin/release \
-            CC=x86_64-pc-cygwin-gcc \
-            CPPFLAGS="-I/usr/include -Wall" \
-            LDFLAGS="-L/usr/lib"
-popd
+	gem_build_OnConfigure
 }
+
+function gem_v_OnCommandLine_Configure_Autotools
+{
+	# gem_flags_configure, gem_flags_c, gem_flags_cpp, gem_flags_cxx,
+	# gem_flags_ld. To remove a flag:
+	# flags=$(printf '%s\n' "${flags//-byebye/}")
+
+	gem_v_DebugDumpVars
+	gem_build_OnCommandLine_Configure_Autotools
+
+	#v1:  Works with v1 build.
+#	gem_cmd_line_configure="${gem_fullpath_src}/configure \
+#--host=x86_64-w64-mingw32 \
+#--prefix=${gem_fullpath_install} \
+#CC=x86_64-w64-mingw32-gcc \
+#CPPFLAGS=\"-I/usr/local/mingw64/include -Wall\" \
+#LDFLAGS=\"-L/usr/local/mingw64/lib\""
+}
+
 
 function gem_v_OnBuild
 {
@@ -120,7 +130,15 @@ function gem_v_OnBuild
 
 function gem_v_build_OnCommandLine_Build
 {
+	# gem_flags_configure, gem_flags_c, gem_flags_cpp, gem_flags_cxx,
+	# gem_flags_ld. To remove a flag:
+	# flags=$(printf '%s\n' "${flags//-byebye/}")
+
 	gem_build_OnCommandLine_Build
+
+
+
+#echo "${gem_cmd_line_build}" ; exit
 
 # DOESN'T WORK #1, Original.
 #		gem_cmd_line_build="make -j${gem_num_jobs} \
@@ -137,6 +155,7 @@ function gem_v_build_OnCommandLine_Build
 #		make
 
 # WORKS!  It excludes LDFLAGS.
+# v1:  Works with v1 config.
 #	gem_cmd_line_build="make -j${gem_num_jobs} \
 #${gem_fullpath_autotools_makefile} \
 #CFLAGS=\"-std=gnu90 -march=x86-64 -msse4.2 -mpopcnt -m64 -mtune=intel -O2\" \
@@ -146,6 +165,8 @@ function gem_v_build_OnCommandLine_Build
 
 # WORKS! Try adding in the gem_flags_... variables, but still exclude LDFLAGS:
 #		gem_cmd_line_build="make -j${gem_num_jobs} \
+# v2:  Works with v1 config.
+#	gem_cmd_line_build="make -j${gem_num_jobs} \
 #${gem_fullpath_autotools_makefile} \
 #CFLAGS=\"${gem_flags_c}\" \
 #CPPFLAGS=\"${gem_flags_cpp}\" \
@@ -154,6 +175,8 @@ function gem_v_build_OnCommandLine_Build
 
 # FAILS! Added LDFLAGS="".
 #		gem_cmd_line_build="make -j${gem_num_jobs} \
+# v3:  Doesn't work
+#	gem_cmd_line_build="make -j${gem_num_jobs} \
 #${gem_fullpath_autotools_makefile} \
 #CFLAGS=\"${gem_flags_c}\" \
 #CPPFLAGS=\"${gem_flags_cpp}\" \
@@ -161,10 +184,15 @@ function gem_v_build_OnCommandLine_Build
 #LDFLAGS=\"\" \
 #${gem_error_ignore_build_errors}"
 
+#echo "======================================================="
+#echo "gem_cmd_line_build:"
+#echo ${gem_cmd_line_build}
+#echo "======================================================="
 # WORKS! Try only adding non-empty flags.
-#		gem_cmd_line_build="make -j${gem_num_jobs} ${gem_fullpath_autotools_makefile}"
+# v4: 
+#	gem_cmd_line_build="make -j${gem_num_jobs} ${gem_fullpath_autotools_makefile}"
 #		if [[ ${gem_flags_c}x != "x" ]]; then
-#			gem_cmd_line_build="${gem_cmd_line_build} CFLAGS=\"${gem_flags_c}\" ${CFLAGS}"
+#			gem_cmd_line_build="${gem_cmd_line_build} CFLAGS=\"${gem_flags_c}\""
 #		fi
 #		if [[ ${gem_flags_cpp}x != "x" ]]; then
 #			gem_cmd_line_build="${gem_cmd_line_build} CPPFLAGS=\"${gem_flags_cpp}\""
@@ -175,6 +203,13 @@ function gem_v_build_OnCommandLine_Build
 #		if [[ ${gem_flags_ld}x != "x" ]]; then
 #			gem_cmd_line_build="${gem_cmd_line_build} LDFLAGS=\"${gem_flags_ld}\""
 #		fi
+#		if [[ ${gem_error_ignore_build_errors}x != "x" ]]; then
+#			gem_cmd_line_build="${gem_cmd_line_build} ${gem_error_ignore_build_errors}"
+#		fi
+#echo "gem_cmd_line_build:"
+#echo ${gem_cmd_line_build}
+#echo "======================================================="
+#exit
 }
 
 function gem_v_OnInstall
@@ -189,11 +224,11 @@ function gem_v_OnUninstall
 {
 	# build a colon-separated list of all files installed, less the
 	# gem_fullpath_install prefix.
-	if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW shell on Windows.
-		gem_v_Error "ERROR: Uninstall not yet implemented for Mingw."
-	elif [[ ${gem_os} == "CYGWIN"* ]]; then	# Cygwin shell on Windows.
+	if [[ ${gem_os} == "MINGW64"* || ${gem_os} == "CYGWIN"* ]]; then	# Cygwin shell on Windows.
 		local gem_colon_separated_list="\
+bin/libcharset-1.dll:\
 bin/cygcharset-1.dll:\
+bin/libiconv-2.dll:\
 bin/cygiconv-2.dll:\
 bin/iconv.exe:\
 include/iconv.h:\
@@ -234,14 +269,29 @@ share/man/man3/iconvctl.3"
 	done
 	IFS=${gem_ifs_saved}
 
+	local gem_space_separated_list="af bg ca cs da de el eo es et fi fr ga gl hr hu id it ja lt nl pl pt_BR rm ro ru sk sl sq sr sv tr uk vi wa zh_CN zh_TW"
+	local gem_ifs_saved=${IFS}
+	IFS=" "
+	for gem_lang in ${gem_space_separated_list}
+	do
+		gem_fullpath_installed_file=${gem_fullpath_install}/share/locale/${gem_lang}/LC_MESSAGES/libiconv.mo
+		if [[ -f ${gem_fullpath_installed_file} ]]; then
+			gem_script_rm ${gem_fullpath_installed_file}
+		fi
+		gem_script_rmdir_IfEmpty ${gem_fullpath_install}/share/locale/${gem_lang}/LC_MESSAGES
+		gem_script_rmdir_IfEmpty ${gem_fullpath_install}/share/locale/${gem_lang}
+	done
+
+	IFS=${gem_ifs_saved}
+
 	gem_script_rmdir_IfEmpty ${gem_fullpath_install}/bin
 	gem_script_rmdir_IfEmpty ${gem_fullpath_install}/include
 	gem_script_rmdir_IfEmpty ${gem_fullpath_install}/lib
-	gem_script_rmdir_IfEmpty ${gem_fullpath_install}/share
 	gem_script_rmdir_IfEmpty ${gem_fullpath_install}/share/doc
 	gem_script_rmdir_IfEmpty ${gem_fullpath_install}/share/man/man1
 	gem_script_rmdir_IfEmpty ${gem_fullpath_install}/share/man/man3
 	gem_script_rmdir_IfEmpty ${gem_fullpath_install}/share/man
+	gem_script_rmdir_IfEmpty ${gem_fullpath_install}/share/locale
 	gem_script_rmdir_IfEmpty ${gem_fullpath_install}/share
 
 #	gem_build_OnUninstall
