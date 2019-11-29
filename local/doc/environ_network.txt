@@ -482,7 +482,7 @@ chcon -R -t public_content_rw_t /home/mhodges/www
 yes | cp /etc/samba/smb.conf /etc/samba/smb.conf.bak
 
 # Should we use samba-tool user add?
-echo -e "ab29xlk\nab29xlk" | smbpasswd -a mhodges
+echo -e "<password>\n<password>" | smbpasswd -a mhodges
 
 
 cp /etc/samba/smb.conf /etc/samba/smb.conf.backup
@@ -766,8 +766,8 @@ function Main()
 	# Back Up Support
 	# =========================================================================
 	export CRED_NAME_DATABASE_ADMIN=root
-	export CRED_PASSWORD_DATABASE_ADMIN=abxkl2904
-    export CRED_PASSWORD_ROOT=abxkl2904
+	export CRED_PASSWORD_DATABASE_ADMIN=<password>
+    export CRED_PASSWORD_ROOT=<password>
 }
 Main
 
@@ -1072,7 +1072,7 @@ cat << EOF > ~/gem/local/sbin/mountall
 echo "I did: usermod -a -G vboxsf mhodges"
 
 USERNAME=mhodges
-USERPASSWORD=ab29xlk    # *FIX: This is horrifying!  Please correct immediately!
+USERPASSWORD=<password>    # *FIX: This is horrifying!  Please correct immediately!
 
 WINDOWS_HOSTNAME=mars
 WINDOWS_IP_ADDRESS=10.0.0.120
@@ -1213,10 +1213,10 @@ function Main()
         # vbox ----------------------------------------------------------------
        if [[ \${VBOX_IS_ONLINE} -eq 1 ]]; then
             if [[ \${VBOX_ROOT_NOT_MOUNTED} -eq 1 ]]; then
-                sudo mount -t cifs -o username=\${USERNAME},password=ab29xlk //10.0.0.121/root ${HOME}/gem/mnt/vbox_root
+                sudo mount -t cifs -o username=\${USERNAME},password=<password> //10.0.0.121/root ${HOME}/gem/mnt/vbox_root
             fi
             if [[ \${VBOX_HOME_NOT_MOUNTED} -eq 1 ]]; then
-                sudo mount -t cifs -o vers=1.0,username=\${USERNAME},password=ab29xlk //10.0.0.121/\${USERNAME} ${HOME}/gem/mnt/vbox_\${USERNAME}
+                sudo mount -t cifs -o vers=1.0,username=\${USERNAME},password=<password> //10.0.0.121/\${USERNAME} ${HOME}/gem/mnt/vbox_\${USERNAME}
             fi
         else
             echo "vbox is offline."
@@ -1439,7 +1439,7 @@ su
 
 # Create a vnc user.
 su mhodges
-echo -e "ab29xlk\nab29xlk\n" | vncpasswd
+echo -e "<password>\n<password>\n" | vncpasswd
 exit
 
 
@@ -1851,7 +1851,7 @@ systemctl start mariadb.service
 cat > temp << "EOF"
 [client]
 user = root
-password = abxkl2904
+password = <password>
 host = www.markhodges.com
 
 EOF
@@ -1867,7 +1867,7 @@ mysql -h localhost -u root -p
 
 
 # Perform a test:
-mysql -h localhost -u root -p'abxkl2904' -e 'show databases;'
+mysql -h localhost -u root -p'<password>' -e 'show databases;'
 
 
 You should now be able to dump a database without indicating the password using:
@@ -2260,9 +2260,9 @@ f28v2.markhodges.com.
 WWW_DIR=${HOME}
 DATABASE_NAME=mediawiki_1_32
 DATABASE_USER=mhodges
-DATABASE_USER_PASSWORD=ab29xlk
+DATABASE_USER_PASSWORD=<password>
 DATABASE_USER_ROOT=root
-DATABASE_USER_ROOT_PASSWORD=abxkl2904
+DATABASE_USER_ROOT_PASSWORD=<password>
 COMPOSER_INSTALL_DIR=${HOME}/local/bin
 COMPOSER_EXTRACT_DIR=./temp
 LOGO_IMAGE=mylogo_135x135.png
