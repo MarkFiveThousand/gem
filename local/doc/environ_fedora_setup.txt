@@ -273,8 +273,10 @@ selinux appendix as appropriate.
 # changed at any point while the virtual machine is powered down.
 #
 # In the left panel, select "Display".  In the right panel, click "Screen."
-# Next to "Acceleration", check "Enable 3D Acceleration."  It is not yet clear
-# that this will work well.
+# Next to "Acceleration", check "Enable 3D Acceleration."  WARNING!  I have run
+# into stability problems with VirtualBox crashing and menus not drawing
+# correctly.  Disabling 3D acceleration fixed these issues.  Enable with
+# caution.
 #
 # In the left panel, select "Storage".  In the right panel, below "Controller:
 # IDE", Click "Empty."  This is how we insert a CD image (.iso file) into the
