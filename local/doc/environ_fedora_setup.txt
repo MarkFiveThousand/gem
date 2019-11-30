@@ -1,3 +1,11 @@
+#  ___________                           __________
+# /\   _______\                         /\   ______\
+# \ \  \______/_     ___   ____ ____ ___\ \  \_____/_     ___   ___ ___  ______    ___    ___
+#  \ \  \ /\__  \  /'___`\/\   V    V   \\ \_______  \  /'   `\/\  \\  \/\   __\/' ._`\ /'___`\
+#   \ \  \\/__\  \/\  ___/\ \  \/\  \/\  \\/_______\  \/\  \\  \ \  \\  \ \  \ /\  \__//\  ___/
+#    \ \__________\ \____\ \ \__\ \__\ \__\ /\_________\ \_____/\ \______\ \__\\ \____/\ \____\
+#     \/__________/\/____/  \/__/\/__/\/__/ \/_________/\/____/  \/______/\/__/ \/___/  \/____/
+
 # =============================================================================
 # To Do:
 # =============================================================================
@@ -106,6 +114,7 @@ selinux appendix as appropriate.
 # Install & Configure Oracle Java
 # Configure Git Revision Control
 # Download Gem
+# Update .bashrc to Run Scripts Initializing the Gem Development Environment
 #
 # Appendix A: Repositories
 # Appendix B: Grouplists
@@ -272,8 +281,10 @@ selinux appendix as appropriate.
 # changed at any point while the virtual machine is powered down.
 #
 # In the left panel, select "Display".  In the right panel, click "Screen."
-# Next to "Acceleration", check "Enable 3D Acceleration."  It is not yet clear
-# that this will work well.
+# Next to "Acceleration", check "Enable 3D Acceleration."  WARNING!  I have run
+# into stability problems with VirtualBox crashing and menus not drawing
+# correctly.  Disabling 3D acceleration fixed these issues.  Enable with
+# caution.
 #
 # In the left panel, select "Storage".  In the right panel, below "Controller:
 # IDE", Click "Empty."  This is how we insert a CD image (.iso file) into the
@@ -503,8 +514,8 @@ dnf -y install kernel-devel* elfutils-libelf-devel
 
 # How much hard drive space is being used?  Let's find out.  Open a terminal
 # and enter the below command:
-
-Fedora->System Tools->QTerminal
+#
+# Fedora->System Tools->QTerminal
 
 df
 
@@ -613,22 +624,10 @@ df
 #  3.) On the bar at the bottom-right of the Fedora desktop there's a button to
 #      the left of the volume icon.  Hover the mouse over it to display the
 #      message "Removable media/devices manager."  Left-clicking it displays
-#      a message similar to "VBox_GA_6.0.12."  To the right is the eject
+#      a message similar to "VBox_GA_6.0.14."  To the right is the eject
 #      triangle.  Click the triangle to eject the Guest Additions CD.
 #
 # Next, we will continue to make the linux environment more comfortable.
-
-
-
-
-
-
-
-# =============================================================================
-* FIX: Avoid the temporary gem_colors() function below by cloning the Gem repo
-# very early, similar to how we do in environ_cygwin_setup.txt.
-
-# =============================================================================
 
 
 
@@ -702,9 +701,9 @@ exit
 # ================================================================================= 
 #
 # Set gem_fedora_hostname to your desired name for your system.  I have multiple
-# installations, so chose f30v4 for my 4th installation of Fedora 30.
+# installations, so chose f31v1 for my 1st installation of Fedora 31.
 
-gem_fedora_hostname=f30v4
+gem_fedora_hostname=f31v1
 
 # In /etc/hostname replace localhost.localdomain with ${gem_hostname}.localdomain.
 # 
@@ -722,13 +721,12 @@ hostname
 
 su
 
-gem_fedora_hostname=f30v4
+gem_fedora_hostname=f31v1
 
 if [[ ! -f /etc/hostname.backup ]]; then
 	\cp -f /etc/hostname /etc/hostname.backup
 fi
 sed -i "s|localhost.localdomain|${gem_fedora_hostname}.localdomain|g" /etc/hostname
-sed -i "s|f30v1.localdomain|${gem_fedora_hostname}.localdomain|g" /etc/hostname
 
 # View the new contents of /etc/hostname:
 
@@ -755,7 +753,7 @@ cat /etc/hostname
 #     Icons Theme: Fedora (Fedora Icon Theme)
 #     LXQt Theme: Fedora-lxqt
 #     Font->Point size: 10
-#     Cursor->Breeze Snow
+#     Cursor->Breeze Light
 #
 # Click "Apply."  Notice how the file manager appearance has changed.
 #
@@ -893,7 +891,7 @@ cd /home/$USER/Downloads
 ls
 
 # Assign your file name here.
-gem_filename_image=redwood.jpg
+gem_filename_image=<your file>.jpg
 
 cp /home/$USER/Downloads/${gem_filename_image} /usr/share/backgrounds
 chown root:root /usr/share/backgrounds/${gem_filename_image}
@@ -905,9 +903,9 @@ chown root:root /usr/share/backgrounds/${gem_filename_image}
 # Try this first:
 # Source: https://www.mankier.com/1/pcmanfm-qt
 
-gem_filename_image=redwood.jpg
+gem_fullpath_image=/usr/share/backgrounds/732171.jpg
 
-pcmanfm-qt --set-wallpaper=/usr/share/backgrounds/${gem_filename_image} --wallpaper-mode=stretch
+pcmanfm-qt --set-wallpaper=${gem_fullpath_image} --wallpaper-mode=stretch
 
 
 
@@ -923,14 +921,13 @@ pcmanfm-qt --set-wallpaper=/usr/share/backgrounds/${gem_filename_image} --wallpa
 #
 # Verify the following setting- Wallpaper image folder: /usr/share/backgrounds
 #
-# I prefer to check Randomize the slide show.
+# I prefer to check "Randomize the slide show."
 #
 # Remove the default background:
 
 su
 
-cd /usr/share/backgrounds
-rm -f default.png
+rm -f /usr/share/backgrounds/default.png
 
 
 
@@ -963,11 +960,12 @@ rm -f default.png
 su
 
 
-# Name of the background image in /usr/share/backgrounds
-gem_filename_image=redwood.jpg
+# Name of the background image, must be located in /usr/share/backgrounds.
+gem_fullpath_image=/usr/share/backgrounds/732171.jpg
+
 
 # Must be owned by root.
-chown root:root /usr/share/backgrounds/${gem_filename_image}
+chown root:root ${gem_fullpath_image}
 
 
 
@@ -986,7 +984,7 @@ if [[ ! -f /usr/share/sddm/themes/02-lxqt-fedora/theme.conf.bak ]]; then
 fi
 
 # Tell 02-lxqt-fedora theme to use our background.
-sed -i "s|background=/usr/share/backgrounds/default.png|background=/usr/share/backgrounds/${gem_filename_image}|g" /usr/share/sddm/themes/02-lxqt-fedora/theme.conf
+sed -i "s|background=/usr/share/backgrounds/default.png|background=${gem_fullpath_image}|g" /usr/share/sddm/themes/02-lxqt-fedora/theme.conf
 
 
 
@@ -994,7 +992,7 @@ sed -i "s|background=/usr/share/backgrounds/default.png|background=/usr/share/ba
 
 
 # -----------------------------------------------------------------------------
-*FIX: I think the reset of this is not necessary.  Verify and remove.
+*FIX: I think the rest of this is not necessary.  Verify and remove.
 
 # Does this change the theme?  I tried it, but it always looked the same.
 sddm-greeter --theme /usr/share/sddm/themes/02-lxqt-fedora
@@ -1142,13 +1140,8 @@ sudo dnf -y groupinstall "Development Tools" "Development Libraries" "X Software
 # Node Package Manager
 # https://nodejs.org/en/knowledge/getting-started/npm/what-is-npm/
 
-# Assume root identity.
-su
-
 sudo dnf -y install npm
 
-# Return to user identity.
-exit
 
 
 
@@ -1491,8 +1484,7 @@ fi
 # To restore:
 # cp -f ${gem_fullpath_panel_conf}.bak ${gem_fullpath_panel_conf}.bak
 
-sed ':a;N;$!ba;s|\[quicklaunch]\nalignment=Left|\[quicklaunch]\nalignment=Left\napps\\1\\desktop=/usr/share/applications/rxvt-unicode.desktop\napps\\2\\desktop=/usr/share/applications/pcmanfm-qt.desktop\napps\\3\\desktop=/usr/share/applications/google-chrome.desktop\napps\\4\\desktop=/usr/share/applications/code.desktop\napps\\size=4|g' ${gem_fullpath_panel_conf} > ${gem_fullpath_panel_conf}2.txt
-cp ${gem_fullpath_panel_conf}2.txt ${gem_fullpath_panel_conf}
+sed -i ':a;N;$!ba;s|\[quicklaunch]\nalignment=Left|\[quicklaunch]\nalignment=Left\napps\\1\\desktop=/usr/share/applications/rxvt-unicode.desktop\napps\\2\\desktop=/usr/share/applications/pcmanfm-qt.desktop\napps\\3\\desktop=/usr/share/applications/google-chrome.desktop\napps\\4\\desktop=/usr/share/applications/code.desktop\napps\\size=4|g' ${gem_fullpath_panel_conf}
 
 # To reload our modified panel script we're going to logout, then back in.
 # Fedora->Leave->Logout
@@ -1605,7 +1597,7 @@ ls /usr/share/applications/*.desktop
 
 
 
-# *FIX: Skip, for now.  Needs to be updated for Fedora 30.
+# *FIX: Skip, for now.  Needs to be updated for Fedora 30+.
 # =============================================================================
 # Autostart
 # =============================================================================
@@ -1640,68 +1632,6 @@ EOF
 
 
 # =============================================================================
-# Install Audio & Video Codecs
-# =============================================================================
-
-# NOTE: Starting in Fedora 27 running easylife produced errors.  Installing
-# the below packages fixed this.
-#
-# https://rpmfusion.org/Configuration
-
-
-# *FIX: This has only been tested piece meal.  Remove this warning, once you've
-# verified that this works fine.
-
-# *FIX: Your easiest path through here is to jump to "Install it:" below.
-
-
-FEDORA_VERSION=30
-
-FREE_RPM_FILENAME=rpmfusion-free-release-${FEDORA_VERSION}.noarch.rpm
-NONFREE_RPM_FILENAME=rpmfusion-nonfree-release-${FEDORA_VERSION}.noarch.rpm
-cd ~/Downloads
-wget https://download1.rpmfusion.org/free/fedora/${FREE_RPM_FILENAME}
-# Install
-sudo rpm -ivh ${FREE_RPM_FILENAME}
-# Update
-sudo rpm -Uvh ${FREE_RPM_FILENAME}
-wget https://download1.rpmfusion.org/nonfree/fedora/${NONFREE_RPM_FILENAME}
-# Install
-sudo rpm -ivh ${NONFREE_RPM_FILENAME}
-# Update
-sudo rpm -Uvh ${NONFREE_RPM_FILENAME}
-
-
-
-
-# Install it:
-
-# Download easylife:
-# http://sourceforge.net/projects/easylife-linux/
-
-su
-cd /home/$USER/Downloads
-
-# The easylife directions suggest that you update and reboot before running
-# easylife.
-
-# It looks like we now have to download some dependencies:
-sudo dnf -y install usermode-gtk yad
-
-rpm -Uvh /home/$USER/Downloads/easylife-*.rpm
-
-# Run it.
-easylife
-
-# Clean up.
-rm /home/mhodges/Downloads/easylife-?.?-?.noarch.rpm
-
-
-
-
-
-
-# =============================================================================
 # Install & Configure Oracle Java
 # =============================================================================
 
@@ -1713,8 +1643,7 @@ su
 
 # Update the file name version accordingly:
 
-gem_fullpath_rpm=/home/$USER/Downloads/jdk-13_linux-x64_bin.rpm
-
+gem_fullpath_rpm=/home/$USER/Downloads/jdk-13.0.1_linux-x64_bin.rpm
 
 # Install:
 sudo rpm -ivh ${gem_fullpath_rpm}
@@ -1772,6 +1701,11 @@ git clone https://github.com/MarkFiveThousand/gem.git
 # a "git pull" from within your gem directory to update it from github.
 
 
+
+
+
+
+# Gem includes some preference settings that may vary bewteen users.
 
 
 
@@ -1899,6 +1833,45 @@ gem_copy_id_rsa_pub
 # commands.  It tells git fetch/git pull which branch to merge.
 
 git push --set-upstream origin master
+
+
+
+# =============================================================================
+# Update .bashrc to Run Scripts Initializing the Gem Development Environment
+# =============================================================================
+
+# Remove temporary gem_colors() function from ~/.bashrc:
+sed -i "/function gem_colors()/,/gem_colors  # Call it./d" ~/.bashrc
+
+
+# Unless you have preferred settings for your bash environment, you may want to
+# copy user mhodges' environment settings located in
+# ~/gem/home/mhodges/local/sbin/user_bash_init.
+gem_fullpath_user_sbin=~/gem/home/${USER}/local/sbin/
+mkdir -p ${gem_fullpath_user_sbin}
+cp ~/gem/home/mhodges/local/sbin/user_bash_init ${gem_fullpath_user_sbin}
+
+
+# Add calls to gem's bash scripts to ~/.bashrc to prepare the environment.
+cp ~/.bashrc ~/.bashrc_old
+cat << EOF >> ~/.bashrc
+
+# Source our definitions
+gem_fullpath_gem_bash_init=~/gem/local/sbin/gem_bash_init
+gem_fullpath_user_bash_init=~/gem/home/$USER/local/sbin/user_bash_init
+
+if [[ -f \${gem_fullpath_gem_bash_init} ]]; then
+    source \${gem_fullpath_gem_bash_init}
+    if [[ -f \${gem_fullpath_user_bash_init} ]]; then
+        source \${gem_fullpath_user_bash_init}
+    else
+        echo "\$BASH_SOURCE(\${LINENO}) WARNING: \${gem_fullpath_user_bash_init} not found."
+    fi
+else
+    echo "\$BASH_SOURCE(\${LINENO}) WARNING: \${gem_fullpath_gem_bash_init} not found."
+fi
+
+EOF
 
 
 

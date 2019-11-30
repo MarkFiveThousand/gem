@@ -1,4 +1,12 @@
 #!/bin/bash
+#  ___________                           __________
+# /\   _______\                         /\   ______\
+# \ \  \______/_     ___   ____ ____ ___\ \  \_____/_     ___   ___ ___  ______    ___    ___
+#  \ \  \ /\__  \  /'___`\/\   V    V   \\ \_______  \  /'   `\/\  \\  \/\   __\/' ._`\ /'___`\
+#   \ \  \\/__\  \/\  ___/\ \  \/\  \/\  \\/_______\  \/\  \\  \ \  \\  \ \  \ /\  \__//\  ___/
+#    \ \__________\ \____\ \ \__\ \__\ \__\ /\_________\ \_____/\ \______\ \__\\ \____/\ \____\
+#     \/__________/\/____/  \/__/\/__/\/__/ \/_________/\/____/  \/______/\/__/ \/___/  \/____/
+
 
 # To build a custom standalone toolchain run:
 #
@@ -646,6 +654,7 @@ function gem_build_SetHost_mingw
 			gem_flags_ld="${gem_flags_ld} -L${gem_fullpath_gcc_libs}"
 		fi
 
+		# *FIX: Move this to SetDefaults.
 		gem_flags_common="-march=x86-64 -msse4.2 -mpopcnt -m64 -mtune=intel ${gem_flags_common}"
 		gem_flags_c="${gem_flags_c} ${gem_flags_common}"
 		gem_flags_cpp="${gem_flags_cpp} ${gem_flags_common}"
