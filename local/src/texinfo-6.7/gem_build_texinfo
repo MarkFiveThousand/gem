@@ -24,10 +24,13 @@ function gem_v_SetDefaults
 #	gem_build_script="meson"
 
 	# Common Defaults
-	if [[ $(uname -s) == "MINGW64"* ]]; then	# MinGW shell on Windows.
+	if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW shell on Windows.
 		gem_host=mingw
 #		gem_host=msvc
-	elif [[ $(uname -s) == "Linux"* ]]; then	# Linux shell.
+	elif [[ ${gem_os} == "CYGWIN"* ]]; then		# Cygwin shell on Windows.
+		gem_host=cygwin
+#		gem_host=mingw
+	elif [[ ${gem_os} == "Linux"* ]]; then	# Linux shell.
 		gem_host=linux
 #		gem_host=mingw
 #		gem_host=android_arm64_v8a
