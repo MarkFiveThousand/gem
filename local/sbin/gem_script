@@ -35,11 +35,21 @@ function gem_script_Callstack
 function gem_v_Print { gem_script_Print "$@";}
 function gem_script_Print
 {
-	printf "%b" "$@"
+	if [[ ${gem_script_option_quiet_mode} -eq 0 ]]; then
+		printf "%b" "$@"
+	fi
 }
 
 function gem_v_Msg { gem_script_Msg "$@";}
 function gem_script_Msg
+{
+	if [[ ${gem_script_option_quiet_mode} -eq 0 ]]; then
+		printf "%b\n" "$@"
+	fi
+}
+
+function gem_v_Msg_NotQuiet { gem_script_Msg_NotQuiet "$@";}
+function gem_script_Msg_NotQuiet
 {
 	printf "%b\n" "$@"
 }
@@ -47,16 +57,16 @@ function gem_script_Msg
 function gem_v_ExitMsg { gem_script_ExitMsg "$@";}
 function gem_script_ExitMsg
 {
-	gem_v_Msg "$@"
+	gem_v_Msg_NotQuiet "$@"
 	exit 1
 }
 
 function gem_v_Error { gem_script_Error "$@";}
 function gem_script_Error
 {
-	gem_v_Msg ""
+	gem_v_Msg_NotQuiet ""
 	gem_script_Callstack
-	gem_v_Msg "\n$@\n"
+	gem_v_Msg_NotQuiet "\nERROR: $@\n"
 	exit 1
 }
 
@@ -64,13 +74,6 @@ function gem_v_ExitHelp { gem_script_ExitHelp "$@";}
 function gem_script_ExitHelp
 {
 	exit 0
-}
-
-# gem_v_OnArg()- Returns the number of arguments processed.
-function gem_v_OnArg { gem_script_ArgHandler "$@";}
-function gem_script_OnArg
-{
-	return 0	# 0 arguments handled here.
 }
 
 # Trims the whitespace from the head and tail of a string.
@@ -127,7 +130,7 @@ function gem_script_ValidatePaths
 	for gem_path in ${gem_colon_separated_list}
 	do
 		if [[ ! -d ${gem_path} ]]; then
-			gem_v_Error "ERROR: gem_script_ValidatePaths(): Directory does not exist: ${gem_path}"
+			gem_v_Error "gem_script_ValidatePaths(): Directory does not exist: ${gem_path}"
 		fi
 	done
 	IFS=${gem_ifs_saved}
@@ -142,7 +145,7 @@ function gem_script_ValidateFiles
 	for gem_file in ${gem_space_separated_list}
 	do
 		if [[ ! -f ${gem_file} ]]; then
-			gem_v_Error "ERROR: gem_script_ValidateFiles(): File does not exist: ${gem_file}"
+			gem_v_Error "gem_script_ValidateFiles(): File does not exist: ${gem_file}"
 		fi
 	done
 	IFS=${gem_ifs_saved}
@@ -164,7 +167,7 @@ function gem_script_ValidateFileParams
 		local gem_result=$?
 		if [[ ${gem_result} -eq 0 ]]; then
 			if [[ ${gem_absolute_path} != *"/gem/"* && ${arg} != *"/gem/"* ]]; then
-				gem_v_Error "ERROR: gem_script_ValidateFileParams() Refusing to perform file operations outside of /gem/ file tree: ${arg}"
+				gem_v_Error "gem_script_ValidateFileParams() Refusing to perform file operations outside of /gem/ file tree: ${arg}"
 #			else
 #				((gem_counter++))
 			fi
@@ -205,7 +208,7 @@ function gem_script_cd
 	${gem_cmd_line}
 	local gem_result=$?
 	if [[ ${gem_result} -ne 0 ]]; then
-		gem_v_Error "ERROR: gem_script_cd failed to change to directory. Error code: ${gem_result}, Command line: ${gem_cmd_line}."
+		gem_v_Error "gem_script_cd failed to change to directory. Error code: ${gem_result}, Command line: ${gem_cmd_line}."
 	fi
 }
 
@@ -217,7 +220,7 @@ function gem_script_cp
 	${gem_cmd_line}
 	local gem_result=$?
 	if [[ ${gem_result} -ne 0 ]]; then
-		gem_v_Error "ERROR: gem_script_cp failed to copy file(s).  Error code: ${gem_result}, Command line: ${gem_cmd_line}."
+		gem_v_Error "gem_script_cp failed to copy file(s).  Error code: ${gem_result}, Command line: ${gem_cmd_line}."
 	fi
 }
 
@@ -229,8 +232,8 @@ function gem_script_rm
 	eval ${gem_cmd_line}
 	local gem_result=$?
 	if [[ ${gem_result} -ne 0 ]]; then
-		gem_v_Error "ERROR: Result=${gem_result}"
-		gem_v_Error "ERROR: gem_script_rm failed to remove file(s).  Command line \"${gem_cmd_line}\"."
+		gem_v_Error "Result=${gem_result}"
+		gem_v_Error "gem_script_rm failed to remove file(s).  Command line \"${gem_cmd_line}\"."
 	fi
 }
 
@@ -242,7 +245,7 @@ function gem_script_mkdir
 	eval ${gem_cmd_line}
 	local gem_result=$?
 	if [[ ${gem_result} -ne 0 ]]; then
-		gem_v_Error "ERROR: gem_script_mkdir failed to create directory.  Command line \"${gem_cmd_line}\"."
+		gem_v_Error "gem_script_mkdir failed to create directory.  Command line \"${gem_cmd_line}\"."
 	fi
 }
 
@@ -254,7 +257,7 @@ function gem_script_rmdir
 	eval ${gem_cmd_line}
 	local gem_result=$?
 	if [[ ${gem_result} -ne 0 ]]; then
-		gem_v_Error "ERROR: gem_script_rmdir failed to remove directory.  Command line \"${gem_cmd_line}\"."
+		gem_v_Error "gem_script_rmdir failed to remove directory.  Command line \"${gem_cmd_line}\"."
 	fi
 }
 
@@ -293,23 +296,42 @@ function gem_script_rmdir_IfEmpty
 		gem_script_rmdir ${gem_path}
 		local gem_result=$?
 		if [[ ${gem_result} -ne 0 ]]; then
-			gem_v_Error "ERROR: gem_script_rmdir_IfEmpty failed to remove directory: ${gem_path}"
+			gem_v_Error "gem_script_rmdir_IfEmpty failed to remove directory: ${gem_path}"
 		fi
 	fi
 }
 
+# gem_v_OnArg()- Processes recognized arguments, and returns the number of
+# arguments processed.
+function gem_v_OnArg { gem_script_OnArg "$@";}
+function gem_script_OnArg
+{
+#echo "+++ gem_script::gem_script_OnArg()"
+
+	local arg=${1}
+	case ${arg} in
+	-q) gem_script_option_quiet_mode=1
+		return 1 ;;
+	*)	gem_v_ExitMsg "ERROR: gem_script_OnArg: Caught unhandled script argument: ${arg}."
+	esac
+}
 
 function gem_v_Main { gem_script_Main "$@";}
 function gem_script_Main
 {
+#echo "+++ gem_script::gem_script_Main()"
+
+	gem_script_option_quiet_mode=0
+
 	while [[ $# > 0 ]]
 	do
-		gem_v_OnArg "$@"
-		local num_handled=$?
-		if [[ ${num_handled} == 0 ]]; then
-			gem_v_ExitHelp "ERROR: gem_script_Main encountered an unrecognized argument: ${1}"
+		arg=$(echo ${1} | tr '[A-Z]' '[a-z]')	# Lowercase the argument.
+		gem_v_OnArg $arg
+		local num_args_handled=$?
+		if [[ ${num_args_handled} > 0 ]]; then
+			for (( i=0; i<${num_args_handled}; i++ )) do shift ; done
 		else
-			for (( i=0; i<${num_handled}; i++ )) do shift ; done
+			gem_v_ExitHelp "ERROR: gem_script_Main encountered an unrecognized argument: ${1}"
 		fi
 	done
 }
