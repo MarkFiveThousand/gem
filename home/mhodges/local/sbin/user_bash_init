@@ -128,8 +128,6 @@ function gem_bash_init_Main()
     # Aliases
     # =========================================================================
     alias ls='ls -al --color=auto'
-    alias gitpush="git push git@github.com:MarkFiveThousand/gem.git"
-    alias gitpull="git pull git@github.com:MarkFiveThousand/gem.git"
     if [[ ${gem_os} == *"MINGW64"* || ${gem_os} == *"CYGWIN"* ]]; then
         # Escape spaces.
         gem_fullpath_vscode_exe=$(echo ${gem_fullpath_vscode} | sed 's/ /\\ /g')
