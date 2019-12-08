@@ -132,11 +132,11 @@ function gem_v_OnUninstall
 
 	# build a colon-separated list of all files installed, less the
 	# gem_fullpath_install prefix.
-	if [[ ${gem_os} == "Linux" ]]; then	# Linux shell.
+	if [[ ${gem_os} == "Linux" || ${gem_os} == "MINGW64"* ]]; then	# Linux shell.
 		local gem_colon_separated_list="\
 bin/makeinfo:\
 share/info/dir:"
-	elif [[ ${gem_os} == "MINGW64"* || ${gem_os} == "CYGWIN"* ]]; then	# Cygwin shell on Windows.
+	elif [[ ${gem_os} == "CYGWIN"* ]]; then	# Cygwin shell on Windows.
 		gem_v_Error "gem_build_texinfo: gem_v_OnUninstall() not yet implemented for mingw and cygwin."
 	else
 		gem_v_Error "Build platform not supported: ${gem_os}"

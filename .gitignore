@@ -2,20 +2,20 @@
 
 .gitconfig
 
-/home/mhodges/local/sbin/vscode_cyg.lnk
-/home/mhodges/local/sbin/vscode_msys2.lnk
+home/mhodgeslocal/sbin/vscode_cyg.lnk
+home/mhodgeslocal/sbin/vscode_msys2.lnk
 
 
-/local_x86_64-w64-mingw32/
-/local_x86_64-pc-windows-msvc/
-/local_x86_64-pc-linux-gnu/
-/local_x86_64-pc-cygwin/
-/local_aarch64-linux-android_ndk_18b_api_28_stl_libc++_arch_arm64/
-/local_aarch64-linux-android_ndk_17b_api_28_stl_libc++_arch_arm64/
+local_x86_64-w64-mingw32/
+local_x86_64-pc-windows-msvc/
+local_x86_64-pc-linux-gnu/
+local_x86_64-pc-cygwin/
+local_aarch64-linux-android_ndk_18b_api_28_stl_libc++_arch_arm64/
+local_aarch64-linux-android_ndk_17b_api_28_stl_libc++_arch_arm64/
 
-/local/sbin/.vscode/
+local/sbin/.vscode/
 
-/local/src/examples/cmake_executable/build
+local/src/examples/cmake_executable/build
 
 local/src/libffi-*/build
 local/src/libffi-*/src
@@ -32,20 +32,21 @@ local/src/gettext-*/gettext-*.gz
 local/src/gettext-*/buildtool
 local/src/gettext-*/ReadMe.txt
 
-/local/src/glib-*/build
-/local/src/glib-*/src
-/local/src/glib-*/glib-*.xz
-/local/src/glib-*/buildtool.orig
+local/src/glib-*/build
+local/src/glib-*/src
+local/src/glib-*/glib-*.xz
+local/src/glib-*/buildtool.orig
 
-/local/src/ogre/v1-12-0/2019_03_02/build/
+local/src/ogre/v1-12-0/2019_03_02/build/
 
-/local/src/pkg-config/build
-/local/src/pkg-config/src
-/local/src/pkg-config/pkg-config-*.gz
+local/src/pkg-config/build
+local/src/pkg-config/src
+local/src/pkg-config/pkg-config-*.gz
 
-/local/src/zlib-*/build
-/local/src/zlib-*/src
-/local/src/zlib-*/zlib-*.gz
+local/src/texinfo-*/build
+local/src/texinfo-*/src
+local/src/texinfo-*/texinfo-*.tar.xz
 
-/mnt/
-/tmp/
+local/src/zlib-*/build
+local/src/zlib-*/src
+local/src/zlib-*/zlib-*.gz
