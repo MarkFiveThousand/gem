@@ -2,10 +2,6 @@
 
 .gitconfig
 
-home/mhodgeslocal/sbin/vscode_cyg.lnk
-home/mhodgeslocal/sbin/vscode_msys2.lnk
-
-
 local_x86_64-w64-mingw32/
 local_x86_64-pc-windows-msvc/
 local_x86_64-pc-linux-gnu/
@@ -24,20 +20,16 @@ local/src/libffi-*/libffi-*.gz
 local/src/libiconv-*/build
 local/src/libiconv-*/src
 local/src/libiconv-*/libiconv-*.gz
-local/src/libiconv-*/buildtool
 
 local/src/gettext-*/build
 local/src/gettext-*/src
 local/src/gettext-*/gettext-*.gz
-local/src/gettext-*/buildtool
-local/src/gettext-*/ReadMe.txt
 
 local/src/glib-*/build
 local/src/glib-*/src
 local/src/glib-*/glib-*.xz
-local/src/glib-*/buildtool.orig
 
-local/src/ogre/v1-12-0/2019_03_02/build/
+local/src/ogre/v1-12-0/2019_03_02/build
 
 local/src/pkg-config/build
 local/src/pkg-config/src
@@ -50,3 +42,4 @@ local/src/texinfo-*/texinfo-*.tar.xz
 local/src/zlib-*/build
 local/src/zlib-*/src
 local/src/zlib-*/zlib-*.gz
+
