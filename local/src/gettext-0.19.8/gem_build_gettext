@@ -137,12 +137,12 @@ function gem_v_OnUninstall
 	gem_build_OnUninstall
 }
 
-function gem_v_OnClean
+function gem_v_Cmd_Clean
 {
 	# gem_flags_configure, gem_flags_c, gem_flags_cpp, gem_flags_cxx,
 	# gem_flags_ld. To remove a flag:
 	# flags=$(printf '%s\n' "${flags//-byebye/}")
-	gem_build_Cmd_OnClean
+	gem_build_Cmd_Clean
 }
 
 # =============================================================================
