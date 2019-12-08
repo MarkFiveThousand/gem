@@ -1,0 +1,21 @@
+stripslash.o: \
+ /home/mhodges/gem/local/src/texinfo-6.7/src/gnulib/lib/stripslash.c \
+ /usr/include/stdc-predef.h ../../config.h \
+ /home/mhodges/gem/local/src/texinfo-6.7/src/gnulib/lib/dirname.h \
+ /usr/lib/gcc/x86_64-redhat-linux/9/include/stdbool.h stddef.h \
+ /usr/lib/gcc/x86_64-redhat-linux/9/include/stddef.h \
+ /home/mhodges/gem/local/src/texinfo-6.7/src/gnulib/lib/dosname.h
+
+/usr/include/stdc-predef.h:
+
+../../config.h:
+
+/home/mhodges/gem/local/src/texinfo-6.7/src/gnulib/lib/dirname.h:
+
+/usr/lib/gcc/x86_64-redhat-linux/9/include/stdbool.h:
+
+stddef.h:
+
+/usr/lib/gcc/x86_64-redhat-linux/9/include/stddef.h:
+
+/home/mhodges/gem/local/src/texinfo-6.7/src/gnulib/lib/dosname.h:
