@@ -133,7 +133,7 @@ function gem_bash_init_Main()
     if [[ ${gem_os} == *"MINGW64"* || ${gem_os} == *"CYGWIN"* ]]; then
         # Escape spaces.
         gem_fullpath_vscode_exe=$(echo ${gem_fullpath_vscode} | sed 's/ /\\ /g')
-        alias code='${gem_fullpath_vscode_exe} --user-data-dir=${HOME}/.config/Code/'
+        alias code="${gem_fullpath_vscode_exe} --user-data-dir=${HOME}/.config/Code/"
     fi
 
 
