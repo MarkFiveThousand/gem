@@ -124,8 +124,30 @@ Move gem/mnt/ and  gem/local/sbin/gem_mount* to gem/local/home/$USER/.
 
 
 -------------------------------------------------------------------------------
+gem_script
+-------------------------------------------------------------------------------
+
+Do we need to move the -q quiet mode argument to the front of the list?  If
+not, is it quiet if we do "-m -q"?  I suspect the configure process will not
+be quiet.
+
+
+
+
+-------------------------------------------------------------------------------
 gem_build
 -------------------------------------------------------------------------------
+
+In gem_build_OnArg what happens if we specify an argument twice?  E.g.
+"gem_build_zlib -m -m".  I believe it should work as the flag
+gem_option_configure=1 will just be set twice.  Please verify this.
+
+Extend the functionality of gem_option_quiet_mode to affect autotools, meson,
+and cmake builds scripts.
+
+The gem_v_DownloadSource seems pretty stable in derrived build scripts.
+Consider whether it's time to move the implementation into the gem_build base
+script.
 
  ./gem_build_libiconv -c -m produces weird results.  We need to define what
  "clean" means. Does that only clean build files, or does it also remove the
