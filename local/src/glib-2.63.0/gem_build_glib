@@ -17,9 +17,6 @@ function gem_v_SetDefaults
 {
 	gem_build_SetDefaults;
 
-	gem_download_src=1
-
-	# Need gnu extensions for compile asm code.
 	gem_c_standard="-std=gnu11"	# c90, c99, c11, gnu90, gnu99, gnu11
 
 #	gem_build_script="cmake"
@@ -27,10 +24,13 @@ function gem_v_SetDefaults
 	gem_build_script="meson"
 
 	# Common Defaults
-	if [[ $(uname -s) == *"MINGW64"* ]]; then	# MinGW shell on Windows.
+	if [[ ${gem_os} == *"MINGW64"* ]]; then	# MinGW shell on Windows.
 		gem_host=mingw
 #		gem_host=msvc
-	elif [[ $(uname -s) == *"Linux"* ]]; then	# Linux shell.
+	elif [[ ${gem_os} == "CYGWIN"* ]]; then		# Cygwin shell on Windows.
+		gem_host=cygwin
+#		gem_host=mingw
+	elif [[ ${gem_os} == *"Linux"* ]]; then	# Linux shell.
 		gem_host=linux
 #		gem_host=mingw
 #		gem_host=android_arm64_v8a
@@ -38,61 +38,6 @@ function gem_v_SetDefaults
 
 	gem_build_type=release
 #	gem_build_type=debug
-
-	gem_flags_configure=
-	gem_flags_c=
-	gem_flags_cpp=
-	gem_flags_cxx=
-	gem_flags_ld=
-
-
-	gem_filename_pkg=glib
-	gem_filename_version=2.63.0
-	gem_filename_exten=tar.xz
-	gem_filename_base=${gem_filename_pkg}-${gem_filename_version}
-	gem_filename_archive=${gem_filename_base}.${gem_filename_exten}
-	gem_filename_url=http://ftp.gnome.org/pub/gnome/sources/glib/2.63/${gem_filename_archive}
-}
-
-function gem_v_DownloadSource
-{
-	# Download
-	if [[ ! -f ${gem_filename_archive} ]]; then
-		wget -c ${gem_filename_url}
-		if [[ $? != 0 ]]; then
-			gem_v_Error "gem_v_DownloadSource: wget failed to download source archive: ${gem_filename_url}"
-		fi
-	fi
-	# Decompress
-	if [[ -d ${gem_fullpath_src} ]]; then
-		gem_v_Msg "ALERT: src directory already exists.  Archive not uncompressed."
-	else
-		gem_script_mkdir -p ${gem_fullpath_src}
-		gem_flags_tar="<undefined>"
-		if [[ ${gem_filename_exten} == *".gz"* ]]; then
-			gem_flags_tar="xzf"
-		elif  [[ ${gem_filename_exten} == *".xz"* ]]; then
-			gem_flags_tar="xf"
-		fi
-		if [[ ${gem_flags_tar} == "<undefined>" ]]; then
-			gem_v_Error "gem_v_DownloadSource: Unable to decompress downloaded file with extension \"${gem_filename_exten}\"."
-		fi
-		tar -${gem_flags_tar} ${gem_filename_archive} -C ${gem_fullpath_src}
-		if [[ $? != 0 ]]; then
-			gem_v_Error "gem_v_DownloadSource: Failed to uncompress the source archive: ${gem_filename_archive}"
-		fi
-		gem_script_cp -rf ${gem_fullpath_src}/${gem_filename_base}/* ${gem_fullpath_src}
-		gem_script_rm -rf ${gem_fullpath_src}/${gem_filename_base}
-	fi
-
-	gem_build_DownloadSource
-}
-
-function gem_v_OnConfigure
-{
-	# gem_flags_configure, gem_flags_c, gem_flags_cpp, gem_flags_cxx,
-	# gem_flags_ld. To remove a flag:
-	# flags=$(printf '%s\n' "${flags//-byebye/}")
 
 	# SEE CONFIGURATION OPTIONS:
 	# https://developer.gnome.org/glib/stable/glib-building.html
@@ -118,8 +63,32 @@ function gem_v_OnConfigure
 	# tapset_install_dir
 	# xattr
 
-	gem_flags_configure="-Dinternal_pcre=true -Dgtk_doc=false -Dman=false -Dlibmount=false ${gem_flags_configure}"
+	# The package url must be in the following format:
+	# <url parent>/<package name>-<version>.tar.<extension>
+	gem_filename_url=http://ftp.gnome.org/pub/gnome/sources/glib/2.63/glib-2.63.0.tar.xz
 
+	# Set build flags.
+	gem_flags_configure="\
+-Dinternal_pcre=true \
+-Dgtk_doc=false \
+-Dman=false \
+-Dlibmount=false \
+${gem_flags_configure}"
+
+	gem_flags_c="${gem_flags_c}"
+	gem_flags_cpp="${gem_flags_cpp}"
+	gem_flags_cxx="${gem_flags_cxx}"
+	gem_flags_ld="${gem_flags_ld}"
+	gem_flags_common="${gem_flags_common}"
+}
+
+function gem_v_DownloadSource
+{
+	gem_build_DownloadSource
+}
+
+function gem_v_OnConfigure
+{
 	gem_v_DebugDumpVars
 	gem_build_OnConfigure
 }
@@ -127,29 +96,17 @@ function gem_v_OnConfigure
 function gem_v_build_CommandLine_Build
 {
 	gem_build_CommandLine_Build
-#	printf "\ngem_cmd_line_build=\n\n${gem_cmd_line_build}\n\n"
 }
 
 function gem_v_OnBuild
 {
-	# gem_flags_configure, gem_flags_c, gem_flags_cpp, gem_flags_cxx,
-	# gem_flags_ld. To remove a flag:
-	# flags=$(printf '%s\n' "${flags//-byebye/}")
 	gem_v_DebugDumpVars
 	gem_build_OnBuild
 }
 
 function gem_v_OnInstall
 {
-	# gem_flags_configure, gem_flags_c, gem_flags_cpp, gem_flags_cxx,
-	# gem_flags_ld. To remove a flag:
-	# flags=$(printf '%s\n' "${flags//-byebye/}")
 	gem_build_OnInstall
-<<<<<<< HEAD
-
-
-=======
->>>>>>> ed78ed502e025171bfc2fa6928b99da386c8b237
 }
 
 function gem_v_OnUninstall
@@ -175,9 +132,6 @@ function gem_v_OnUninstall
 
 function gem_v_OnClean
 {
-	# gem_flags_configure, gem_flags_c, gem_flags_cpp, gem_flags_cxx,
-	# gem_flags_ld. To remove a flag:
-	# flags=$(printf '%s\n' "${flags//-byebye/}")
 	gem_build_Cmd_OnClean
 }
 
@@ -197,5 +151,4 @@ function gem_v_Main
 {
 	gem_build_Main "$@"
 }
-
 gem_v_Main $@

@@ -230,7 +230,43 @@ function gem_build_SetDefaults
 function gem_v_DownloadSource { gem_build_DownloadSource ;}
 function gem_build_DownloadSource
 {
-	return 0
+	# Parse gem_filename_url.
+	gem_filename_archive=${gem_filename_url##*/}
+	gem_filename_base=${gem_filename_archive%".tar"*}		# Remove everything *after* '.tar'
+	gem_filename_exten=${gem_filename_archive#*${gem_filename_base}.}
+	gem_filename_version=${gem_filename_base#*"-"}		# Remove everything *before* '-'
+	gem_filename_pkg=${gem_filename_base%"-"*}
+
+	# Download
+	if [[ ! -f ${gem_filename_archive} ]]; then
+		wget -c ${gem_filename_url}
+		if [[ $? != 0 ]]; then
+			gem_v_Error "gem_v_DownloadSource: wget failed to download source archive: ${gem_filename_url}"
+		fi
+	fi
+	# Decompress
+	if [[ -d ${gem_fullpath_src} ]]; then
+		gem_v_Msg "MESSAGE: src directory already exists.  Archive not uncompressed."
+	else
+		gem_script_mkdir -p ${gem_fullpath_src}
+		gem_flags_tar="<undefined>"
+		if [[ ${gem_filename_exten} == *".gz" ]]; then
+			gem_flags_tar="xzf"
+		elif  [[ ${gem_filename_exten} == *".xz" ]]; then
+			gem_flags_tar="xf"
+		elif  [[ ${gem_filename_exten} == *".bz2" ]]; then
+			gem_flags_tar="xjf"
+		fi
+		if [[ ${gem_flags_tar} == "<undefined>" ]]; then
+			gem_v_Error "gem_v_DownloadSource: Unable to decompress downloaded file with extension \"${gem_filename_exten}\"."
+		fi
+		tar -${gem_flags_tar} ${gem_filename_archive} -C ${gem_fullpath_src}
+		if [[ $? != 0 ]]; then
+			gem_v_Error "gem_v_DownloadSource: Failed to uncompress the source archive: ${gem_filename_archive}"
+		fi
+		gem_script_cp -rf ${gem_fullpath_src}/${gem_filename_base}/* ${gem_fullpath_src}
+		gem_script_rm -rf ${gem_fullpath_src}/${gem_filename_base}
+	fi
 }
 
 function gem_v_BuildFilePaths { gem_build_BuildFilePaths ;}
@@ -1647,8 +1683,6 @@ function gem_build_Cmd_RunAndroid
 function gem_v_OnArg { gem_build_OnArg "$@";}
 function gem_build_OnArg
 {
-#echo "+++ gem_build::gem_build_OnArg()"
-
 	local arg=${1}
 	case ${arg} in
 		-android-api)
@@ -1708,8 +1742,6 @@ function gem_build_OnArg
 function gem_v_Main { gem_build_Main "$@";}
 function gem_build_Main
 {
-#echo "+++ gem_build::gem_build_Main()"
-
 	gem_time_start=$(( 10#$(date +%s) ))
 
 	gem_option_build=0
@@ -1764,9 +1796,8 @@ function gem_build_Main
 	fi
 
 	# Execute the commands.
-	if [[ ${gem_download_src} == 1 ]]; then
-		gem_v_DownloadSource
-	fi
+	gem_v_DownloadSource
+
 	if [[ ${gem_option_clean} == 1 ]]; then
 		gem_v_Cmd_Clean
 	fi
