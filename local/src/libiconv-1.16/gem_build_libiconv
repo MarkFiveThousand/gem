@@ -15,8 +15,6 @@ function gem_v_SetDefaults
 {
 	gem_build_SetDefaults;
 
-	gem_download_src=1
-
 	# Need gnu extensions for compile asm code.
 	# Tried: c11, c90
 	gem_c_standard="-std=gnu90"	# c90, c99, c11, c17, c2x, gnu90, gnu99, gnu11
@@ -29,7 +27,7 @@ function gem_v_SetDefaults
 	if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW shell on Windows.
 		gem_host=mingw
 #		gem_host=msvc
-	elif [[ ${gem_os} == "CYGWIN"* ]]; then	# MinGW shell on Windows.
+	elif [[ ${gem_os} == "CYGWIN"* ]]; then	# Cygwin shell on Windows.
 		gem_host=cygwin
 #		gem_host=mingw
 	elif [[ ${gem_os} == "Linux"* ]]; then	# Linux shell.
@@ -41,6 +39,11 @@ function gem_v_SetDefaults
 	gem_build_type=release
 #	gem_build_type=debug
 
+	# The package url must be in the following format:
+	# <url parent>/<package name>-<version>.tar.<extension>
+	gem_filename_url=http://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.16.tar.gz
+
+	# Set build flags.
 #-flto \
 #-fPIC \
 
@@ -54,177 +57,38 @@ function gem_v_SetDefaults
 	gem_flags_cxx="${gem_flags_cxx}"
 	gem_flags_ld="${gem_flags_ld}"
 	gem_flags_common="${gem_flags_common}"
-
-	gem_filename_pkg=libiconv
-	gem_filename_version=1.16
-	gem_filename_exten=tar.gz
-	gem_filename_base=${gem_filename_pkg}-${gem_filename_version}
-	gem_filename_archive=${gem_filename_base}.${gem_filename_exten}
-	gem_filename_url=http://ftp.gnu.org/pub/gnu/libiconv/${gem_filename_archive}
 }
 
 function gem_v_DownloadSource
 {
-	# Download
-	if [[ ! -f ${gem_filename_archive} ]]; then
-		wget -c ${gem_filename_url}
-		if [[ $? != 0 ]]; then
-			gem_v_Error "gem_v_DownloadSource: wget failed to download source archive: ${gem_filename_url}"
-		fi
-	fi
-	# Decompress
-	if [[ -d ${gem_fullpath_src} ]]; then
-		gem_v_Msg "MESSAGE: src directory already exists.  Archive not uncompressed."
-	else
-		gem_script_mkdir -p ${gem_fullpath_src}
-		gem_flags_tar="<undefined>"
-		if [[ ${gem_filename_exten} == *".gz"* ]]; then
-			gem_flags_tar="xzf"
-		elif  [[ ${gem_filename_exten} == *".xz"* ]]; then
-			gem_flags_tar="xf"
-		fi
-		if [[ ${gem_flags_tar} == "<undefined>" ]]; then
-			gem_v_Error "gem_v_DownloadSource: Unable to decompress downloaded file with extension \"${gem_filename_exten}\"."
-		fi
-		tar -${gem_flags_tar} ${gem_filename_archive} -C ${gem_fullpath_src}
-		if [[ $? != 0 ]]; then
-			gem_v_Error "gem_v_DownloadSource: Failed to uncompress the source archive: ${gem_filename_archive}"
-		fi
-		gem_script_cp -rf ${gem_fullpath_src}/${gem_filename_base}/* ${gem_fullpath_src}
-		gem_script_rm -rf ${gem_fullpath_src}/${gem_filename_base}
-	fi
-
 	gem_build_DownloadSource
 }
 
 function gem_v_OnConfigure
 {
-	# gem_flags_configure, gem_flags_c, gem_flags_cpp, gem_flags_cxx,
-	# gem_flags_ld. To remove a flag:
-	# flags=$(printf '%s\n' "${flags//-byebye/}")
-
 	gem_v_DebugDumpVars
 	gem_build_OnConfigure
 }
 
 function gem_v_OnCommandLine_Configure_Autotools
 {
-	# gem_flags_configure, gem_flags_c, gem_flags_cpp, gem_flags_cxx,
-	# gem_flags_ld. To remove a flag:
-	# flags=$(printf '%s\n' "${flags//-byebye/}")
-
 	gem_v_DebugDumpVars
 	gem_build_OnCommandLine_Configure_Autotools
-
-	#v1:  Works with v1 build.
-#	gem_cmd_line_configure="${gem_fullpath_src}/configure \
-#--host=x86_64-w64-mingw32 \
-#--prefix=${gem_fullpath_install} \
-#CC=x86_64-w64-mingw32-gcc \
-#CPPFLAGS=\"-I/usr/local/mingw64/include -Wall\" \
-#LDFLAGS=\"-L/usr/local/mingw64/lib\""
 }
-
 
 function gem_v_OnBuild
 {
-	# gem_flags_configure, gem_flags_c, gem_flags_cpp, gem_flags_cxx,
-	# gem_flags_ld. To remove a flag:
-	# flags=$(printf '%s\n' "${flags//-byebye/}")
-
 	gem_v_DebugDumpVars
 	gem_build_OnBuild
 }
 
 function gem_v_build_OnCommandLine_Build
 {
-	# gem_flags_configure, gem_flags_c, gem_flags_cpp, gem_flags_cxx,
-	# gem_flags_ld. To remove a flag:
-	# flags=$(printf '%s\n' "${flags//-byebye/}")
-
 	gem_build_OnCommandLine_Build
-
-
-
-#echo "${gem_cmd_line_build}" ; exit
-
-# DOESN'T WORK #1, Original.
-#		gem_cmd_line_build="make -j${gem_num_jobs} \
-#${gem_fullpath_autotools_makefile} \
-#CFLAGS=\"${gem_flags_c}\" \
-#CPPFLAGS=\"${gem_flags_cpp}\" \
-#CXXFLAGS=\"${gem_flags_cxx}\" \
-#LDFLAGS=\"${gem_flags_ld}\" \
-#${gem_error_ignore_build_errors}"
-
-
-
-# DOES WORK #1, Simple.
-#		make
-
-# WORKS!  It excludes LDFLAGS.
-# v1:  Works with v1 config.
-#	gem_cmd_line_build="make -j${gem_num_jobs} \
-#${gem_fullpath_autotools_makefile} \
-#CFLAGS=\"-std=gnu90 -march=x86-64 -msse4.2 -mpopcnt -m64 -mtune=intel -O2\" \
-#CPPFLAGS=\" -march=x86-64 -msse4.2 -mpopcnt -m64 -mtune=intel -O2\" \
-#CXXFLAGS=\" -march=x86-64 -msse4.2 -mpopcnt -m64 -mtune=intel -O2\" \
-#${gem_error_ignore_build_errors}"
-
-# WORKS! Try adding in the gem_flags_... variables, but still exclude LDFLAGS:
-#		gem_cmd_line_build="make -j${gem_num_jobs} \
-# v2:  Works with v1 config.
-#	gem_cmd_line_build="make -j${gem_num_jobs} \
-#${gem_fullpath_autotools_makefile} \
-#CFLAGS=\"${gem_flags_c}\" \
-#CPPFLAGS=\"${gem_flags_cpp}\" \
-#CXXFLAGS=\"${gem_flags_cxx}\" \
-#${gem_error_ignore_build_errors}"
-
-# FAILS! Added LDFLAGS="".
-#		gem_cmd_line_build="make -j${gem_num_jobs} \
-# v3:  Doesn't work
-#	gem_cmd_line_build="make -j${gem_num_jobs} \
-#${gem_fullpath_autotools_makefile} \
-#CFLAGS=\"${gem_flags_c}\" \
-#CPPFLAGS=\"${gem_flags_cpp}\" \
-#CXXFLAGS=\"${gem_flags_cxx}\" \
-#LDFLAGS=\"\" \
-#${gem_error_ignore_build_errors}"
-
-#echo "======================================================="
-#echo "gem_cmd_line_build:"
-#echo ${gem_cmd_line_build}
-#echo "======================================================="
-# WORKS! Try only adding non-empty flags.
-# v4: 
-#	gem_cmd_line_build="make -j${gem_num_jobs} ${gem_fullpath_autotools_makefile}"
-#		if [[ ${gem_flags_c}x != "x" ]]; then
-#			gem_cmd_line_build="${gem_cmd_line_build} CFLAGS=\"${gem_flags_c}\""
-#		fi
-#		if [[ ${gem_flags_cpp}x != "x" ]]; then
-#			gem_cmd_line_build="${gem_cmd_line_build} CPPFLAGS=\"${gem_flags_cpp}\""
-#		fi
-#		if [[ ${gem_flags_cxx}x != "x" ]]; then
-#			gem_cmd_line_build="${gem_cmd_line_build} CXXFLAGS=\"${gem_flags_cxx}\""
-#		fi
-#		if [[ ${gem_flags_ld}x != "x" ]]; then
-#			gem_cmd_line_build="${gem_cmd_line_build} LDFLAGS=\"${gem_flags_ld}\""
-#		fi
-#		if [[ ${gem_error_ignore_build_errors}x != "x" ]]; then
-#			gem_cmd_line_build="${gem_cmd_line_build} ${gem_error_ignore_build_errors}"
-#		fi
-#echo "gem_cmd_line_build:"
-#echo ${gem_cmd_line_build}
-#echo "======================================================="
-#exit
 }
 
 function gem_v_OnInstall
 {
-	# gem_flags_configure, gem_flags_c, gem_flags_cpp, gem_flags_cxx,
-	# gem_flags_ld. To remove a flag:
-	# flags=$(printf '%s\n' "${flags//-byebye/}")
 	gem_build_OnInstall
 }
 
@@ -306,9 +170,6 @@ share/man/man3/iconvctl.3"
 
 function gem_v_OnClean
 {
-	# gem_flags_configure, gem_flags_c, gem_flags_cpp, gem_flags_cxx,
-	# gem_flags_ld. To remove a flag:
-	# flags=$(printf '%s\n' "${flags//-byebye/}")
 	gem_build_OnClean
 }
 
@@ -323,10 +184,8 @@ function gem_v_OnArg
 	esac
 }
 
-
 function gem_v_Main
 {
 	gem_build_Main "$@"
 }
-
 gem_v_Main $@
