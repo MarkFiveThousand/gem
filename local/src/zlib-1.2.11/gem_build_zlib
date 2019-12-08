@@ -55,7 +55,7 @@ function gem_v_DownloadSource
 	if [[ ! -f ${gem_filename_archive} ]]; then
 		wget -c ${gem_filename_url}
 		if [[ $? != 0 ]]; then
-			gem_v_Error "ERROR: gem_v_DownloadSource: wget failed to download source archive: ${gem_filename_url}"
+			gem_v_Error "gem_v_DownloadSource: wget failed to download source archive: ${gem_filename_url}"
 		fi
 	fi
 	# Decompress
@@ -70,11 +70,11 @@ function gem_v_DownloadSource
 			gem_flags_tar="xf"
 		fi
 		if [[ ${gem_flags_tar} == "<undefined>" ]]; then
-			gem_v_Error "ERROR: gem_v_DownloadSource: Unable to decompress downloaded file with extension \"${gem_filename_exten}\"."
+			gem_v_Error "gem_v_DownloadSource: Unable to decompress downloaded file with extension \"${gem_filename_exten}\"."
 		fi
 		tar -${gem_flags_tar} ${gem_filename_archive} -C ${gem_fullpath_src}
 		if [[ $? != 0 ]]; then
-			gem_v_Error "ERROR: gem_v_DownloadSource: Failed to uncompress the source archive: ${gem_filename_archive}"
+			gem_v_Error "gem_v_DownloadSource: Failed to uncompress the source archive: ${gem_filename_archive}"
 		fi
 
 		gem_script_cp -rf ${gem_fullpath_src}/${gem_filename_base}/* ${gem_fullpath_src}
