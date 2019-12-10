@@ -67,6 +67,9 @@ function gem_v_SetDefaults
 	# <url parent>/<package name>-<version>.tar.<extension>
 	gem_filename_url=http://ftp.gnome.org/pub/gnome/sources/glib/2.63/glib-2.63.0.tar.xz
 
+	# IMPORTANT: For configuration options see 
+	# https://developer.gnome.org/glib/2.42/glib-building.html
+
 	# Set build flags.
 	gem_flags_configure="\
 -Dinternal_pcre=true \
