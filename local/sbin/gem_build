@@ -153,8 +153,6 @@ function gem_build_ExitHelp
 function gem_v_SetDefaults { gem_build_SetDefaults ;}
 function gem_build_SetDefaults
 {
-	gem_download_src=0
-
 	gem_use_clang=0			# Else gcc.
 	gem_is_cplusplus=0
 	gem_c_standard="-std=c11"	# c90, c99, c11, c17, c2x, gnu90, gnu99, gnu11
