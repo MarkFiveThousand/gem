@@ -6,8 +6,7 @@ local_x86_64-w64-mingw32/
 local_x86_64-pc-windows-msvc/
 local_x86_64-pc-linux-gnu/
 local_x86_64-pc-cygwin/
-local_aarch64-linux-android_ndk_18b_api_28_stl_libc++_arch_arm64/
-local_aarch64-linux-android_ndk_17b_api_28_stl_libc++_arch_arm64/
+local_aarch64-linux-android_*
 
 local/sbin/.vscode/
 
@@ -29,7 +28,10 @@ local/src/glib-*/build
 local/src/glib-*/src
 local/src/glib-*/glib-*.xz
 
-local/src/ogre/v1-12-0/2019_03_02/build
+local/src/ogre/v1-12-3/2019_12_12/build
+local/src/ogre/v1-12-3/2019_12_12/src
+
+local/src/
 
 local/src/pkg-config/build
 local/src/pkg-config/src
