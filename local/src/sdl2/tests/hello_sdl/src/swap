@@ -1,0 +1,12 @@
+TESTGL2=${GEM_DIR_LOCAL}/src/sdl2_apps/hello_sdl/src/testgl2
+TESTGLES2=${GEM_DIR_LOCAL}/src/sdl2_apps/hello_sdl/src/testgles2
+if [ -e ${TESTGL2}.c ]; then
+	mv ${TESTGL2}.c ${TESTGL2}.x
+else
+	mv ${TESTGL2}.x ${TESTGL2}.c
+fi
+if [ -e ${TESTGLES2}.c ]; then
+	mv ${TESTGLES2}.c ${TESTGLES2}.x
+else
+	mv ${TESTGLES2}.x ${TESTGLES2}.c
+fi
