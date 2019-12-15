@@ -1,0 +1,359 @@
+#!/bin/bash
+
+# =============================================================================
+# Overview
+# 
+# This script builds the code base for the project.  This script *must* be run
+# in the parent of the src/ folder.  See ExitHelp() below for usage information.
+#
+# $PROJECT_TARGET_PLATFORM is what the code will run on.
+# $PROJECT_BUILD_PLATFORM is what we're building on.
+# Both default to $(uname -s)_$(uname -m)
+#
+# =============================================================================
+
+SCRIPT_NUM_ARGS=$#
+SCRIPT_ARGS=$@
+
+function ExitHelp()
+{
+	if [[ ! -z $1 ]]; then
+		echo $1
+	fi
+	echo "============================================================================="
+	echo "IMPORTANT: This script must be located in the parent of the source tree."
+	echo
+	echo "FILE STRUCTURE:"
+	echo ""
+	echo "    EXAMPLE:"
+	echo "        my_project/       Parent of source tree.  buildtool script here."
+	echo "            bin/          Install location"
+	echo "            build/        Object & CMake files"
+	echo "            lib/          Library files"
+	echo "            src/          Source tree"
+	echo
+	echo "USAGE:"
+	echo "    Arguments:"
+	echo "        cmake"
+	echo "        build"
+	echo "        clean"
+	echo "        install"
+	echo "        android"
+	echo "        debug"
+	echo "        release"
+	echo
+	echo "EXAMPLE USAGE:"
+	echo ""
+	echo "    buildtool cmake"
+	echo "    buildtool debug build android"
+	echo "    buildtool release clean"
+	echo ""
+	echo "============================================================================="
+}
+
+function PrintVars()
+{
+	echo "PROJECT_TARGET_PLATFORM = $PROJECT_TARGET_PLATFORM"
+	echo "PROJECT_BUILD_PLATFORM = $PROJECT_BUILD_PLATFORM"
+	echo "PROJECT_ANDROID_ABI = $PROJECT_ANDROID_ABI"
+	echo "PROJECT_ANDROID_API = $PROJECT_ANDROID_API"
+	echo "PROJECT_ROOT_DIR = $PROJECT_ROOT_DIR"
+	echo "PROJECT_BUILD_FULLPATH = $PROJECT_BUILD_FULLPATH"
+	echo "CMAKE_BUILD_TYPE = $CMAKE_BUILD_TYPE"
+	echo ""
+}
+
+# =============================================================================
+#                                 Android Utilities
+# =============================================================================
+#SourceFileList=""
+function EnumSourceFiles
+{
+	# Strip trailing /
+	srcDir=${1%/}
+	if [ ! -d "$srcDir" ]; then
+		printf "WARNING: EnumSourceFiles() source directory does not exist:\n"
+		printf "         $srcDir\n"
+		return 0
+	fi
+
+	# Process files in $srcDir*
+	printf "EnumSourceFiles() adding the following files to the android project:\n"
+	srcFileList=$(find $srcDir -mindepth 1 -maxdepth 1 -type f)
+	for srcFileName in $srcFileList
+	do
+		fileName=${srcFileName##*/}
+		srcFile=${srcDir}/$fileName
+
+		# Do we want this file?
+		if [[ $srcFile == *".c"* ]]; then
+			printf "        Adding: $srcFile\n"
+			# Add the file
+			SourceFileList=${SourceFileList}'\t'${srcFile}' \\\n'
+		fi
+	done
+
+	# Iterate over the sub directories in $srcDir.
+	srcDirList=$(find $srcDir -mindepth 1 -maxdepth 1 -type d)
+	for srcDir in $srcDirList
+	do
+		# Enter a sub directory.
+		pushd $srcDir > /dev/null
+		EnumSourceFiles $srcDir
+		popd > /dev/null
+	done
+}
+
+# CopyDirs() copies all the files in $SRC_DIR and its subtrees to $DST_DIR.
+# We must iterate over the individual files and sub directories manually so
+# that we can process each file.  For source files we must add each one to
+# Android.mk to get built.  Also, we want to selectively omit files for non-
+# android platforms.  Directories to be omitted can be identified by their
+# paths containing "linux" or "mingw".  We also need to process assets in the
+# same way.
+function CopyDirs()
+{
+	# Strip trailing /
+	srcDir=${1%/}
+	dstDir=${2%/}
+	dstDirRoot=$dstDir
+
+	if [ ! -d "$srcDir" ]; then
+		printf "WARNING: CopyDirs() source directory does not exist:\n"
+		printf "         $srcDir\n"
+		return
+	fi
+	if [ ! -d "$dstDir" ]; then
+		mkdir -p $dstDir
+		printf "Creating: $dstDir\n"
+	fi
+
+	# Process files in $srcDir
+	srcFileList=$(find $srcDir -mindepth 1 -maxdepth 1 -type f)
+	for srcFileName in $srcFileList
+	do
+		fileName=${srcFileName##*/}
+		srcFile=${srcDir}/$fileName
+		dstFile=${dstDir}/$fileName
+		cp $srcFile $dstFile
+		SRC_LIST=${SRC_LIST}$'\t'${srcFile}$' \\\n'
+	done
+
+	# Iterate over the sub directories in $srcDir.
+	srcDirList=$(find $srcDir -mindepth 1 -maxdepth 1 -type d)
+	for srcDir in $srcDirList
+	do
+		# Enter a sub directory.
+		pushd $srcDir > /dev/null
+		leafDir=${srcDir##*/}
+		dstDir=${dstDir}/$leafDir
+
+		CopyDirs $srcDir $dstDir	# Recurse into and process the sub directory.
+
+		# Pop the sub directory
+		dstDir=${dstDir%${dstDir##*/}}
+		dstDir=${dstDir%/}
+		popd > /dev/null
+	done
+}
+
+
+# =============================================================================
+#                                      build
+# =============================================================================
+
+# Creates an empty build direectory if it doesn't exist, or else deletes all
+# its contents if it does.
+function CreateCleanBuildDirectory()
+{
+	if [ ! -d ${PROJECT_BUILD_FULLPATH} ]; then
+		mkdir -p ${PROJECT_BUILD_FULLPATH}
+	else
+		rm -fr ${PROJECT_BUILD_FULLPATH}/*
+	fi
+}
+
+function cmd_build()
+{
+	if [ $PROJECT_TARGET_PLATFORM == "Android" ]; then
+
+		CreateCleanBuildDirectory
+		cp -r $SDL_DIR/android-project/* ${PROJECT_BUILD_FULLPATH}
+
+		# ${PROJECT_ROOT_DIR}/android-project/jni/src/Android.mk contains the
+		# following reference:
+		#
+		# SDL_PATH := ../SDL
+		#
+		# We make this found by creating a symbolic link:
+		cd ${PROJECT_BUILD_FULLPATH}/jni
+		ln -s $SDL_DIR ./SDL
+		cd src
+
+		# Add our source files to ${PROJECT_BUILD_FULLPATH}/jni/src/Android.mk
+		EnumSourceFiles $PROJECT_ROOT_DIR/src
+		printf "\$SourceFileList =\n"
+		printf "        $SourceFileList\n"
+		sed -i 's|YourSourceHere.c|'"$SourceFileList"'|g' ${PROJECT_BUILD_FULLPATH}/jni/src/Android.mk
+
+		sed -i 's|APP_ABI := armeabi armeabi-v7a x86|APP_ABI := '"$PROJECT_ANDROID_ABI"'|g' ${PROJECT_BUILD_FULLPATH}/jni/Application.mk
+		sed -i 's|APP_PLATFORM=android-10|APP_PLATFORM=android-'"$PROJECT_ANDROID_API"'|g' ${PROJECT_BUILD_FULLPATH}/jni/Application.mk
+
+		sed -i 's|android:minSdkVersion="'"$PROJECT_ANDROID_API"'" android:targetSdkVersion="'"$PROJECT_ANDROID_API"'"|android:minSdkVersion="'"$PROJECT_ANDROID_API"'" android:targetSdkVersion="'"$PROJECT_ANDROID_API"'"|g' ${PROJECT_BUILD_FULLPATH}/AndroidManifest.xml
+
+		# Copy our assets into the android project.
+		if [ -d ${PROJECT_ROOT_DIR}/assets ]; then
+			CopyDirs ${PROJECT_ROOT_DIR}/assets ${PROJECT_BUILD_FULLPATH}/assets
+		fi
+		ndk-build
+	else
+		cd ${PROJECT_BUILD_FULLPATH}
+		make
+	fi
+}
+
+
+# =============================================================================
+#                                      install
+# =============================================================================
+function cmd_install()
+{
+	cd ${PROJECT_BUILD_FULLPATH}
+	if [ $PROJECT_TARGET_PLATFORM == "Android" ]; then
+		android update project --target "android-${PROJECT_ANDROID_API}" --path ./
+		ant debug install
+	else
+		make install
+	fi
+}
+
+# =============================================================================
+#                                      clean
+# =============================================================================
+function cmd_clean()
+{
+	if [ $PROJECT_TARGET_PLATFORM == "Android" ]; then
+		printf "The clean command is not implemented yet for android builds.\n"
+	else
+		cd ${PROJECT_BUILD_FULLPATH}
+		make clean
+	fi
+}
+
+# =============================================================================
+#                                      cmake
+# =============================================================================
+function cmd_cmake()
+{
+	if [ $PROJECT_TARGET_PLATFORM == "Android" ]; then
+		printf "The cmake command is not necessary for android builds.\n"
+		return 0
+	fi
+	# Create build directories.
+	CreateCleanBuildDirectory
+	cd ${PROJECT_BUILD_FULLPATH}
+
+	# Build platform-specific Settings
+	if [ $PROJECT_BUILD_PLATFORM == "GEM_OS_HOST_BUILD_MINGW" ]; then
+		CMAKE_GENERATOR="MSYS Makefiles"
+		CMAKE_MAKE_PROGRAM=$(which mingw32-make)
+	elif [ $PROJECT_BUILD_PLATFORM == "GEM_OS_HOST_BUILD_LINUX" ]; then
+		CMAKE_GENERATOR="Unix Makefiles"
+		CMAKE_MAKE_PROGRAM=$(which make)
+	fi
+
+#	cmake --debug-output
+	cmake \
+		$PROJECT_ROOT_DIR/src \
+		-G"${CMAKE_GENERATOR}" \
+		-DCMAKE_MAKE_PROGRAM="${CMAKE_MAKE_PROGRAM}" \
+		-DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}"
+}
+
+
+# =============================================================================
+#                                       Main
+# =============================================================================
+function Main()
+{
+	if [ ! -d $(pwd)/src ]; then
+		printf "ERROR: This script must be run in the parent of src/.\n"
+		exit
+	fi
+
+	PROJECT_ROOT_DIR=$(pwd)
+	PROJECT_TARGET_PLATFORM=$(uname -s)_$(uname -m)
+	PROJECT_BUILD_PLATFORM=$(uname -s)_$(uname -m)
+	PROJECT_ANDROID_ABI=arm64-v8a
+	PROJECT_ANDROID_API=23
+
+	for arg in $SCRIPT_ARGS
+	do
+		case "$arg" in
+		android|ANDROID|Android)
+			PROJECT_TARGET_PLATFORM="Android"
+			;;
+		build)
+			cmd=cmd_build
+			;;
+		install)
+			cmd=cmd_install
+			;;
+		clean)
+			cmd=cmd_clean
+			;;
+		cmake)
+			cmd=cmd_cmake
+			;;
+		debug|DEBUG|Debug)
+			CMAKE_BUILD_TYPE=Debug
+			;;
+		release|RELEASE|Release)
+			printf "=====================================================\n"
+			printf "NOTE: Support for Release build type is not complete.\n"
+			printf "      All builds are hardcoded to be Debug.\n"
+			printf "=====================================================\n"
+			CMAKE_BUILD_TYPE=Release
+			;;
+		relwithdebinfo|RELWITHDEBINFO|RelWithDebInfo)
+			printf "============================================================\n"
+			printf "NOTE: Support for RelWithDebInfo build type is not complete.\n"
+			printf "      All builds are hardcoded to be Debug.\n"
+			printf "============================================================\n"
+			CMAKE_BUILD_TYPE=RelWithDebInfo
+			;;
+		minsizerel|MINSIZEREL|MinSizeRel)
+			printf "========================================================\n"
+			printf "NOTE: Support for MinSizeRel build type is not complete.\n"
+			printf "      All builds are hardcoded to be Debug.\n"
+			printf "========================================================\n"
+			CMAKE_BUILD_TYPE=MinSizeRel
+			;;
+		*)
+			ExitHelp "ERROR: Unrecognised parameter.\n"
+			return
+			;;
+		esac
+	done
+
+    if [[ -z $CMAKE_BUILD_TYPE || ($CMAKE_BUILD_TYPE != "Debug" && $CMAKE_BUILD_TYPE != "Release" && $CMAKE_BUILD_TYPE != "RelWithDebInfo" && $CMAKE_BUILD_TYPE != "MinSizeRel") ]]; then
+        printf "ERROR: You must include a CMAKE_BUILD_TYPE: Debug, Release, RelWithDebInfo, MinSizeRel.\n"
+        exit;
+    fi
+
+	if [ $PROJECT_TARGET_PLATFORM == "Android" ]; then	# Build Android path.
+		SUFFIX=api_${PROJECT_ANDROID_API}_abi_${PROJECT_ANDROID_ABI}/
+	fi
+	PROJECT_BUILD_FULLPATH=$PROJECT_ROOT_DIR/build/$PROJECT_TARGET_PLATFORM/${SUFFIX}$CMAKE_BUILD_TYPE
+
+	PrintVars
+
+	if [ -z $cmd ]; then
+		ExitHelp "ERROR: An operation must be specified.\n"
+	fi
+	$cmd	# Invoke the command.
+}
+Main
+
+
+
