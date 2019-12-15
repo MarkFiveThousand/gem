@@ -1,0 +1,88 @@
+Changes to make Ogre3D Android version compile:
+
+-------------------------------------------------------------------------------
+grep -rn "msse"
+
+ogre/CMakeLists.txt:102:    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse")
+
+This is getting set even though the check for sse is failing.  I had to comment out the code that set this compile flag.
+-------------------------------------------------------------------------------
+In: /home/mhodges/projects/ogre/v1-11/2018_05_12/ogre/CMake/Dependencies.cmake:
+
+This is where we tell cmake to configure the project (zziplib dependency).  Around line 129 find:
+    execute_process(COMMAND ${CMAKE_COMMAND}
+        -DCMAKE_INSTALL_PREFIX=${OGREDEPS_PATH}
+        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+		-DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}	# <----- Add this.
+        -DZLIB_ROOT=${OGREDEPS_PATH}
+        -DBUILD_SHARED_LIBS=${OGREDEPS_SHARED}
+        -G ${CMAKE_GENERATOR}
+        -DCMAKE_GENERATOR_PLATFORM=${CMAKE_GENERATOR_PLATFORM}
+        ${CROSS}
+        ${CMAKE_BINARY_DIR}/ZZIPlib-master
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/ZZIPlib-master)
+
+
+This is where we tell cmake to configure the project (freetype dependency).  Around line 155 find:
+    execute_process(COMMAND ${CMAKE_COMMAND}
+        -DCMAKE_INSTALL_PREFIX=${OGREDEPS_PATH}
+        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+		-DCMAKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}	# <----- Add this.
+        -DZLIB_ROOT=${OGREDEPS_PATH}
+        -DBUILD_SHARED_LIBS=${OGREDEPS_SHARED}
+        -G ${CMAKE_GENERATOR}
+        -DCMAKE_GENERATOR_PLATFORM=${CMAKE_GENERATOR_PLATFORM}
+        ${CROSS}
+        ${CMAKE_BINARY_DIR}/ZZIPlib-master
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/ZZIPlib-master)
+
+
+-------------------------------------------------------------------------------
+In /home/mhodges/projects/ogre/v1-11/2018_05_12/ogre/CMakeFile.txt near line 
+101 comment out:
+
+  if (OGRE_GCC_HAS_SSE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse")
+  endif ()
+
+NOTE: This should only be done for Android!!!
+
+-------------------------------------------------------------------------------
+Ogre samplebrowser wants to run something like:
+
+android update project --target android-19 --path /home/mhodges/projects/ogre/v1-11/2018_05_12/ogre_build/android/armeabi-v7a/API_19/Release/SampleBrowserNDK
+
+...but google has deprecated this required tool.  You may download the old sdk
+tools.
+
+Download it:
+
+OLD_SDK_TOOLS_ZIP=tools_r25.2.3-linux.zip
+cd /~/Android
+wget https://dl.google.com/android/repository/${OLD_SDK_TOOLS_ZIP}
+unzip ./${OLD_SDK_TOOLS_ZIP}
+# First time only!!! Save original sdk\tools
+#cp ~/Android/Sdk/tools ~/Android/Sdk/tools_original
+
+
+# Set sdk\tools to old tool directory
+rm -rf ~/Android/Sdk/tools
+cp -r ~/Android/tools ~/Android/Sdk/tools
+
+# Build Ogre:
+./buildtool -api 19 -abi armeabi-v7a -config release -b
+
+# Restore sdk\tools to original
+rm -rf ~/Android/Sdk/tools
+cp -r ~/Android/Sdk/tools_original ~/Android/Sdk/tools
+
+
+-------------------------------------------------------------------------------
+
+
+
+
+
+
+
+

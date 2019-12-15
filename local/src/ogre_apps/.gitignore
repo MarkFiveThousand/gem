@@ -1,0 +1,10 @@
+# http://git-scm.com/docs/gitignore
+# Untracked files:
+
+
+Tutorial/build/
+Tutorial/dist/
+Tutorial/.dep.inc
+Tutorial/LowLevelOgre.log
+Simple2/bin
+Simple2/build
