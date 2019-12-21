@@ -224,6 +224,18 @@ function gem_script_cp
 	fi
 }
 
+function gem_script_mv
+{
+	gem_script_ValidateFileParams ${@}
+
+	local gem_cmd_line="mv ${@}"
+	${gem_cmd_line}
+	local gem_result=$?
+	if [[ ${gem_result} -ne 0 ]]; then
+		gem_v_Error "gem_script_mv failed to move file(s).  Error code: ${gem_result}, Command line: ${gem_cmd_line}."
+	fi
+}
+
 function gem_script_rm
 {
 	gem_script_ValidateFileParams ${@}
