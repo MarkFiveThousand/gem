@@ -32,8 +32,8 @@ local/src/glib-*/glib-*.xz
 
 local/src/help2man-1.47.9
 
-local/src/ogre/v1-12-3/2019_12_15/build
-local/src/ogre/v1-12-3/2019_12_15/src
+local/src/ogre-1.12.3/build
+local/src/ogre-1.12.3/src
 
 local/src/pkg-config/build
 local/src/pkg-config/src
