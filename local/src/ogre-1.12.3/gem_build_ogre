@@ -51,11 +51,22 @@ function gem_v_DownloadSource
 	if [[ -d ./ogre || -d ./src ]]; then
 		gem_v_Error "The source tree already exists.  Refusing to download."
 	fi
-	git clone --depth 1 https://github.com/OGRECave/ogre.git
+	git clone --depth 1 --recursive --branch v1.12.3 https://github.com/OGRECave/ogre.git
 
 	if [[ -d ./ogre && ! -d ./src ]]; then
 		mv ./ogre ./src
 	fi
+}
+
+function gem_v_OnCommandLine_Configure_CMake
+{
+	gem_cmake_params_extra=" \
+-DCMAKE_CXX_FLAGS="-I${gem_fullpath_build}/Dependencies/include" \
+${gem_cmake_params_extra}"
+
+	gem_build_OnCommandLine_Configure_CMake
+
+	echo ${gem_cmd_line_configure} ; exit
 }
 
 function gem_v_OnConfigure

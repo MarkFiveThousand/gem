@@ -50,3 +50,5 @@ local/src/zlib-*/build
 local/src/zlib-*/src
 local/src/zlib-*/zlib-*.gz
 
+local/src/zziplib-*/build
+local/src/zziplib-*/src
