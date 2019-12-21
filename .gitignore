@@ -31,8 +31,6 @@ local/src/glib-*/glib-*.xz
 local/src/ogre/v1-12-3/2019_12_12/build
 local/src/ogre/v1-12-3/2019_12_12/src
 
-local/src/
-
 local/src/pkg-config/build
 local/src/pkg-config/src
 local/src/pkg-config/pkg-config-*.gz
