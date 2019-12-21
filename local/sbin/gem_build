@@ -104,6 +104,7 @@ function gem_build_ExitHelp
 	gem_v_Msg "  -m           Configure or cmake"
 	gem_v_Msg "  -b           Build"
 	gem_v_Msg "  -c           Clean"
+	gem_v_Msg "  -d           Download the source file."
 	gem_v_Msg "  -scrub       Uninstall and delete all build files."
 	gem_v_Msg "  -help        Display this help message."
 	gem_v_Msg "  -i           Install"
@@ -308,25 +309,26 @@ function gem_build_BuildFilePaths
 	#     documentation states different things.
 	#
 	# In a cross compile situation, some .pc files on the system will be for
-	# the build machine and some will be for the target machine. In order to
+	# the build machine and some will be for the host machine. In order to
 	# make sure that the build machine's .pc files are not found, both the
 	# $PKG_CONFIG_PATH and $PKG_CONFIG_PATH environment variables must be set
-	# to directories containing only target machine `.pc files.
+	# to directories containing only host machine `.pc files.
 	#
 	# MORE INFO HERE: https://autotools.io/pkgconfig/cross-compiling.html
 
 	export PKG_CONFIG=${gem_fullpath_tool_bin}/pkg-config
 	if [[ ! -f ${PKG_CONFIG} ]]; then
-		if [[ ${gem_option_quiet_mode} -eq 0 ]]; then
-			gem_v_Msg "MESSAGE: Gem's pkg-config was not found at ${PKG_CONFIG}.  Looking for system pkg-config..."
-		fi
+#		if [[ ${gem_option_quiet_mode} -eq 0 ]]; then
+#			gem_v_Msg "MESSAGE: Gem's pkg-config was not found at ${PKG_CONFIG}.  Looking for system pkg-config..."
+#		fi
 		PKG_CONFIG=$(which pkg-config)
 		if [[ ! -f ${PKG_CONFIG} ]]; then
 			gem_v_ExitMsg "MESSAGE: The system pkg-config was not found."
 		else
-			if [[ ${gem_option_quiet_mode} -eq 0 ]]; then
-				gem_v_Msg "MESSAGE: The system pkg-config was found at ${PKG_CONFIG}."
-			fi
+			local noop=0
+#			if [[ ${gem_option_quiet_mode} -eq 0 ]]; then
+#				gem_v_Msg "MESSAGE: The system pkg-config was found at ${PKG_CONFIG}."
+#			fi
 		fi
 	else
 		if [[ ${gem_option_quiet_mode} -eq 0 ]]; then
@@ -335,7 +337,17 @@ function gem_build_BuildFilePaths
 	fi
 	gem_fullpath_pkg_config=${PKG_CONFIG}
 
-	export PKG_CONFIG_SYSROOT_DIR=${gem_fullpath_sysroot}
+	# PKG_CONFIG_SYSROOT_DIR will be prepended to the -I and -L directories.
+	# We *do* want this for finding system libraries.  We *do not* want that
+	# for our gem libraries.  Otherwise
+	# -I/home/mhodges/gem/local_x86_64-w64-mingw32/release/include
+	# will become
+	# -I/usr/x86_64-w64-mingw32/sys-root/home/mhodges/gem/local_x86_64-w64-mingw32/release/include
+	# when cross compiling.  If this becomes a problem we can add another
+	# version of gem_build_PkgConfig for system libraries that sets
+	# PKG_CONFIG_SYSROOT_DIR to gem_fullpath_sysroot.
+
+	export PKG_CONFIG_SYSROOT_DIR=
 
 	# Building under MinGW on Windows.	# zlib.pc is in ${gem_fullpath_install}/share/pkgconfig
 	# Other .pc files are in ${gem_fullpath_install}/lib/pkgconfig
@@ -381,14 +393,62 @@ function gem_build_BuildFilePaths
 #echo "----------------"
 #exit
 
+# Source: https://linux.die.net/man/1/pkg-config
+# PKG_CONFIG_TOP_BUILD_DIR
+#
+# PKG_CONFIG_SYSTEM_INCLUDE_PATH
+#
+# PKG_CONFIG_SYSTEM_LIBRARY_PATH
+#
+# PKG_CONFIG_PATH
+#   A colon-separated (on Windows, semicolon-separated) list of directories to
+#   search for .pc files. The default directory will always be searched after
+#   searching the path; the default is libdir/pkgconfig:datadir/pkgconfig where
+#   libdir is the libdir where pkg-config and datadir is the datadir where
+#   pkg-config was installed.
+#
+# PKG_CONFIG_DEBUG_SPEW
+#
+# 	If set, causes pkg-config to print all kinds of debugging information and
+#   report all errors.
+#
+# PKG_CONFIG_TOP_BUILD_DIR
+#
+# 	A value to set for the magic variable pc_top_builddir which may appear in
+#   .pc files. If the environment variable is not set, the default value
+#   '$(top_builddir)' will be used. This variable should refer to the top
+#   builddir of the Makefile where the compile/link flags reported by
+#   pkg-config will be used. This only matters when compiling/linking against
+#   a package that hasn't yet been installed.
+#
+# PKG_CONFIG_DISABLE_UNINSTALLED
+#
+#   Normally if you request the package "foo" and the package "foo-uninstalled"
+#   exists, pkg-config will prefer the "-uninstalled" variant. This allows
+#   compilation/linking against uninstalled packages. If this environment
+#   variable is set, it disables said behavior.
+#
+# PKG_CONFIG_ALLOW_SYSTEM_CFLAGS
+#
+# 	Don't strip -I/usr/include out of cflags.
+#
+# PKG_CONFIG_ALLOW_SYSTEM_LIBS
+#
+# 	Don't strip -L/usr/lib out of libs
+#
+# PKG_CONFIG_SYSROOT_DIR
+#
+#   Modify -I and -L to use the directories located in target sysroot. this
+#   option is usefull when crosscompiling package that use pkg-config to
+#   determine CFLAGS and LDFLAGS. -I and -L are modified to point to the new
+#   system root. this means that a -I/usr/include/libfoo will become
+#   -I/var/target/usr/include/libfoo with a PKG_CONFIG_SYSROOT_DIR equal to
+#   /var/target (same rule apply to -L)
+#
+# PKG_CONFIG_LIBDIR
+#
+# 	Replaces the default pkg-config search directory.
 
-#PKG_CONFIG_DEBUG_SPEW
-#PKG_CONFIG_TOP_BUILD_DIR
-#PKG_CONFIG_DISABLE_UNINSTALLED
-#PKG_CONFIG_ALLOW_SYSTEM_CFLAGS
-#PKG_CONFIG_ALLOW_SYSTEM_LIBS
-#PKG_CONFIG_SYSTEM_INCLUDE_PATH
-#PKG_CONFIG_SYSTEM_LIBRARY_PATH
 
 #	pkg-config --list-all ; exit
 
@@ -445,6 +505,7 @@ function gem_build_SelectCMakeGenerator
 		linux|cygwin|mingw|android_x86_64|android_v7vfpv3|android_arm_v7_plus_neon|android_arm64_v8a)
 			gem_cmake_generator="-G\"Unix Makefiles\"" ;;
 		msvc)
+			gem_v_Error "We may need to pass --msvc-syntax to pkg-config."
 			# Good sources: https://cognitivewaves.wordpress.com/cmake-and-visual-studio/
 			# https://gitlab.kitware.com/cmake/community/wikis/FAQ
 			# https://devblogs.microsoft.com/cppblog/cmake-support-in-visual-studio/
@@ -553,6 +614,15 @@ function gem_build_FlagsToMesonArray
 	if [[ ${gem_counter} > 0 ]]; then
 		gem_flags_meson_array="[${gem_flags_meson_array}]"
 	fi
+}
+
+function gem_build_PkgConfig
+{
+	local gem_output=$(pkg-config "$@")
+	if [[ $? -ne 0 ]]; then
+		gem_v_Error "Command failed: pkg-config $@"
+	fi
+	echo ${gem_output}
 }
 
 
@@ -683,10 +753,10 @@ function gem_build_SetHost_mingw
 		# gem_build_libiconv.
 		if [[ ${gem_os} != "MINGW64"* ]]; then
 			if [[ ${gem_os} == "CYGWIN"* || ${gem_os} == "Linux" ]]; then
-				pushd /usr/lib/gcc/x86_64-w64-mingw32
+				pushd /usr/lib/gcc/x86_64-w64-mingw32 &>/dev/null
 			elif [[ ${gem_os} == "MINGW64"* ]]; then
 				# Not cross compiling.
-				pushd /mingw64/lib/gcc/x86_64-w64-mingw32
+				pushd /mingw64/lib/gcc/x86_64-w64-mingw32 &>/dev/null
 	#			gem_fullpath_gcc_libs=${gem_fullpath_sysroot}/mingw/lib
 			else
 				gem_v_Error "gem_build_SetHost_mingw: Unrecognized shell: ${gem_os}."
@@ -696,7 +766,7 @@ function gem_build_SetHost_mingw
 				gem_v_Error "gem_build_SetHost_mingw(): Failed to determine library directory."
 			fi
 			gem_fullpath_gcc_libs=$(pwd)/$(dirname ${gem_path_found})
-			popd
+			popd &>/dev/null
 			if [[ ! -d ${gem_fullpath_gcc_libs} ]]; then
 				gem_v_Error "gem_build_SetHost_mingw(): Library path does not exist: ${gem_fullpath_gcc_libs}.  Did the version number change?"
 			fi
@@ -1328,6 +1398,38 @@ function gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_android
 
 
 # =============================================================================
+#                                   Configure
+# =============================================================================
+function gem_v_Cmd_ConfigureHelp { gem_build_Cmd_ConfigureHelp ;}
+function gem_build_Cmd_ConfigureHelp
+{
+	# Verify build directory exists, then enter it.
+	if [[ ${gem_fullpath_build}x == "x" ]]; then
+		gem_v_Error "gem_build_Cmd_ConfigureHelp: gem_fullpath_build not defined in $(basename ${0})."
+	fi
+	if [[ ! -d ${gem_fullpath_build} ]]; then
+		gem_v_Error "gem_build_Cmd_ConfigureHelp: Build directory ${gem_fullpath_build} does not exist.  Try configuring the project first using the -m option."
+	fi
+	gem_script_cd ${gem_fullpath_build}
+
+	if [[ ${gem_build_script} == "cmake" ]]; then
+
+		gem_v_Error "Configuration help is not implemented for CMake."
+
+	elif [[ ${gem_build_script} == "autotools" ]]; then
+
+		if [[ ! -f ./configure ]]; then
+			gem_v_Error "gem_build_Cmd_ConfigureHelp: The configuration file ${gem_fullpath_build}/configure does not exist.  Try configuring the project first using the -m option."
+		fi
+		./configure --help
+
+	elif [[ ${gem_build_script} == "meson" ]]; then
+
+		meson configure --help
+	fi
+}
+
+# =============================================================================
 #                                     Build
 # =============================================================================
 
@@ -1689,10 +1791,12 @@ function gem_build_OnArg
 		-android-standalone)
 			gem_fullpath_android_standalone_toolchain=${2}
 			return 2 ;;
-		-b)        gem_option_build=1 ;;
-		-c)        gem_option_clean=1 ;;
-		-cmdline)  gem_option_cmdline_only=1 ; gem_script_option_quiet_mode=1 ;;
-		-help)     gem_v_ExitHelp ;;
+		-b)			gem_option_build=1 ;;
+		-c)			gem_option_clean=1 ;;
+		-ch)		gem_option_configure_help=1 ;;
+		-cmdline)	gem_option_cmdline_only=1 ; gem_script_option_quiet_mode=1 ;;
+		-d)			gem_option_download=1 ;;
+		-help)		gem_v_ExitHelp ;;
 		-host)
 			case ${2} in
 				linux|cygwin|mingw|android_x86_64|android_v7vfpv3|android_arm_v7_plus_neon|android_arm64_v8a)
@@ -1746,6 +1850,8 @@ function gem_build_Main
 	gem_option_clean=0
 	gem_option_cmdline_only=0
 	gem_option_configure=0
+	gem_option_configure_help=0
+	gem_option_download=0
 	gem_option_install=0
 	gem_option_pack=0
 	gem_option_redirect_output=0
@@ -1794,8 +1900,9 @@ function gem_build_Main
 	fi
 
 	# Execute the commands.
-	gem_v_DownloadSource
-
+	if [[ ${gem_option_download} == 1 ]]; then
+		gem_v_DownloadSource
+	fi
 	if [[ ${gem_option_clean} == 1 ]]; then
 		gem_v_Cmd_Clean
 	fi
@@ -1804,6 +1911,9 @@ function gem_build_Main
 	fi
 	if [[ ${gem_option_configure} == 1 ]]; then
 		gem_v_Cmd_Configure
+	fi
+	if [[ ${gem_option_configure_help} == 1 ]]; then
+		gem_v_Cmd_ConfigureHelp
 	fi
 	if [[ ${gem_option_build} == 1 ]]; then
 		gem_v_Cmd_Build

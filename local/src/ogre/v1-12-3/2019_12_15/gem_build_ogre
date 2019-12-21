@@ -1,0 +1,117 @@
+#!/bin/bash
+#  ___________                           __________
+# /\   _______\                         /\   ______\
+# \ \  \______/_     ___   ____ ____ ___\ \  \_____/_     ___   ___ ___  ______    ___    ___
+#  \ \  \ /\__  \  /'___`\/\   V    V   \\ \_______  \  /'   `\/\  \\  \/\   __\/' ._`\ /'___`\
+#   \ \  \\/__\  \/\  ___/\ \  \/\  \/\  \\/_______\  \/\  \\  \ \  \\  \ \  \ /\  \__//\  ___/
+#    \ \__________\ \____\ \ \__\ \__\ \__\ /\_________\ \_____/\ \______\ \__\\ \____/\ \____\
+#     \/__________/\/____/  \/__/\/__/\/__/ \/_________/\/____/  \/______/\/__/ \/___/  \/____/
+
+
+. gem_script
+. gem_build
+
+function gem_v_SetDefaults
+{
+	gem_build_SetDefaults;
+
+	gem_c_standard="-std=c99"	# c90, c99, c11, gnu90, gnu99, gnu11
+
+	gem_build_script="cmake"
+#	gem_build_script="autotools"
+#	gem_build_script="meson"
+
+	# Common Defaults
+	if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW shell on Windows.
+		gem_host=mingw
+#		gem_host=msvc
+	elif [[ ${gem_os} == "CYGWIN"* ]]; then		# Cygwin shell on Windows.
+		gem_host=cygwin
+#		gem_host=mingw
+	elif [[ ${gem_os} == "Linux"* ]]; then	# Linux shell.
+		gem_host=linux
+#		gem_host=mingw
+#		gem_host=android_arm64_v8a
+	fi
+
+	gem_build_type=release
+#	gem_build_type=debug
+
+	# The package url must be in the following format:
+	# <url parent>/<package name>-<version>.tar.<extension>
+	# E.g.: http://www.zlib.net/zlib-1.2.11.tar.gz
+	gem_filename_url=ftp://sourceware.org/pub/libffi/libffi-3.2.tar.gz
+
+	# Set build flags.
+	gem_flags_configure="${gem_flags_configure}"
+	gem_flags_c="${gem_flags_c}"
+	gem_flags_cpp="${gem_flags_cpp}"
+	gem_flags_cxx="${gem_flags_cxx}"
+	gem_flags_ld="${gem_flags_ld}"
+	gem_flags_common="${gem_flags_common}"
+}
+
+function gem_v_DownloadSource
+{
+	if [[ -d ./ogre || -d ./src ]]; then
+		gem_v_Error "The source tree already exists.  Refusing to download."
+	fi
+	git clone --depth 1 https://github.com/OGRECave/ogre.git
+
+	if [[ -d ./ogre && ! -d ./src ]]; then
+		mv ./ogre ./src
+	fi
+}
+
+function gem_v_OnConfigure
+{
+	gem_v_DebugDumpVars
+	gem_build_OnConfigure
+}
+
+function gem_v_build_CommandLine_Build
+{
+	gem_build_CommandLine_Build
+}
+
+function gem_v_OnBuild
+{
+	gem_v_DebugDumpVars
+	gem_build_OnBuild
+}
+
+function gem_v_OnInstall
+{
+	gem_build_OnInstall
+}
+
+function gem_v_OnUninstall
+{
+	gem_build_OnUninstall
+}
+
+function gem_v_Cmd_Clean
+{
+	# gem_flags_configure, gem_flags_c, gem_flags_cpp, gem_flags_cxx,
+	# gem_flags_ld. To remove a flag:
+	# flags=$(printf '%s\n' "${flags//-byebye/}")
+	gem_build_Cmd_Clean
+}
+
+# =============================================================================
+#                                       gem_Main
+# =============================================================================
+function gem_v_OnArg
+{
+	arg=$(echo ${1} | tr '[A-Z]' '[a-z]')	# Lowercase args.
+	case ${arg} in
+		*)	gem_build_OnArg "$@" ;	return $?
+	esac
+}
+
+
+function gem_v_Main
+{
+	gem_build_Main "$@"
+}
+gem_v_Main $@
