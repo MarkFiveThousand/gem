@@ -37,11 +37,6 @@ function gem_v_SetDefaults
 	gem_build_type=release
 #	gem_build_type=debug
 
-	# The package url must be in the following format:
-	# <url parent>/<package name>-<version>.tar.<extension>
-	# E.g.: http://www.zlib.net/zlib-1.2.11.tar.gz
-	gem_filename_url=ftp://sourceware.org/pub/libffi/libffi-3.2.tar.gz
-
 	# Set build flags.
 	gem_flags_configure="${gem_flags_configure}"
 	gem_flags_c="${gem_flags_c}"
