@@ -17,8 +17,8 @@ function gem_v_SetDefaults
 
 	gem_c_standard="-std=c99"	# c90, c99, c11, gnu90, gnu99, gnu11
 
-#	gem_build_script="cmake"
-	gem_build_script="autotools"
+	gem_build_script="cmake"
+#	gem_build_script="autotools"
 #	gem_build_script="meson"
 
 	# Common Defaults
@@ -53,19 +53,14 @@ function gem_v_SetDefaults
 
 function gem_v_DownloadSource
 {
-	gem_build_DownloadSource
+	if [[ -d ./ogre || -d ./src ]]; then
+		gem_v_Error "The source tree already exists.  Refusing to download."
+	fi
+	git clone --depth 1 https://github.com/OGRECave/ogre.git
 
-	pushd ${gem_fullpath_src}
-	# Correct for library being put into a lib64 directory instead of the correct
-	# lib directory.  Source: https://ghc.haskell.org/trac/ghc/ticket/9620
-	sed 's:@toolexeclibdir@:$(libdir):g' -i Makefile.in
-
-	# Make package install headers into the conventional ${PREFIX}/include instead
-	# of ${PREFIX}/lib/libffi-3.2.1/include.
-	# Source: http://zwyuan.github.io/2016/07/17/cross-compile-glib-for-android/
-	sed -e '/^includesdir/ s/$(libdir).*$/$(includedir)/' -i include/Makefile.in
-	sed -e '/^includedir/ s/=.*$/=@includedir@/' -e 's/^Cflags: -I${includedir}/Cflags:/' -i libffi.pc.in
-	popd
+	if [[ -d ./ogre && ! -d ./src ]]; then
+		mv ./ogre ./src
+	fi
 }
 
 function gem_v_OnConfigure

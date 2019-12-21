@@ -325,8 +325,8 @@ function gem_script_Main
 
 	while [[ $# > 0 ]]
 	do
-		arg=$(echo ${1} | tr '[A-Z]' '[a-z]')	# Lowercase the argument.
-		gem_v_OnArg $arg
+		args=$(echo $@ | tr '[A-Z]' '[a-z]')	# Lowercase the argument.
+		gem_v_OnArg $args
 		local num_args_handled=$?
 		if [[ ${num_args_handled} > 0 ]]; then
 			for (( i=0; i<${num_args_handled}; i++ )) do shift ; done

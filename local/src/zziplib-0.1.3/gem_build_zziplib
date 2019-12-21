@@ -39,20 +39,11 @@ function gem_v_SetDefaults
 
 	# The package url must be in the following format:
 	# <url parent>/<package name>-<version>.tar.<extension>
-	gem_filename_url=http://ftp.gnu.org/pub/gnu/gettext/gettext-0.20.tar.gz
+	# E.g.: http://www.zlib.net/zlib-1.2.11.tar.gz
+	gem_filename_url=ftp://sourceware.org/pub/libffi/libffi-3.2.tar.gz
 
 	# Set build flags.
-	gem_flags_configure="\
---with-libiconv \
---disable-rpath \
---disable-libasprintf \
---disable-java \
---disable-native-java \
---disable-openmp \
---disable-curses \
---disable-nls \
-${gem_flags_configure}"
-
+	gem_flags_configure="${gem_flags_configure}"
 	gem_flags_c="${gem_flags_c}"
 	gem_flags_cpp="${gem_flags_cpp}"
 	gem_flags_cxx="${gem_flags_cxx}"
@@ -62,11 +53,20 @@ ${gem_flags_configure}"
 
 function gem_v_DownloadSource
 {
-	gem_build_DownloadSource
+	if [[ -d ./zziplib || -d ./src ]]; then
+		gem_v_Error "The source tree already exists.  Refusing to download."
+	fi
+	git clone --depth=1 https://github.com/gdraheim/zziplib.git
+
+	if [[ -d ./zziplib && ! -d ./src ]]; then
+		mv ./zziplib ./src
+	fi
 }
 
 function gem_v_OnConfigure
 {
+	gem_flags_c="$(gem_build_PkgConfig --cflags zlib) ${gem_flags_c}"
+
 	gem_v_DebugDumpVars
 	gem_build_OnConfigure
 }
@@ -78,6 +78,9 @@ function gem_v_build_CommandLine_Build
 
 function gem_v_OnBuild
 {
+	gem_flags_c="$(gem_build_PkgConfig --cflags zlib) ${gem_flags_c}"
+	gem_flags_ld="$(gem_build_PkgConfig --libs zlib) ${gem_flags_ld}"
+
 	gem_v_DebugDumpVars
 	gem_build_OnBuild
 }
