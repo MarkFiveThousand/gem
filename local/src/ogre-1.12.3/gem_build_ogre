@@ -65,8 +65,6 @@ function gem_v_OnCommandLine_Configure_CMake
 ${gem_cmake_params_extra}"
 
 	gem_build_OnCommandLine_Configure_CMake
-
-	echo ${gem_cmd_line_configure} ; exit
 }
 
 function gem_v_OnConfigure
@@ -98,9 +96,6 @@ function gem_v_OnUninstall
 
 function gem_v_Cmd_Clean
 {
-	# gem_flags_configure, gem_flags_c, gem_flags_cpp, gem_flags_cxx,
-	# gem_flags_ld. To remove a flag:
-	# flags=$(printf '%s\n' "${flags//-byebye/}")
 	gem_build_Cmd_Clean
 }
 

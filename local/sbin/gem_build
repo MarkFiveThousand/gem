@@ -351,7 +351,7 @@ function gem_build_BuildFilePaths
 
 	# Building under MinGW on Windows.	# zlib.pc is in ${gem_fullpath_install}/share/pkgconfig
 	# Other .pc files are in ${gem_fullpath_install}/lib/pkgconfig
-	export PKG_CONFIG_LIBDIR=${gem_fullpath_install}/lib/pkgconfig:${gem_fullpath_install}/share/pkgconfig
+#	export PKG_CONFIG_LIBDIR=${gem_fullpath_install}/lib/pkgconfig:${gem_fullpath_install}/share/pkgconfig
 
 	if [[ ${gem_os} == "Linux" ]]; then		# Running on Linux.
 		if [[ ${gem_host} == "linux" ]]; then
@@ -1123,12 +1123,19 @@ ${gem_cmake_params_extra}"
 
 	export CMAKE_BUILD_PARALLEL_LEVEL=${gem_num_jobs}
 
+#	gem_cmd_line_configure="cmake ${gem_fullpath_src} ${gem_cmake_generator} \
+#-DCMAKE_TOOLCHAIN_FILE=${gem_filename_cmake_toolchain} \
+#-DCMAKE_BUILD_TYPE=${gem_build_type} \
+#-DCMAKE_INSTALL_PREFIX=${gem_fullpath_install} \
+#-Dgem_host=${gem_host} \
+#-DPKG_CONFIG_EXECUTABLE=${gem_fullpath_pkg_config} \
+#${gem_cmake_params_extra}"
+
 	gem_cmd_line_configure="cmake ${gem_fullpath_src} ${gem_cmake_generator} \
 -DCMAKE_TOOLCHAIN_FILE=${gem_filename_cmake_toolchain} \
 -DCMAKE_BUILD_TYPE=${gem_build_type} \
 -DCMAKE_INSTALL_PREFIX=${gem_fullpath_install} \
 -Dgem_host=${gem_host} \
--DPKG_CONFIG_EXECUTABLE=${gem_fullpath_pkg_config} \
 ${gem_cmake_params_extra}"
 }
 
