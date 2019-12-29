@@ -1135,7 +1135,7 @@ sudo dnf -y install vlc
 sudo dnf -y install kdiff3 *mercurial* 
 sudo dnf -y install swig fping python3-matplotlib cmake cmake-gui llvm clang mingw64-gcc mingw64-gcc-c++ git perl meson
 sudo dnf -y groupinstall "Development Tools" "Development Libraries" "X Software Development" "C Development Tools and Libraries"
-
+sudo dnf -y install mesa-libGLES-devel libXt-devel libXaw-devel
 
 # npm
 # ---
