@@ -35,6 +35,9 @@ local/src/help2man-1.47.9
 local/src/ogre-1.12.3/build
 local/src/ogre-1.12.3/src
 
+local/src/ogre-1.12.4/build
+local/src/ogre-1.12.4/src
+
 local/src/pkg-config/build
 local/src/pkg-config/src
 local/src/pkg-config/pkg-config-*.gz

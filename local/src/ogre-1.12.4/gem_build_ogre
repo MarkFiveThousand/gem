@@ -51,7 +51,7 @@ function gem_v_DownloadSource
 	if [[ -d ./ogre || -d ./src ]]; then
 		gem_v_Error "The source tree already exists.  Refusing to download."
 	fi
-	git clone --depth 1 --recursive --branch v1.12.3 https://github.com/OGRECave/ogre.git
+	git clone --depth 1 --recursive --branch v1.12.4 https://github.com/OGRECave/ogre.git
 
 	if [[ -d ./ogre && ! -d ./src ]]; then
 		mv ./ogre ./src
