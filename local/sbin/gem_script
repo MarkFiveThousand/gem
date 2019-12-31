@@ -61,7 +61,7 @@ function gem_script_ExitMsg
 	exit 1
 }
 
-function gem_v_Error { gem_script_Error "$@";}
+function gem_script_v_Error { gem_script_Error "$@";}
 function gem_script_Error
 {
 	gem_v_Msg_NotQuiet ""
@@ -69,6 +69,7 @@ function gem_script_Error
 	gem_v_Msg_NotQuiet "\nERROR: $@\n"
 	exit 1
 }
+function gem_v_Error { gem_script_Error "gem_v_Error() has been deprecated.";}
 
 function gem_v_ExitHelp { gem_script_ExitHelp "$@";}
 function gem_script_ExitHelp
@@ -315,7 +316,7 @@ function gem_script_rmdir_IfEmpty
 
 # gem_v_OnArg()- Processes recognized arguments, and returns the number of
 # arguments processed.
-function gem_v_OnArg { gem_script_OnArg "$@";}
+function gem_script_v_OnArg { gem_script_OnArg "$@";}
 function gem_script_OnArg
 {
 #echo "+++ gem_script::gem_script_OnArg()"
@@ -328,7 +329,7 @@ function gem_script_OnArg
 	esac
 }
 
-function gem_v_Main { gem_script_Main "$@";}
+function gem_script_v_Main { gem_script_Main "$@";}
 function gem_script_Main
 {
 #echo "+++ gem_script::gem_script_Main()"
@@ -338,7 +339,7 @@ function gem_script_Main
 	while [[ $# > 0 ]]
 	do
 		args=$(echo $@ | tr '[A-Z]' '[a-z]')	# Lowercase the argument.
-		gem_v_OnArg $args
+		gem_script_v_OnArg $args
 		local num_args_handled=$?
 		if [[ ${num_args_handled} > 0 ]]; then
 			for (( i=0; i<${num_args_handled}; i++ )) do shift ; done

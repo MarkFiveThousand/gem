@@ -82,7 +82,8 @@
 #   http://landinghub.visualstudio.com/visual-cpp-build-tools (it's the file
 #   visualcppbuildtools_full.exe).
 
-function gem_v_ExitHelp { gem_build_ExitHelp "$@";}
+function gem_v_ExitHelp { gem_script_v_Error "gem_v_ExitHelp() has been renamed." ;}
+function gem_build_v_ExitHelp { gem_build_ExitHelp "$@";}
 function gem_build_ExitHelp
 {
 	gem_v_Msg "============================================================================="
@@ -151,7 +152,8 @@ function gem_build_ExitHelp
 	gem_v_ExitMsg "${1}"
 }
 
-function gem_v_SetDefaults { gem_build_SetDefaults ;}
+function gem_v_SetDefaults { gem_script_v_Error "gem_v_SetDefaults() has been renamed." ;}
+function gem_build_v_SetDefaults { gem_build_SetDefaults ;}
 function gem_build_SetDefaults
 {
 	gem_use_clang=0			# Else gcc.
@@ -166,7 +168,7 @@ function gem_build_SetDefaults
 
 	# Directories
 	gem_fullpath_local=${HOME}/gem/local
-	# gem_fullpath_install is set further below in function gem_v_BuildFilePaths().
+	# gem_fullpath_install is set further below in function gem_build_v_BuildFilePaths().
 
 	gem_os=$(uname -s)
 
@@ -226,7 +228,8 @@ function gem_build_SetDefaults
 	gem_str_not_implemented="Operation for host \"${gem_host}\" on OS \"${gem_os}\" is not yet implemented."
 }
 
-function gem_v_DownloadSource { gem_build_DownloadSource ;}
+function gem_v_DownloadSource { gem_script_v_Error "gem_v_DownloadSource() has been renamed." ;}
+function gem_build_v_DownloadSource { gem_build_DownloadSource ;}
 function gem_build_DownloadSource
 {
 	# Parse gem_filename_url.
@@ -240,7 +243,7 @@ function gem_build_DownloadSource
 	if [[ ! -f ${gem_filename_archive} ]]; then
 		wget -c ${gem_filename_url}
 		if [[ $? != 0 ]]; then
-			gem_v_Error "gem_v_DownloadSource: wget failed to download source archive: ${gem_filename_url}"
+			gem_v_Error "gem_build_v_DownloadSource: wget failed to download source archive: ${gem_filename_url}"
 		fi
 	fi
 	# Decompress
@@ -257,18 +260,19 @@ function gem_build_DownloadSource
 			gem_flags_tar="xjf"
 		fi
 		if [[ ${gem_flags_tar} == "<undefined>" ]]; then
-			gem_v_Error "gem_v_DownloadSource: Unable to decompress downloaded file with extension \"${gem_filename_exten}\"."
+			gem_v_Error "gem_build_v_DownloadSource: Unable to decompress downloaded file with extension \"${gem_filename_exten}\"."
 		fi
 		tar -${gem_flags_tar} ${gem_filename_archive} -C ${gem_fullpath_src}
 		if [[ $? != 0 ]]; then
-			gem_v_Error "gem_v_DownloadSource: Failed to uncompress the source archive: ${gem_filename_archive}"
+			gem_v_Error "gem_build_v_DownloadSource: Failed to uncompress the source archive: ${gem_filename_archive}"
 		fi
 		gem_script_cp -rf ${gem_fullpath_src}/${gem_filename_base}/* ${gem_fullpath_src}
 		gem_script_rm -rf ${gem_fullpath_src}/${gem_filename_base}
 	fi
 }
 
-function gem_v_BuildFilePaths { gem_build_BuildFilePaths ;}
+function gem_v_BuildFilePaths { gem_script_v_Error "gem_v_BuildFilePaths() has been renamed." ;}
+function gem_build_v_BuildFilePaths { gem_build_BuildFilePaths ;}
 function gem_build_BuildFilePaths
 {
 	gem_path_suffix=${gem_platform_host}
@@ -456,10 +460,11 @@ function gem_build_BuildFilePaths
 
 
 
-	gem_v_ValidateFilePaths
+	gem_build_v_ValidateFilePaths
 }
 
-function gem_v_ValidateFilePaths { gem_build_ValidateFilePaths ;}
+function gem_v_ValidateFilePaths { gem_script_v_Error "gem_v_ValidateFilePaths() has been renamed." ;}
+function gem_build_v_ValidateFilePaths { gem_build_ValidateFilePaths ;}
 function gem_build_ValidateFilePaths
 {
 	if [[ ${gem_build_script} == "cmake" && ! -f ${gem_filename_cmake_toolchain} ]]; then
@@ -471,7 +476,8 @@ function gem_build_ValidateFilePaths
 	fi
 }
 
-function gem_v_ValidateCompatibility { gem_build_ValidateCompatibility ;}
+function gem_v_ValidateCompatibility { gem_script_v_Error "gem_v_ValidateCompatibility() has been renamed." ;}
+function gem_build_v_ValidateCompatibility { gem_build_ValidateCompatibility ;}
 function gem_build_ValidateCompatibility
 {
 	if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW shell on Windows.
@@ -489,7 +495,8 @@ function gem_build_ValidateCompatibility
 	fi
 }
 
-function gem_v_ValidateBuildTools { gem_build_ValidateBuildTools ;}
+function gem_v_ValidateBuildTools { gem_script_v_Error "gem_v_ValidateBuildTools() has been renamed." ;}
+function gem_build_v_ValidateBuildTools { gem_build_ValidateBuildTools ;}
 function gem_build_ValidateBuildTools
 {
 	gem_script_ValidateFiles "${CC} ${CXX} ${LD} ${AR} ${AS} ${NM} ${STRIP} ${RANLIB} ${OBJDUMP}"
@@ -498,7 +505,8 @@ function gem_build_ValidateBuildTools
 	fi
 }
 
-function gem_v_SelectCMakeGenerator { gem_build_SelectCMakeGenerator ;}
+function gem_v_SelectCMakeGenerator { gem_script_v_Error "gem_v_SelectCMakeGenerator() has been renamed." ;}
+function gem_build_v_SelectCMakeGenerator { gem_build_SelectCMakeGenerator ;}
 function gem_build_SelectCMakeGenerator
 {
 	# Select the correct generator based upon gem_host.
@@ -520,7 +528,8 @@ function gem_build_SelectCMakeGenerator
 }
 
 
-function gem_v_DebugDumpVars { gem_build_DebugDumpVars ;}
+function gem_v_DebugDumpVars { gem_script_v_Error "gem_v_DebugDumpVars() has been renamed." ;}
+function gem_build_v_DebugDumpVars { gem_build_DebugDumpVars ;}
 function gem_build_DebugDumpVars
 {
 	if [[ ${gem_option_quiet_mode} -ne 0 ]]; then
@@ -572,7 +581,8 @@ function gem_build_DebugDumpVars
 	gem_v_Msg "--------------------------------------------------------------------------------"
 }
 
-function gem_v_CheckLogForErrors { gem_build_v_CheckLogForErrors $@;}
+function gem_v_CheckLogForErrors { gem_script_v_Error "gem_v_CheckLogForErrors() has been renamed." ;}
+function gem_build_v_CheckLogForErrors { gem_build_v_CheckLogForErrors $@;}
 function gem_build_v_CheckLogForErrors
 {
 	if [[ ${gem_option_quiet_mode} -ne 0 ]]; then
@@ -598,8 +608,6 @@ function gem_build_v_CheckLogForErrors
 	fi
 }
 
-# c_args = ['-D-std=gnu11', '-D-march=x86-64', '-D-msse4.2', '-D-mpopcnt', '-D-m64', '-D-mtune=intel', '-D-O2']
-# Sets gem_flags_meson_array to a meson-fomatted array of flags.
 function gem_build_FlagsToMesonArray
 {
 	gem_flags_param=$@
@@ -630,13 +638,15 @@ function gem_build_PkgConfig
 # =============================================================================
 #                          Configure Build Platform
 # =============================================================================
-function gem_v_SetHost_common { gem_build_SetHost_common ;}
+function gem_v_SetHost_common { gem_script_v_Error "gem_v_SetHost_common() has been renamed." ;}
+function gem_build_v_SetHost_common { gem_build_SetHost_common ;}
 function gem_build_SetHost_common
 {
 	noop=0
 }
 
-function gem_v_SetHost_linux { gem_build_SetHost_linux ;}
+function gem_v_SetHost_linux { gem_script_v_Error "gem_v_SetHost_linux() has been renamed." ;}
+function gem_build_v_SetHost_linux { gem_build_SetHost_linux ;}
 function gem_build_SetHost_linux
 {
 #	gem_platform_host=x86_64-linux-gnu
@@ -674,10 +684,11 @@ function gem_build_SetHost_linux
 	elif [[ ${gem_build_script} == "meson" ]]; then
 		noop=0
 	fi
-	gem_v_SetHost_common
+	gem_build_v_SetHost_common
 }
 
-function gem_v_SetHost_cygwin { gem_build_SetHost_cygwin ;}
+function gem_v_SetHost_cygwin { gem_script_v_Error "gem_v_SetHost_cygwin() has been renamed." ;}
+function gem_build_v_SetHost_cygwin { gem_build_SetHost_cygwin ;}
 function gem_build_SetHost_cygwin
 {
 	gem_platform_host=x86_64-pc-cygwin
@@ -716,10 +727,11 @@ function gem_build_SetHost_cygwin
 	elif [[ ${gem_build_script} == "meson" ]]; then
 		noop=0
 	fi
-	gem_v_SetHost_common
+	gem_build_v_SetHost_common
 }
 
-function gem_v_SetHost_mingw { gem_build_SetHost_mingw ;}
+function gem_v_SetHost_mingw { gem_script_v_Error "gem_v_SetHost_mingw() has been renamed." ;}
+function gem_build_v_SetHost_mingw { gem_build_SetHost_mingw ;}
 function gem_build_SetHost_mingw
 {
 	gem_platform_host=x86_64-w64-mingw32
@@ -739,35 +751,33 @@ function gem_build_SetHost_mingw
 		gem_v_Error "gem_build_SetHost_mingw: Unrecognized shell: ${gem_os}."
 	fi
 
+	# Find the compiler's library directory.  The gcc library directory
+	# name includes an ever changing version number, so we'll enter the
+	# parent directory, then search for a file expected to be present (i.e.
+	# libgcc.a.)
+	if [[ ${gem_os} == "CYGWIN"* || ${gem_os} == "Linux" ]]; then
+		pushd /usr/lib/gcc/x86_64-w64-mingw32 &>/dev/null
+	elif [[ ${gem_os} == "MINGW64"* ]]; then
+		# Not cross compiling.
+		pushd /mingw64/lib/gcc/x86_64-w64-mingw32 &>/dev/null
+		gem_fullpath_gcc_libs=${gem_fullpath_sysroot}/mingw/lib
+	else
+		gem_v_Error "gem_build_SetHost_mingw: Unrecognized shell: ${gem_os}."
+	fi
+	gem_path_found=$(find -name libgcc.a)
+	if [[ ${gem_path_found}x == "x" ]]; then
+		gem_v_Error "gem_build_SetHost_mingw(): Failed to determine library directory."
+	fi
+	gem_fullpath_gcc_libs=$(pwd)/$(dirname ${gem_path_found})
+	popd &>/dev/null
+
+
 	if [[ ${gem_build_script} == "cmake" ]]; then
 		gem_filename_cmake_toolchain=${gem_fullpath_local}/toolchains/mingw.toolchain.cmake
 
 	elif [[ ${gem_build_script} == "autotools" ]]; then
 
-		# Find the compiler's library directory.  The gcc library directory
-		# name includes an ever changing version number, so we'll enter the
-		# parent directory, then search for a file expected to be present (i.e.
-		# libgcc.a.)
-		# Temporarily(?) disabling because adding LDFLAGS=" -L/mingw64/lib/gcc/x86_64-w64-mingw32/./9.2.0"
-		# causes link errors when building libiconv.  If removing it breaks
-		# other projects, then we'll have to figure out how to remove this in
-		# gem_build_libiconv.
-		if [[ ${gem_os} != "MINGW64"* ]]; then
-			if [[ ${gem_os} == "CYGWIN"* || ${gem_os} == "Linux" ]]; then
-				pushd /usr/lib/gcc/x86_64-w64-mingw32 &>/dev/null
-			elif [[ ${gem_os} == "MINGW64"* ]]; then
-				# Not cross compiling.
-				pushd /mingw64/lib/gcc/x86_64-w64-mingw32 &>/dev/null
-	#			gem_fullpath_gcc_libs=${gem_fullpath_sysroot}/mingw/lib
-			else
-				gem_v_Error "gem_build_SetHost_mingw: Unrecognized shell: ${gem_os}."
-			fi
-			gem_path_found=$(find -name libgcc.a)
-			if [[ ${gem_path_found}x == "x" ]]; then
-				gem_v_Error "gem_build_SetHost_mingw(): Failed to determine library directory."
-			fi
-			gem_fullpath_gcc_libs=$(pwd)/$(dirname ${gem_path_found})
-			popd &>/dev/null
+		if [[ ${gem_os} != "MINGW64"* ]]; then	# Building for mingw on cygwin or linux.
 			if [[ ! -d ${gem_fullpath_gcc_libs} ]]; then
 				gem_v_Error "gem_build_SetHost_mingw(): Library path does not exist: ${gem_fullpath_gcc_libs}.  Did the version number change?"
 			fi
@@ -818,10 +828,11 @@ function gem_build_SetHost_mingw
 	elif [[ ${gem_build_script} == "meson" ]]; then
 		noop=0
 	fi
-	gem_v_SetHost_common
+	gem_build_v_SetHost_common
 }
 
-function gem_v_SetHost_msvc { gem_build_SetHost_msvc ;}
+function gem_v_SetHost_msvc { gem_script_v_Error "gem_v_SetHost_msvc() has been renamed." ;}
+function gem_build_v_SetHost_msvc { gem_build_SetHost_msvc ;}
 function gem_build_SetHost_msvc
 {
 	if [[ ${gem_build_script} == "cmake" ]]; then
@@ -835,11 +846,13 @@ function gem_build_SetHost_msvc
 	gem_platform_host=x86_64-pc-windows-msvc
 	gem_platform_arch=x86-64
 
-	gem_v_SetHost_common
+	gem_build_v_SetHost_common
 }
 
-function gem_v_SetHost_common_android { gem_build_SetHost_common_android ;}
-function gem_build_SetHost_common_android
+function gem_v_SetHost_common_android { gem_script_v_Error "gem_v_SetHost_common_android() has been renamed." ;}
+function gem_build_SetHost_common_android { gem_script_v_Error "gem_build_SetHost_common_android() has been renamed." ;}
+function gem_build_v_SetHost_android_common { gem_build_SetHost_android_common ;}
+function gem_build_SetHost_android_common
 {
 	gem_platform_host_details_suffix=ndk_${gem_android_ndk_version}_api_${gem_android_api_level}_stl_${gem_android_standalone_toolchain_stl}_arch_${gem_platform_arch}
 	gem_fullpath_android_standalone_toolchain=${gem_fullpath_android_standalone_toolchain_root}/${gem_platform_host_details_suffix}
@@ -882,10 +895,11 @@ function gem_build_SetHost_common_android
 	
 	fi
 
-	gem_v_SetHost_common
+	gem_build_v_SetHost_common
 }
 
-function gem_v_SetHost_android_x86_64 { gem_build_SetHost_android_x86_64 ;}
+function gem_v_SetHost_android_x86_64 { gem_script_v_Error "gem_v_SetHost_android_x86_64() has been renamed." ;}
+function gem_build_v_SetHost_android_x86_64 { gem_build_SetHost_android_x86_64 ;}
 function gem_build_SetHost_android_x86_64
 {
 	# For performance hints see:
@@ -901,10 +915,11 @@ function gem_build_SetHost_android_x86_64
 	gem_flags_cxx="-march=x86-64 -msse4.2 -mpopcnt -m64 -mtune=intel ${gem_flags_cxx}"
 	gem_flags_ld="${gem_flags_ld}"
 
-	gem_v_SetHost_common_android
+	gem_build_v_SetHost_common_android
 }
 
-function gem_v_SetHost_android_v7vfpv3 { gem_build_SetHost_android_v7vfpv3 ;}
+function gem_v_SetHost_android_v7vfpv3 { gem_script_v_Error "gem_v_SetHost_android_v7vfpv3() has been renamed." ;}
+function gem_build_v_SetHost_android_v7vfpv3 { gem_build_SetHost_android_v7vfpv3 ;}
 function gem_build_SetHost_android_v7vfpv3
 {
 	gem_platform_host=arm-linux-androideabi
@@ -921,7 +936,8 @@ function gem_build_SetHost_android_v7vfpv3
 	gem_v_SetHost_common_android
 }
 
-function gem_v_SetHost_android_arm_v7_plus_neon { gem_build_SetHost_android_arm_v7_plus_neon ;}
+function gem_v_SetHost_android_arm_v7_plus_neon { gem_script_v_Error "gem_v_SetHost_android_arm_v7_plus_neon() has been renamed." ;}
+function gem_build_v_SetHost_android_arm_v7_plus_neon { gem_build_SetHost_android_arm_v7_plus_neon ;}
 function gem_build_SetHost_android_arm_v7_plus_neon
 {
 	gem_platform_host=arm-linux-androideabi
@@ -935,10 +951,11 @@ function gem_build_SetHost_android_arm_v7_plus_neon
 	gem_flags_cxx="-march=armv7-a -mfpu=neon -mfloat-abi=softfp -mtune=cortex-a8 -mthumb ${gem_flags_cxx}"
 	gem_flags_ld="-march=armv7-a -Wl,--fix-cortex-a8 ${gem_flags_ld}"
 
-	gem_v_SetHost_common_android
+	gem_build_v_SetHost_common_android
 }
 
-function gem_v_SetHost_android_arm64_v8a { gem_build_SetHost_android_arm64_v8a ;}
+function gem_v_SetHost_android_arm64_v8a { gem_script_v_Error "gem_v_SetHost_android_arm64_v8a() has been renamed." ;}
+function gem_build_v_SetHost_android_arm64_v8a { gem_build_SetHost_android_arm64_v8a ;}
 function gem_build_SetHost_android_arm64_v8a
 {
 	gem_platform_host=aarch64-linux-android
@@ -952,7 +969,7 @@ function gem_build_SetHost_android_arm64_v8a
 	gem_flags_cxx="-march=armv8-a ${gem_flags_cxx}"
 	gem_flags_ld="-march=armv8-a ${gem_flags_ld}"
 
-	gem_v_SetHost_common_android
+	gem_build_v_SetHost_common_android
 }
 
 
@@ -960,7 +977,8 @@ function gem_build_SetHost_android_arm64_v8a
 #                            Configure Build Type
 # =============================================================================
 
-function gem_v_SetBuildType_common { gem_build_SetBuildType_common ;}
+function gem_v_SetBuildType_common { gem_script_v_Error "gem_v_SetBuildType_common() has been renamed." ;}
+function gem_build_v_SetBuildType_common { gem_build_SetBuildType_common ;}
 function gem_build_SetBuildType_common
 {
 	# Define common build flags.
@@ -989,7 +1007,8 @@ function gem_build_SetBuildType_common
 	fi
 }
 
-function gem_v_SetBuildType_debug { gem_build_SetBuildType_debug ;}
+function gem_v_SetBuildType_debug { gem_script_v_Error "gem_v_SetBuildType_debug() has been renamed." ;}
+function gem_build_v_SetBuildType_debug { gem_build_SetBuildType_debug ;}
 function gem_build_SetBuildType_debug
 {
 	if [[ ${gem_build_script} == "cmake" ]]; then
@@ -1002,10 +1021,11 @@ function gem_build_SetBuildType_debug
 	elif [[ ${gem_build_script} == "meson" ]]; then
 		noop=0
 	fi
-	gem_v_SetBuildType_common
+	gem_build_v_SetBuildType_common
 }
 
-function gem_v_SetBuildType_release { gem_build_SetBuildType_release ;}
+function gem_v_SetBuildType_release { gem_script_v_Error "gem_v_SetBuildType_release() has been renamed." ;}
+function gem_build_v_SetBuildType_release { gem_build_SetBuildType_release ;}
 function gem_build_SetBuildType_release
 {
 	if [[ ${gem_build_script} == "cmake" ]]; then
@@ -1018,10 +1038,11 @@ function gem_build_SetBuildType_release
 	elif [[ ${gem_build_script} == "meson" ]]; then
 		noop=0
 	fi
-	gem_v_SetBuildType_common
+	gem_build_v_SetBuildType_common
 }
 
-function gem_v_SetBuildType_relwithdebinfo { gem_build_SetBuildType_relwithdebinfo ;}
+function gem_v_SetBuildType_relwithdebinfo { gem_script_v_Error "gem_v_SetBuildType_relwithdebinfo() has been renamed." ;}
+function gem_build_v_SetBuildType_relwithdebinfo { gem_build_SetBuildType_relwithdebinfo ;}
 function gem_build_SetBuildType_relwithdebinfo
 {
 	if [[ ${gem_build_script} == "cmake" ]]; then
@@ -1034,14 +1055,14 @@ function gem_build_SetBuildType_relwithdebinfo
 	elif [[ ${gem_build_script} == "meson" ]]; then
 		noop=0
 	fi
-	gem_v_SetBuildType_common
+	gem_build_v_SetBuildType_common
 }
 
 # =============================================================================
 #                                   Configure
 # =============================================================================
-# Topmost-level invoked Configure command.
-function gem_v_Cmd_Configure { gem_build_Cmd_Configure ;}
+function gem_v_Cmd_Configure { gem_script_v_Error "gem_v_Cmd_Configure() has been renamed." ;}
+function gem_build_v_Cmd_Configure { gem_build_Cmd_Configure ;}
 function gem_build_Cmd_Configure
 {
 	# Clean build directory.
@@ -1058,11 +1079,12 @@ function gem_build_Cmd_Configure
 
 	gem_script_cd ${gem_fullpath_build}
 
-	gem_v_OnConfigure
-	gem_v_CheckLogForErrors ${gem_filename_log_configure}
+	gem_build_v_OnConfigure
+	gem_build_v_CheckLogForErrors ${gem_filename_log_configure}
 }
 
-function gem_v_OnConfigure { gem_build_OnConfigure ;}
+function gem_v_OnConfigure { gem_script_v_Error "gem_v_OnConfigure() has been renamed." ;}
+function gem_build_v_OnConfigure { gem_build_OnConfigure ;}
 function gem_build_OnConfigure
 {
 	gem_build_OnCommandLine_Configure
@@ -1080,19 +1102,20 @@ function gem_build_OnCommandLine_Configure
 {
 	if [[ ${gem_build_script} == "cmake" ]]; then
 
-		gem_v_OnCommandLine_Configure_CMake
+		gem_build_v_OnCommandLine_Configure_CMake
 
 	elif [[ ${gem_build_script} == "autotools" ]]; then
 
-		gem_v_OnCommandLine_Configure_Autotools
+		gem_build_v_OnCommandLine_Configure_Autotools
 
 	elif [[ ${gem_build_script} == "meson" ]]; then
 
-		gem_v_OnCommandLine_Configure_Meson
+		gem_build_v_OnCommandLine_Configure_Meson
 	fi
 }
 
-function gem_v_OnCommandLine_Configure_CMake { gem_build_OnCommandLine_Configure_CMake ;}
+function gem_v_OnCommandLine_Configure_CMake { gem_script_v_Error "gem_v_OnCommandLine_Configure_CMake() has been renamed." ;}
+function gem_build_v_OnCommandLine_Configure_CMake { gem_build_OnCommandLine_Configure_CMake ;}
 function gem_build_OnCommandLine_Configure_CMake
 {
 	if [[ ${gem_host} == *"android"* ]]; then
@@ -1128,15 +1151,26 @@ ${gem_cmake_params_extra}"
 #-DPKG_CONFIG_EXECUTABLE=${gem_fullpath_pkg_config} \
 #${gem_cmake_params_extra}"
 
-	gem_cmd_line_configure="cmake ${gem_fullpath_src} ${gem_cmake_generator} \
+	# Only use the toolchain file if we're cross compiling, because it
+	# prohibits use of system libraries.  However, since we're specifying
+	# sysroot, shouldn't it work?  I think we need to modify the toolchain file
+	# to be aware if we're crosscompiling and modulate the prohibited sources
+	# of resource files.
+	if  [[ ${gem_os} == "MINGW64"* && ${gem_host} != "mingw" ]]; then
+		gem_cmake_params_extra="\
 -DCMAKE_TOOLCHAIN_FILE=${gem_filename_cmake_toolchain} \
+${gem_cmake_params_extra}"
+	fi
+
+	gem_cmd_line_configure="cmake ${gem_fullpath_src} ${gem_cmake_generator} \
 -DCMAKE_BUILD_TYPE=${gem_build_type} \
 -DCMAKE_INSTALL_PREFIX=${gem_fullpath_install} \
 -Dgem_host=${gem_host} \
 ${gem_cmake_params_extra}"
 }
 
-function gem_v_OnCommandLine_Configure_Autotools { gem_build_OnCommandLine_Configure_Autotools ;}
+function gem_v_OnCommandLine_Configure_Autotools { gem_script_v_Error "gem_v_OnCommandLine_Configure_Autotools() has been renamed." ;}
+function gem_build_v_OnCommandLine_Configure_Autotools { gem_build_OnCommandLine_Configure_Autotools ;}
 function gem_build_OnCommandLine_Configure_Autotools
 {
 	gem_cmd_line_configure="${gem_fullpath_src}/configure \
@@ -1161,7 +1195,8 @@ function gem_build_OnCommandLine_Configure_Autotools
 	gem_cmd_line_configure="${gem_cmd_line_configure} ${gem_flags_configure}"
 }
 
-function gem_v_OnCommandLine_Configure_Meson { gem_build_OnCommandLine_Configure_Meson ;}
+function gem_v_OnCommandLine_Configure_Meson { gem_script_v_Error "gem_v_OnCommandLine_Configure_Meson() has been renamed." ;}
+function gem_build_v_OnCommandLine_Configure_Meson { gem_build_OnCommandLine_Configure_Meson ;}
 function gem_build_OnCommandLine_Configure_Meson
 {
 	# ~/gem/local/src/meson/meson-0.50.0/meson.py setup --help
@@ -1378,7 +1413,7 @@ function gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_linux
 
 function gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_mingw
 {
-	gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common
+    gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common
 }
 
 function gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_cygwin
@@ -1402,9 +1437,10 @@ function gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_android
 
 
 # =============================================================================
-#                                   Configure
+#                                Configure Help
 # =============================================================================
-function gem_v_Cmd_ConfigureHelp { gem_build_Cmd_ConfigureHelp ;}
+function gem_v_Cmd_ConfigureHelp { gem_script_v_Error "gem_v_Cmd_ConfigureHelp() has been renamed." ;}
+function gem_build_v_Cmd_ConfigureHelp { gem_build_Cmd_ConfigureHelp ;}
 function gem_build_Cmd_ConfigureHelp
 {
 	# Verify build directory exists, then enter it.
@@ -1437,9 +1473,8 @@ function gem_build_Cmd_ConfigureHelp
 #                                     Build
 # =============================================================================
 
-# *FIX: Rename gem_v_Cmd_Build to gem_build_v_Cmd_Build, so readers know where
-# the base implementation being overridden is located.
-function gem_v_Cmd_Build { gem_build_Cmd_Build ;}
+function gem_v_Cmd_Build { gem_script_v_Error "gem_v_Cmd_Build() has been renamed." ;}
+function gem_build_v_Cmd_Build { gem_build_Cmd_Build ;}
 function gem_build_Cmd_Build
 {
 	if [[ ! -d ${gem_fullpath_build} ]]; then
@@ -1448,18 +1483,15 @@ function gem_build_Cmd_Build
 	fi
 	gem_script_cd ${gem_fullpath_build}
 
-	gem_v_OnBuild
-	gem_v_CheckLogForErrors ${gem_filename_log_build}
+	gem_build_v_OnBuild
+	gem_build_v_CheckLogForErrors ${gem_filename_log_build}
 }
 
-function gem_v_OnBuild { gem_build_OnBuild ;}
+function gem_v_OnBuild { gem_script_v_Error "gem_v_OnBuild() has been renamed." ;}
+function gem_build_v_OnBuild { gem_build_OnBuild ;}
 function gem_build_OnBuild
 {
-	# gem_flags_configure, gem_flags_c, gem_flags_cpp, gem_flags_cxx,
-	# gem_flags_ld. To remove a flag:
-	# flags=$(printf '%s\n' "${flags//-byebye/}")
-
-	gem_v_build_OnCommandLine_Build
+	gem_build_v_OnCommandLine_Build
 
 	if [[ ${gem_option_cmdline_only} -eq 0 ]]; then
 		eval "${gem_cmd_line_build} ${gem_redirect_suffix_build}"
@@ -1468,7 +1500,8 @@ function gem_build_OnBuild
 	fi
 }
 
-function gem_v_build_OnCommandLine_Build { gem_build_OnCommandLine_Build ;}
+function gem_v_build_OnCommandLine_Build { gem_script_v_Error "gem_v_build_OnCommandLine_Build() has been renamed." ;}
+function gem_build_v_OnCommandLine_Build { gem_build_OnCommandLine_Build ;}
 function gem_build_OnCommandLine_Build
 {
 	if [[ ${gem_build_script} == "cmake" ]]; then
@@ -1522,7 +1555,8 @@ function gem_build_OnCommandLine_Build
 # =============================================================================
 #                                      Install
 # =============================================================================
-function gem_v_Cmd_Install { gem_build_Cmd_Install ;}
+function gem_v_Cmd_Install { gem_script_v_Error "gem_v_Cmd_Install() has been renamed." ;}
+function gem_build_v_Cmd_Install { gem_build_Cmd_Install ;}
 function gem_build_Cmd_Install
 {
 	if [[ ! -d ${gem_fullpath_build} ]]; then
@@ -1531,26 +1565,32 @@ function gem_build_Cmd_Install
 	fi
 	gem_script_cd ${gem_fullpath_build}
 
-	gem_v_OnInstall
-	gem_v_CheckLogForErrors ${gem_filename_log_install}
+	gem_build_v_OnInstall
+	gem_build_v_CheckLogForErrors ${gem_filename_log_install}
 }
 
-function gem_v_OnInstall { gem_build_OnInstall ;}
+function gem_v_OnInstall { gem_script_v_Error "gem_v_OnInstall() has been renamed." ;}
+function gem_build_v_OnInstall { gem_build_OnInstall ;}
 function gem_build_OnInstall
 {
-	# gem_flags_configure, gem_flags_c, gem_flags_cpp, gem_flags_cxx,
-	# gem_flags_ld. To remove a flag:
-	# flags=$(printf '%s\n' "${flags//-byebye/}")
-
 	gem_build_OnCommandLine_Install
 
-	if [[ ${gem_option_cmdline_only} -eq 0 ]]; then
-		eval "${gem_cmd_line_install} ${gem_redirect_suffix_install}"
-	else
+	if [[ ${gem_option_cmdline_only} -ne 0 ]]; then
 		gem_v_Msg_NotQuiet "${gem_cmd_line_install}"
+		return 1
+	fi
+
+	eval "${gem_cmd_line_install} ${gem_redirect_suffix_install}"
+
+	if [[ ${gem_host} == *"mingw"*  ]]; then
+
+		cp /c/msys64/mingw64/bin/libgcc_s_seh-1.dll ${gem_fullpath_install}/bin
+		cp /c/msys64/mingw64/bin/libstdc++-6.dll ${gem_fullpath_install}/bin
+		cp /c/msys64/mingw64/bin/libwinpthread-1.dll ${gem_fullpath_install}/bin
 	fi
 }
 
+function gem_build_v_OnCommandLine_Install { gem_build_OnCommandLine_Install ;}
 function gem_build_OnCommandLine_Install
 {
 	if [[ ${gem_build_script} == "cmake" ]]; then
@@ -1567,7 +1607,8 @@ function gem_build_OnCommandLine_Install
 # =============================================================================
 #                                     Uninstall
 # =============================================================================
-function gem_v_Cmd_Uninstall { gem_build_Cmd_Uninstall ;}
+function gem_v_Cmd_Uninstall { gem_script_v_Error "gem_v_Cmd_Uninstall() has been renamed." ;}
+function gem_build_v_Cmd_Uninstall { gem_build_Cmd_Uninstall ;}
 function gem_build_Cmd_Uninstall
 {
 	if [[ ! -d ${gem_fullpath_build} ]]; then
@@ -1576,11 +1617,12 @@ function gem_build_Cmd_Uninstall
 	fi
 	gem_script_cd ${gem_fullpath_build}
 
-	gem_v_OnUninstall
-	gem_v_CheckLogForErrors ${gem_filename_log_uninstall}
+	gem_build_v_OnUninstall
+	gem_build_v_CheckLogForErrors ${gem_filename_log_uninstall}
 }
 
-function gem_v_OnUninstall { gem_build_OnUninstall ;}
+function gem_v_OnUninstall { gem_script_v_Error "gem_v_OnUninstall() has been renamed." ;}
+function gem_build_v_OnUninstall { gem_build_OnUninstall ;}
 function gem_build_OnUninstall
 {
 	# gem_flags_configure, gem_flags_c, gem_flags_cpp, gem_flags_cxx,
@@ -1596,6 +1638,7 @@ function gem_build_OnUninstall
 	fi
 }
 
+function gem_build_v_OnCommandLine_Uninstall { gem_build_OnCommandLine_Uninstall ;}
 function gem_build_OnCommandLine_Uninstall
 {
 	if [[ ${gem_build_script} == "cmake" ]]; then
@@ -1612,6 +1655,34 @@ function gem_build_OnCommandLine_Uninstall
 # =============================================================================
 #                                      Clean
 # =============================================================================
+function gem_v_Cmd_Clean { gem_script_v_Error "gem_v_Cmd_Clean() has been renamed." ;}
+function gem_build_v_Cmd_Clean { gem_build_Cmd_Clean ;}
+function gem_build_Cmd_Clean
+{
+	if [[ ! -d ${gem_fullpath_build} ]]; then
+		gem_v_Error "Cannot clean.  Build directory does not exist."
+		return 0
+	fi
+	gem_script_cd ${gem_fullpath_build}
+
+	gem_build_v_OnClean
+	gem_build_v_CheckLogForErrors ${gem_filename_log_clean}
+}
+
+function gem_v_OnClean { gem_script_v_Error "gem_v_OnClean() has been renamed." ;}
+function gem_build_v_OnClean { gem_build_OnClean ;}
+function gem_build_OnClean
+{
+	gem_build_OnCommandLine_Clean
+
+	if [[ ${gem_option_cmdline_only} -eq 0 ]]; then
+		eval "${gem_cmd_line_clean} ${gem_redirect_suffix_clean}"
+	else
+		gem_v_Msg_NotQuiet "${gem_cmd_line_clean}"
+	fi
+}
+
+function gem_build_v_OnCommandLine_Clean { gem_build_OnCommandLine_Clean ;}
 function gem_build_OnCommandLine_Clean
 {
 	if [[ ${gem_build_script} == "cmake" ]]; then
@@ -1625,39 +1696,11 @@ function gem_build_OnCommandLine_Clean
 	fi
 }
 
-function gem_v_OnClean { gem_build_OnClean ;}
-function gem_build_OnClean
-{
-	# gem_flags_configure, gem_flags_c, gem_flags_cpp, gem_flags_cxx,
-	# gem_flags_ld. To remove a flag:
-	# flags=$(printf '%s\n' "${flags//-byebye/}")
-
-	gem_build_OnCommandLine_Clean
-
-	if [[ ${gem_option_cmdline_only} -eq 0 ]]; then
-		eval "${gem_cmd_line_clean} ${gem_redirect_suffix_clean}"
-	else
-		gem_v_Msg_NotQuiet "${gem_cmd_line_clean}"
-	fi
-}
-
-function gem_v_Cmd_Clean { gem_build_Cmd_Clean ;}
-function gem_build_Cmd_Clean
-{
-	if [[ ! -d ${gem_fullpath_build} ]]; then
-		gem_v_Error "Cannot clean.  Build directory does not exist."
-		return 0
-	fi
-	gem_script_cd ${gem_fullpath_build}
-
-	gem_v_OnClean
-	gem_v_CheckLogForErrors ${gem_filename_log_clean}
-}
-
 # =============================================================================
 #                                      Scrub
 # =============================================================================
-function gem_v_Cmd_Scrub { gem_build_Cmd_Scrub ;}
+function gem_v_Cmd_Scrub { gem_script_v_Error "gem_v_Cmd_Scrub() has been renamed." ;}
+function gem_build_v_Cmd_Scrub { gem_build_Cmd_Scrub ;}
 function gem_build_Cmd_Scrub
 {
 	if [[ ! -d ${gem_fullpath_build} ]]; then
@@ -1665,17 +1708,14 @@ function gem_build_Cmd_Scrub
 	fi
 	gem_script_cd ${gem_fullpath_build}
 
-	gem_v_OnScrub
-	gem_v_CheckLogForErrors ${gem_filename_log_scrub}
+	gem_build_v_OnScrub
+	gem_build_v_CheckLogForErrors ${gem_filename_log_scrub}
 }
 
-function gem_v_OnScrub { gem_build_OnScrub ;}
+function gem_v_OnScrub { gem_script_v_Error "gem_v_OnScrub() has been renamed." ;}
+function gem_build_v_OnScrub { gem_build_OnScrub ;}
 function gem_build_OnScrub
 {
-	# gem_flags_configure, gem_flags_c, gem_flags_cpp, gem_flags_cxx,
-	# gem_flags_ld. To remove a flag:
-	# flags=$(printf '%s\n' "${flags//-byebye/}")
-
 	gem_build_OnCommandLine_Scrub
 
 	if [[ ${gem_option_cmdline_only} -eq 0 ]]; then
@@ -1685,9 +1725,10 @@ function gem_build_OnScrub
 	fi
 }
 
+function gem_build_v_OnCommandLine_Scrub { gem_build_OnCommandLine_Scrub ;}
 function gem_build_OnCommandLine_Scrub
 {
-	gem_v_Cmd_Uninstall
+	gem_build_v_Cmd_Uninstall
 
 	if [[ -d ${gem_fullpath_build} ]]; then
 		gem_script_rm -rf ${gem_fullpath_build}
@@ -1697,7 +1738,8 @@ function gem_build_OnCommandLine_Scrub
 # =============================================================================
 #                                      CPack
 # =============================================================================
-function gem_v_Cmd_CPack { gem_build_Cmd_CPack ;}
+function gem_v_Cmd_CPack { gem_script_v_Error "gem_v_Cmd_CPack() has been renamed." ;}
+function gem_build_v_Cmd_CPack { gem_build_Cmd_CPack ;}
 function gem_build_Cmd_CPack
 {
 	if [[ ! -d ${gem_fullpath_build} ]]; then
@@ -1716,7 +1758,8 @@ function gem_build_Cmd_CPack
 #                                     Run
 # =============================================================================
 
-function gem_v_Cmd_RunLinuxAndMinGW { gem_build_Cmd_RunLinuxAndMinGW ;}
+function gem_v_Cmd_RunLinuxAndMinGW { gem_script_v_Error "gem_v_Cmd_RunLinuxAndMinGW() has been renamed." ;}
+function gem_build_v_Cmd_RunLinuxAndMinGW { gem_build_Cmd_RunLinuxAndMinGW ;}
 function gem_build_Cmd_RunLinuxAndMinGW
 {
 	if [[ ! -d ${gem_fullpath_build} ]]; then
@@ -1742,7 +1785,8 @@ function gem_build_Cmd_RunLinuxAndMinGW
 	gem_v_Msg "--------------------------------------------------------------------------------"
 }
 
-function gem_v_Cmd_RunAndroid { gem_build_Cmd_RunAndroid ;}
+function gem_v_Cmd_RunAndroid { gem_script_v_Error "gem_v_Cmd_RunAndroid() has been renamed." ;}
+function gem_build_v_Cmd_RunAndroid { gem_build_Cmd_RunAndroid ;}
 function gem_build_Cmd_RunAndroid
 {
 	if [[ ! -d ${gem_fullpath_build} ]]; then
@@ -1780,11 +1824,12 @@ function gem_build_Cmd_RunAndroid
 }
 
 # =============================================================================
-#                                       gem_v_Main
+#                                       gem_build_v_Main
 # =============================================================================
 
-# gem_v_OnArg()- Returns the number of arguments processed.
-function gem_v_OnArg { gem_build_OnArg "$@";}
+# gem_build_v_OnArg()- Returns the number of arguments processed.
+function gem_v_OnArg { gem_script_v_Error "gem_v_OnArg() has been renamed." ;}
+function gem_script_v_OnArg { gem_build_OnArg "$@";}
 function gem_build_OnArg
 {
 	local arg=${1}
@@ -1800,7 +1845,7 @@ function gem_build_OnArg
 		-ch)		gem_option_configure_help=1 ;;
 		-cmdline)	gem_option_cmdline_only=1 ; gem_script_option_quiet_mode=1 ;;
 		-d)			gem_option_download=1 ;;
-		-help)		gem_v_ExitHelp ;;
+		-help)		gem_build_v_ExitHelp ;;
 		-host)
 			case ${2} in
 				linux|cygwin|mingw|android_x86_64|android_v7vfpv3|android_arm_v7_plus_neon|android_arm64_v8a)
@@ -1845,7 +1890,8 @@ function gem_build_OnArg
 	return 1	# We handle 1 argument by default.  Other cases will return
 }
 
-function gem_v_Main { gem_build_Main "$@";}
+function gem_v_Main { gem_script_v_Error "gem_v_Main() has been renamed." ;}
+function gem_script_v_Main { gem_build_Main "$@";}
 function gem_build_Main
 {
 	gem_time_start=$(( 10#$(date +%s) ))
@@ -1865,7 +1911,7 @@ function gem_build_Main
 
 	gem_cmake_generator="<undefined>"
 
-	gem_v_SetDefaults
+	gem_build_v_SetDefaults
 
 	gem_script_Main "$@"	# Process all the arguments
 
@@ -1881,12 +1927,12 @@ function gem_build_Main
 		gem_v_Error ${gem_str_not_implemented}
 	fi
 
-	gem_v_SetHost_${gem_host}
-	gem_v_ValidateBuildTools
-	gem_v_SetBuildType_${gem_build_type}
-	gem_v_SelectCMakeGenerator
-	gem_v_ValidateCompatibility
-	gem_v_BuildFilePaths
+	gem_build_v_SetHost_${gem_host}
+	gem_build_v_ValidateBuildTools
+	gem_build_v_SetBuildType_${gem_build_type}
+	gem_build_v_SelectCMakeGenerator
+	gem_build_v_ValidateCompatibility
+	gem_build_v_BuildFilePaths
 
 	if [[ ${gem_option_redirect_output} == 1 ]]; then
 		gem_filename_log_build=${gem_fullpath_build}/gem_log_build.txt
@@ -1905,38 +1951,38 @@ function gem_build_Main
 
 	# Execute the commands.
 	if [[ ${gem_option_download} == 1 ]]; then
-		gem_v_DownloadSource
+		gem_build_v_DownloadSource
 	fi
 	if [[ ${gem_option_clean} == 1 ]]; then
-		gem_v_Cmd_Clean
+		gem_build_v_Cmd_Clean
 	fi
 	if [[ ${gem_option_scrub} == 1 ]]; then
-		gem_v_Cmd_Scrub
+		gem_build_v_Cmd_Scrub
 	fi
 	if [[ ${gem_option_configure} == 1 ]]; then
-		gem_v_Cmd_Configure
+		gem_build_v_Cmd_Configure
 	fi
 	if [[ ${gem_option_configure_help} == 1 ]]; then
-		gem_v_Cmd_ConfigureHelp
+		gem_build_v_Cmd_ConfigureHelp
 	fi
 	if [[ ${gem_option_build} == 1 ]]; then
-		gem_v_Cmd_Build
+		gem_build_v_Cmd_Build
 	fi
 	if [[ ${gem_option_run} == 1 ]]; then
 		if [[ ${gem_host} == *"android"* ]]; then
-			gem_v_Cmd_RunAndroid
+			gem_build_v_Cmd_RunAndroid
 		else
-			gem_v_Cmd_RunLinuxAndMinGW
+			gem_build_v_Cmd_RunLinuxAndMinGW
 		fi
 	fi
 	if [[ ${gem_option_install} == 1 ]]; then
-		gem_v_Cmd_Install
+		gem_build_v_Cmd_Install
 	fi
 	if [[ ${gem_option_uninstall} == 1 ]]; then
-		gem_v_Cmd_Uninstall
+		gem_build_v_Cmd_Uninstall
 	fi
 	if [[ ${gem_option_pack} == 1 ]]; then
-		gem_v_Cmd_CPack
+		gem_build_v_Cmd_CPack
 	fi
 
 	gem_time_ellapsed=$(( $(( 10#$(date +%s) )) - ${gem_time_start} ))
