@@ -355,8 +355,9 @@ function gem_build_BuildFilePaths
 
 	if [[ ${gem_os} == "Linux" ]]; then		# Running on Linux.
 		if [[ ${gem_host} == "linux" ]]; then
-			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=/usr/include
-			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=/usr/lib:/usr/lib64
+			noop=0
+#			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=/usr/include
+#			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=/usr/lib:/usr/lib64
 		elif [[ ${gem_host} == "mingw" ]]; then	# Building for MinGW.
 			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=/mingw/include
 			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=/mingw/lib
@@ -371,7 +372,7 @@ function gem_build_BuildFilePaths
 		fi
 	elif  [[ ${gem_os} == "CYGWIN"* ]]; then	# Running in Cygwin Windows.
 		if [[ ${gem_host} == "cygwin" ]]; then	# Building for Cygwin.
-	noop=0
+			noop=0
 #			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=/usr/include
 #			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=/lib
 		elif [[ ${gem_host} == "mingw" ]]; then	# Building for MinGW.
@@ -1064,10 +1065,6 @@ function gem_build_Cmd_Configure
 function gem_v_OnConfigure { gem_build_OnConfigure ;}
 function gem_build_OnConfigure
 {
-	# gem_flags_configure, gem_flags_c, gem_flags_cpp, gem_flags_cxx,
-	# gem_flags_ld. To remove a flag:
-	# flags=$(printf '%s\n' "${flags//-byebye/}")
-
 	gem_build_OnCommandLine_Configure
 
 	if [[ ${gem_option_cmdline_only} -eq 0 ]]; then
