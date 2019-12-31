@@ -738,35 +738,33 @@ function gem_build_SetHost_mingw
 		gem_v_Error "gem_build_SetHost_mingw: Unrecognized shell: ${gem_os}."
 	fi
 
+	# Find the compiler's library directory.  The gcc library directory
+	# name includes an ever changing version number, so we'll enter the
+	# parent directory, then search for a file expected to be present (i.e.
+	# libgcc.a.)
+	if [[ ${gem_os} == "CYGWIN"* || ${gem_os} == "Linux" ]]; then
+		pushd /usr/lib/gcc/x86_64-w64-mingw32 &>/dev/null
+	elif [[ ${gem_os} == "MINGW64"* ]]; then
+		# Not cross compiling.
+		pushd /mingw64/lib/gcc/x86_64-w64-mingw32 &>/dev/null
+		gem_fullpath_gcc_libs=${gem_fullpath_sysroot}/mingw/lib
+	else
+		gem_v_Error "gem_build_SetHost_mingw: Unrecognized shell: ${gem_os}."
+	fi
+	gem_path_found=$(find -name libgcc.a)
+	if [[ ${gem_path_found}x == "x" ]]; then
+		gem_v_Error "gem_build_SetHost_mingw(): Failed to determine library directory."
+	fi
+	gem_fullpath_gcc_libs=$(pwd)/$(dirname ${gem_path_found})
+	popd &>/dev/null
+
+
 	if [[ ${gem_build_script} == "cmake" ]]; then
 		gem_filename_cmake_toolchain=${gem_fullpath_local}/toolchains/mingw.toolchain.cmake
 
 	elif [[ ${gem_build_script} == "autotools" ]]; then
 
-		# Find the compiler's library directory.  The gcc library directory
-		# name includes an ever changing version number, so we'll enter the
-		# parent directory, then search for a file expected to be present (i.e.
-		# libgcc.a.)
-		# Temporarily(?) disabling because adding LDFLAGS=" -L/mingw64/lib/gcc/x86_64-w64-mingw32/./9.2.0"
-		# causes link errors when building libiconv.  If removing it breaks
-		# other projects, then we'll have to figure out how to remove this in
-		# gem_build_libiconv.
-		if [[ ${gem_os} != "MINGW64"* ]]; then
-			if [[ ${gem_os} == "CYGWIN"* || ${gem_os} == "Linux" ]]; then
-				pushd /usr/lib/gcc/x86_64-w64-mingw32 &>/dev/null
-			elif [[ ${gem_os} == "MINGW64"* ]]; then
-				# Not cross compiling.
-				pushd /mingw64/lib/gcc/x86_64-w64-mingw32 &>/dev/null
-	#			gem_fullpath_gcc_libs=${gem_fullpath_sysroot}/mingw/lib
-			else
-				gem_v_Error "gem_build_SetHost_mingw: Unrecognized shell: ${gem_os}."
-			fi
-			gem_path_found=$(find -name libgcc.a)
-			if [[ ${gem_path_found}x == "x" ]]; then
-				gem_v_Error "gem_build_SetHost_mingw(): Failed to determine library directory."
-			fi
-			gem_fullpath_gcc_libs=$(pwd)/$(dirname ${gem_path_found})
-			popd &>/dev/null
+		if [[ ${gem_os} != "MINGW64"* ]]; then	# Building for mingw on cygwin or linux.
 			if [[ ! -d ${gem_fullpath_gcc_libs} ]]; then
 				gem_v_Error "gem_build_SetHost_mingw(): Library path does not exist: ${gem_fullpath_gcc_libs}.  Did the version number change?"
 			fi
@@ -1131,8 +1129,18 @@ ${gem_cmake_params_extra}"
 #-DPKG_CONFIG_EXECUTABLE=${gem_fullpath_pkg_config} \
 #${gem_cmake_params_extra}"
 
-	gem_cmd_line_configure="cmake ${gem_fullpath_src} ${gem_cmake_generator} \
+	# Only use the toolchain file if we're cross compiling, because it
+	# prohibits use of system libraries.  However, since we're specifying
+	# sysroot, shouldn't it work?  I think we need to modify the toolchain file
+	# to be aware if we're crosscompiling and modulate the prohibited sources
+	# of resource files.
+	if  [[ ${gem_os} == "MINGW64"* && ${gem_host} != "mingw" ]]; then
+		gem_cmake_params_extra="\
 -DCMAKE_TOOLCHAIN_FILE=${gem_filename_cmake_toolchain} \
+${gem_cmake_params_extra}"
+	fi
+
+	gem_cmd_line_configure="cmake ${gem_fullpath_src} ${gem_cmake_generator} \
 -DCMAKE_BUILD_TYPE=${gem_build_type} \
 -DCMAKE_INSTALL_PREFIX=${gem_fullpath_install} \
 -Dgem_host=${gem_host} \
@@ -1541,17 +1549,22 @@ function gem_build_Cmd_Install
 function gem_v_OnInstall { gem_build_OnInstall ;}
 function gem_build_OnInstall
 {
-	# gem_flags_configure, gem_flags_c, gem_flags_cpp, gem_flags_cxx,
-	# gem_flags_ld. To remove a flag:
-	# flags=$(printf '%s\n' "${flags//-byebye/}")
-
 	gem_build_OnCommandLine_Install
 
-	if [[ ${gem_option_cmdline_only} -eq 0 ]]; then
-		eval "${gem_cmd_line_install} ${gem_redirect_suffix_install}"
-	else
+	if [[ ${gem_option_cmdline_only} -ne 0 ]]; then
 		gem_v_Msg_NotQuiet "${gem_cmd_line_install}"
+		return 1
 	fi
+
+	eval "${gem_cmd_line_install} ${gem_redirect_suffix_install}"
+
+	if [[ ${gem_host} == *"mingw"*  ]]; then
+
+		cp /c/msys64/mingw64/bin/libgcc_s_seh-1.dll ${gem_fullpath_install}/bin
+		cp /c/msys64/mingw64/bin/libstdc++-6.dll ${gem_fullpath_install}/bin
+		cp /c/msys64/mingw64/bin/libwinpthread-1.dll ${gem_fullpath_install}/bin
+	fi
+
 }
 
 function gem_build_OnCommandLine_Install
