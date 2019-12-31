@@ -1066,7 +1066,7 @@ sudo dnf -y install policycoreutils-gui and system-* xarchiver wine
 # rxvt-unicode is a nicer terminal.
 # samba allows us to share files with other computers on our local network.
 
-sudo dnf -y install rxvt-unicode samba xclip
+sudo dnf -y install rxvt-unicode samba xclip chrpath
 sudo dnf -y groupinstall "Administration Tools"
 
 
