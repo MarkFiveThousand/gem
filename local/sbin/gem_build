@@ -364,8 +364,10 @@ function gem_build_BuildFilePaths
 #			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=/usr/include
 #			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=/usr/lib:/usr/lib64
 		elif [[ ${gem_host} == "mingw" ]]; then	# Building for MinGW.
-			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=/mingw/include
-			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=/mingw/lib
+#			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=/mingw/include
+#			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=/mingw/lib
+			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=/usr/x86_64-w64-mingw32/sys-root/include
+			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=/usr/x86_64-w64-mingw32/sys-root/lib
 		elif [[ ${gem_host} == *"android_"* ]]; then	# Building for Android.
 			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=/usr/include
 			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=/usr/lib
@@ -388,8 +390,8 @@ function gem_build_BuildFilePaths
 #	gem_script_ValidatePaths ${PKG_CONFIG_SYSTEM_INCLUDE_PATH}:${PKG_CONFIG_SYSTEM_LIBRARY_PATH}
 
 	# These must be reset to stay away from system libraries while cross compiling.
-#	export PKG_CONFIG_PATH=
-#	export PKG_CONFIG_DIR=
+	export PKG_CONFIG_PATH=
+	export PKG_CONFIG_DIR=
 
 #echo
 #echo "----------------"
@@ -462,6 +464,48 @@ function gem_build_BuildFilePaths
 
 
 	gem_build_v_ValidateFilePaths
+}
+
+function gem_build_v_UpdateWinePath { gem_build_UpdateWinePath ;}
+function gem_build_UpdateWinePath
+{
+	# For running mingw apps on linux, add the location of our dlls to wine's path.
+	if [[ ${gem_os} == "Linux" && ${gem_host} == "mingw" ]]; then
+
+		if [[ ! -d ~/.wine ]]; then
+			gem_script_v_Error "Wine directory (~/.wine) does not exist.  Install and run wine once to create it.  Then try again."
+		fi
+		gem_fullpath_wine_system_reg="${HOME}/.wine/system.reg"
+
+		# Back up the wine registery before we modify it.
+		if [[ ! -f ${gem_fullpath_wine_system_reg}.bak ]]; then
+			cp ${gem_fullpath_wine_system_reg} ${gem_fullpath_wine_system_reg}.bak
+		fi
+
+#		cp ${gem_fullpath_wine_system_reg}.bak ${gem_fullpath_wine_system_reg}
+		# Locate the line containing the wine path.
+		gem_path_line_num=$(grep -n '"PATH"=str(2):"C:\\\\windows\\\\system32' ${gem_fullpath_wine_system_reg} | cut -f1 -d:)
+		if [[ -z ${gem_path_line_num} ]]; then
+			gem_script_v_Error "Failed to locate the path variable in ${gem_fullpath_wine_system_reg}."
+		fi
+		gem_path_string=$(head -"${gem_path_line_num}" ${gem_fullpath_wine_system_reg} | tail -1)
+
+		# Replace the trailing double quote with the path to the system dlls, if it's not already there.
+		gem_fullpath_dlls='Z:\\usr\\x86_64-w64-mingw32\\sys-root\\mingw\\bin'
+		if [[ ${gem_path_string} != *"${gem_fullpath_dlls}"* ]]; then
+			local gem_fullpath=$(echo ${gem_fullpath_dlls} | sed 's|\\|\\\\|g')
+			sed -i "${gem_path_line_num}s/\"$/;${gem_fullpath}\"/" ${gem_fullpath_wine_system_reg}
+			gem_script_v_Msg "Adding ${gem_fullpath} to wine path in ${gem_fullpath_wine_system_reg}."
+		fi
+
+		# Replace the trailing double quote with the path to gem's installed dlls, if it's not already there.
+		gem_fullpath_dlls=$(echo "Z:${gem_fullpath_install}/bin" | sed 's|/|\\\\|g')
+		if [[ ${gem_path_string} != *"${gem_fullpath_dlls}"* ]]; then
+			local gem_fullpath=$(echo ${gem_fullpath_dlls} | sed 's|\\|\\\\|g')
+			sed -i "${gem_path_line_num}s/\"$/;${gem_fullpath}\"/" ${gem_fullpath_wine_system_reg}
+			gem_script_v_Msg "Adding ${gem_fullpath} to wine path in ${gem_fullpath_wine_system_reg}."
+		fi
+	fi
 }
 
 function gem_v_ValidateFilePaths { gem_script_v_Error "gem_v_ValidateFilePaths() has been renamed." ;}
@@ -864,6 +908,7 @@ function gem_build_SetHost_mingw
 	elif [[ ${gem_build_script} == "meson" ]]; then
 		noop=0
 	fi
+
 	gem_build_v_SetHost_common
 }
 
@@ -1935,6 +1980,7 @@ function gem_build_Main
 	gem_build_v_SelectCMakeGenerator
 	gem_build_v_ValidateCompatibility
 	gem_build_v_BuildFilePaths
+	gem_build_v_UpdateWinePath
 
 	if [[ ${gem_option_redirect_output} == 1 ]]; then
 		gem_filename_log_build=${gem_fullpath_build}/gem_log_build.txt

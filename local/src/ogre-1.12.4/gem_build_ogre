@@ -76,6 +76,13 @@ function gem_build_v_OnCommandLine_Configure_CMake
 -DSDL2_LIBRARY_TEMP=~/gem/local_x86_64-pc-linux-gnu/release/lib/libSDL2.a"
 	fi
 
+# Didn't find the missing -ldl error while cross compiling.  I think installing
+# mingw64-dlfcn or mingw64-dlfcn-static is the correct fix.
+
+#	if [[ ${gem_os} == "Linux"*  && ${gem_host} == "mingw" ]]; then
+#		gem_flags_ld="-lpsapi ${gem_flags_ld}"
+#	fi
+
 	gem_build_OnCommandLine_Configure_CMake
 
 #	echo ${gem_cmd_line_configure} ; exit
@@ -108,10 +115,13 @@ function gem_build_v_OnInstall
 		gem_script_cp ${gem_fullpath_install}/bin/libzlib1.dll ${gem_fullpath_install}/bin/zlib1.dll 
 		gem_script_cp ${gem_fullpath_build}/zziplib-develop/zzip/libzzip-0.dll ${gem_fullpath_install}/bin/libzzip-0.dll
 	elif [[ ${gem_os} == "Linux"* ]]; then	# Linux shell.
-		gem_script_cp ${gem_fullpath_build}/Dependencies/lib64/libzzip-0.so ${gem_fullpath_install}/lib
-		gem_script_cp ${gem_fullpath_build}/Dependencies/lib64/libzzip-0.so.13 ${gem_fullpath_install}/lib
-		gem_script_cp ${gem_fullpath_build}/Dependencies/lib64/libzzip-0.so.13.0.69 ${gem_fullpath_install}/lib
-
+		if [[ ${gem_host} == "linux" ]]; then
+			gem_script_cp ${gem_fullpath_build}/Dependencies/lib64/libzzip-0.so ${gem_fullpath_install}/lib
+			gem_script_cp ${gem_fullpath_build}/Dependencies/lib64/libzzip-0.so.13 ${gem_fullpath_install}/lib
+			gem_script_cp ${gem_fullpath_build}/Dependencies/lib64/libzzip-0.so.13.0.69 ${gem_fullpath_install}/lib
+		elif [[ ${gem_host} == "mingw" ]]; then
+			gem_script_cp ${gem_fullpath_build}/zziplib-develop/zzip/libzzip-0.dll ${gem_fullpath_install}/bin/libzzip-0.dll
+		fi
 	fi
 }
 
