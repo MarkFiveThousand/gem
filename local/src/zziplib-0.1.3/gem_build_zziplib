@@ -11,7 +11,7 @@
 . gem_script
 . gem_build
 
-function gem_v_SetDefaults
+function gem_build_v_SetDefaults
 {
 	gem_build_SetDefaults;
 
@@ -51,10 +51,10 @@ function gem_v_SetDefaults
 	gem_flags_common="${gem_flags_common}"
 }
 
-function gem_v_DownloadSource
+function gem_build_v_DownloadSource
 {
 	if [[ -d ./zziplib || -d ./src ]]; then
-		gem_v_Error "The source tree already exists.  Refusing to download."
+		gem_script_v_Error "The source tree already exists.  Refusing to download."
 	fi
 	git clone --depth=1 https://github.com/gdraheim/zziplib.git
 
@@ -63,39 +63,46 @@ function gem_v_DownloadSource
 	fi
 }
 
-function gem_v_OnConfigure
+function gem_build_v_OnConfigure
 {
 	gem_flags_c="$(gem_build_PkgConfig --cflags zlib) ${gem_flags_c}"
 
-	gem_v_DebugDumpVars
+	gem_build_v_DebugDumpVars
 	gem_build_OnConfigure
 }
 
-function gem_v_build_CommandLine_Build
+function gem_build_v_OnCommandLine_Configure_Autotools
 {
-	gem_build_CommandLine_Build
+	gem_build_OnCommandLine_Configure_Autotools
+
+#	echo ${gem_cmd_line_configure} ; exit
 }
 
-function gem_v_OnBuild
+function gem_build_v_OnCommandLine_Build
+{
+	gem_build_OnCommandLine_Build
+}
+
+function gem_build_v_OnBuild
 {
 	gem_flags_c="$(gem_build_PkgConfig --cflags zlib) ${gem_flags_c}"
 	gem_flags_ld="$(gem_build_PkgConfig --libs zlib) ${gem_flags_ld}"
 
-	gem_v_DebugDumpVars
+	gem_build_v_DebugDumpVars
 	gem_build_OnBuild
 }
 
-function gem_v_OnInstall
+function gem_build_v_OnInstall
 {
 	gem_build_OnInstall
 }
 
-function gem_v_OnUninstall
+function gem_build_v_OnUninstall
 {
 	gem_build_OnUninstall
 }
 
-function gem_v_Cmd_Clean
+function gem_build_v_Cmd_Clean
 {
 	# gem_flags_configure, gem_flags_c, gem_flags_cpp, gem_flags_cxx,
 	# gem_flags_ld. To remove a flag:
@@ -106,7 +113,7 @@ function gem_v_Cmd_Clean
 # =============================================================================
 #                                       gem_Main
 # =============================================================================
-function gem_v_OnArg
+function gem_script_v_OnArg
 {
 	arg=$(echo ${1} | tr '[A-Z]' '[a-z]')	# Lowercase args.
 	case ${arg} in
@@ -114,9 +121,8 @@ function gem_v_OnArg
 	esac
 }
 
-
-function gem_v_Main
+function gem_script_v_Main
 {
 	gem_build_Main "$@"
 }
-gem_v_Main $@
+gem_script_v_Main $@

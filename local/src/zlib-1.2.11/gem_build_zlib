@@ -11,7 +11,7 @@
 . gem_script
 . gem_build
 
-function gem_v_SetDefaults
+function gem_build_v_SetDefaults
 {
 	gem_build_SetDefaults;
 
@@ -54,14 +54,14 @@ function gem_v_SetDefaults
 	gem_flags_common="${gem_flags_common}"
 }
 
-function gem_v_DownloadSource
+function gem_build_v_DownloadSource
 {
 	gem_build_DownloadSource
 }
 
-function gem_v_OnConfigure
+function gem_build_v_OnConfigure
 {
-	gem_v_DebugDumpVars
+	gem_build_v_DebugDumpVars
 
 	if [[ ${gem_host} == "cygwin" ]]; then
 
@@ -74,32 +74,31 @@ function gem_v_OnConfigure
 		sed -i ':a;N;$!ba;s|#ifdef GCC_WINDRES\nVS_VERSION_INFO		VERSIONINFO\n#else\nVS_VERSION_INFO		VERSIONINFO	MOVEABLE IMPURE LOADONCALL DISCARDABLE\n#endif|VS_VERSION_INFO		VERSIONINFO|g'  ${gem_fullpath_src}/win32/zlib1.rc
 	fi
 
-	if [[ ${gem_lib_type} == "shared" ]]; then
-		gem_cmake_params_extra=" \
--DBUILD_SHARED_LIBS=ON \
-${gem_cmake_params_extra}"
-	fi
-
 	gem_build_OnConfigure
 }
 
-function gem_v_build_OnCommandLine_Build
+function gem_build_v_OnCommandLine_Build
 {
 	gem_build_OnCommandLine_Build
+
+	if [[ ${gem_lib_type} == "shared" ]]; then
+		gem_cmd_line_configure="${gem_cmd_line_configure} \
+-DBUILD_SHARED_LIBS=ON"
+	fi
 }
 
-function gem_v_OnBuild
+function gem_build_v_OnBuild
 {
-	gem_v_DebugDumpVars
+	gem_build_v_DebugDumpVars
 	gem_build_OnBuild
 }
 
-function gem_v_OnInstall
+function gem_build_v_OnInstall
 {
 	gem_build_OnInstall
 }
 
-function gem_v_OnUninstall
+function gem_build_v_OnUninstall
 {
 	# gem_build_OnUninstall
 	if [[ ${gem_host} == "linux" ]]; then
@@ -142,16 +141,16 @@ function gem_v_OnUninstall
 	gem_script_rmdir_IfEmpty ${gem_fullpath_install}/share
 }
 
-function gem_v_OnClean
+function gem_build_v_OnClean
 {
-	gem_v_DebugDumpVars
+	gem_build_v_DebugDumpVars
 	gem_build_OnClean
 }
 
 # =============================================================================
 #                                       gem_Main
 # =============================================================================
-function gem_v_OnArg
+function gem_script_v_OnArg
 {
 	arg=$(echo ${1} | tr '[A-Z]' '[a-z]')	# Lowercase args.
 	case ${arg} in
@@ -159,8 +158,8 @@ function gem_v_OnArg
 	esac
 }
 
-function gem_v_Main
+function gem_script_v_Main
 {
 	gem_build_Main "$@"
 }
-gem_v_Main $@
+gem_script_v_Main $@

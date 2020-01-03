@@ -49,7 +49,7 @@ function gem_build_v_SetDefaults
 function gem_build_v_DownloadSource
 {
 	if [[ -d ./ogre || -d ./src ]]; then
-		gem_v_Error "The source tree already exists.  Refusing to download."
+		gem_script_v_Error "The source tree already exists.  Defying order to download."
 	fi
 	git clone --depth 1 --recursive --branch v1.12.4 https://github.com/OGRECave/ogre.git
 
@@ -60,10 +60,21 @@ function gem_build_v_DownloadSource
 
 function gem_build_v_OnCommandLine_Configure_CMake
 {
-#	gem_cmake_params_extra=" \
-#-DCMAKE_CXX_FLAGS="-I${gem_fullpath_build}/Dependencies/include" \
-#-DCMAKE_LD_FLAGS="-L${gem_fullpath_build}/Dependencies/lib" \
-#${gem_cmake_params_extra}"
+	gem_cmd_line_configure="${gem_cmd_line_configure} \
+-DOGRE_BUILD_COMPONENT_CSHARP=FALSE \
+-DOGRE_BUILD_COMPONENT_PYTHON=FALSE \
+-DOGRE_BUILD_TOOLS=FALSE"
+
+	# On Linux, ~/gem/local/src/ogre-1.12.4/src/CMake/Dependencies.cmake
+	# refuses to download and build SDL, as it does on other platforms.  As
+	# such, we build sdl2 separately, then point to it.
+	if [[ ${gem_os} == "Linux"* ]]; then
+# SDL2_BINARY=
+	gem_cmd_line_configure="${gem_cmd_line_configure} \
+-DSDL2MAIN_LIBRARY=~/gem/local_x86_64-pc-linux-gnu/release/lib/libSDL2main.a \
+-DSDL2_INCLUDE_DIR=~/gem/local_x86_64-pc-linux-gnu/release/include/SDL2 \
+-DSDL2_LIBRARY_TEMP=~/gem/local_x86_64-pc-linux-gnu/release/lib/libSDL2.a"
+	fi
 
 	gem_build_OnCommandLine_Configure_CMake
 
@@ -93,8 +104,15 @@ function gem_build_v_OnInstall
 {
 	gem_build_OnInstall
 
-	gem_script_cp ${gem_fullpath_install}/bin/libzlib1.dll ${gem_fullpath_install}/bin/zlib1.dll 
-	gem_script_cp ${gem_fullpath_build}/zziplib-develop/zzip/libzzip-0.dll ${gem_fullpath_install}/bin/libzzip-0.dll
+	if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW shell on Windows.
+		gem_script_cp ${gem_fullpath_install}/bin/libzlib1.dll ${gem_fullpath_install}/bin/zlib1.dll 
+		gem_script_cp ${gem_fullpath_build}/zziplib-develop/zzip/libzzip-0.dll ${gem_fullpath_install}/bin/libzzip-0.dll
+	elif [[ ${gem_os} == "Linux"* ]]; then	# Linux shell.
+		gem_script_cp ${gem_fullpath_build}/Dependencies/lib64/libzzip-0.so ${gem_fullpath_install}/lib
+		gem_script_cp ${gem_fullpath_build}/Dependencies/lib64/libzzip-0.so.13 ${gem_fullpath_install}/lib
+		gem_script_cp ${gem_fullpath_build}/Dependencies/lib64/libzzip-0.so.13.0.69 ${gem_fullpath_install}/lib
+
+	fi
 }
 
 function gem_build_v_OnUninstall
