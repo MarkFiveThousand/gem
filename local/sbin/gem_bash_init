@@ -66,8 +66,11 @@ function gem_bash_init_Main()
 
         elif [[ ${gem_os} == *"MINGW64"* ]]; then
 
-	        export PATH=${PATH}:${gem_fullpath_gem}/local_x86_64-w64-mingw32/release/bin
-	        export PATH=/c/msys64/mingw64/bin:${PATH}
+            # We'll prepend the path to our built executables.  However, if we
+            # build a library or executable that doesn't work in all cases, it
+            # may prevent tools from functiong properly.
+	        export PATH=${gem_fullpath_gem}/local_x86_64-w64-mingw32/release/bin:${PATH}
+#	        export PATH=${PATH}:${gem_fullpath_gem}/local_x86_64-w64-mingw32/release/bin
             export PATH=${PATH}:/c/Windows/System32 # Need this for clip.exe
 
 
