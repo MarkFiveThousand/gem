@@ -830,7 +830,15 @@ function gem_build_SetHost_common
 	gem_flags_cpp="${gem_flags_cpp} ${gem_flags_common}"
 	gem_flags_c="-fPIE -fPIC ${gem_flags_c} ${gem_flags_common}"	# -D__ANDROID_API__=${gem_android_api_level}
 	gem_flags_cxx="-fPIE -fPIC ${gem_flags_cxx} ${gem_flags_common}"
-	gem_flags_ld="-pie ${gem_flags_ld} ${gem_flags_common}"
+
+	# This is causing mingw under windows to hang during configure at "checking
+	# whether we are cross compiling..."
+	if [[ ${gem_host} == "mingw" ]]; then
+		gem_flags_ld="${gem_flags_ld} ${gem_flags_common}"
+	else
+		gem_flags_ld="-pie ${gem_flags_ld} ${gem_flags_common}"
+	fi
+
 #	gem_flags_ld="-nostdlib -lc -lm -ldl -llog ${gem_flags_ld}"
 }
 

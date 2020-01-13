@@ -86,10 +86,6 @@ function gem_build_v_OnCommandLine_Configure_Autotools
 
 function gem_build_v_OnCommandLine_Build
 {
-	# "checking whether we are cross compiling..." hangs when gem_flags_ld
-	# contains "-pie", so we'll remove it.
-	gem_flags_ld=$(printf "%s\n" "${gem_flags_ld//-pie/}")
-
 	gem_build_OnCommandLine_Build
 }
 
