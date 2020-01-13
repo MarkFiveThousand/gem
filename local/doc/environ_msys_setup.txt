@@ -1047,7 +1047,8 @@ mingw-w64-x86_64-ca-certificates-20180409-1
 mingw-w64-x86_64-expat-2.2.6-1
 mingw-w64-x86_64-gettext-0.19.8.1-7
 mingw-w64-x86_64-gmp-6.1.2-1
-mingw-w64-x86_64-isl-0.19-1  mingw-w64-x86_64-libffi-3.2.1-4
+mingw-w64-x86_64-isl-0.19-1
+mingw-w64-x86_64-libffi-3.2.1-4
 mingw-w64-x86_64-libiconv-1.15-3
 mingw-w64-x86_64-libsystre-1.0.1-4
 mingw-w64-x86_64-libtasn1-4.13-1
