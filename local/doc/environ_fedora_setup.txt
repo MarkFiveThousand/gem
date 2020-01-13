@@ -1133,9 +1133,16 @@ sudo dnf -y install vlc
 # C/C++ Development Tools:
 # ------------------------
 sudo dnf -y install kdiff3 *mercurial* 
-sudo dnf -y install swig fping python3-matplotlib cmake cmake-gui llvm clang mingw64-gcc mingw64-gcc-c++ mingw64-dlfcn-static git perl meson
+sudo dnf -y install fping python3-matplotlib cmake cmake-gui llvm clang mingw64-gcc mingw64-gcc-c++ mingw64-dlfcn-static git perl meson
 sudo dnf -y groupinstall "Development Tools" "Development Libraries" "X Software Development" "C Development Tools and Libraries"
 sudo dnf -y install mesa-libGLES-devel libXt-devel libXaw-devel
+
+# Noting here that I'm downloading the following files for SDL2.  Using the
+# home built ones results in mouse annomolies on Fedrora and cross-compiling for
+# mingw on Fedora, while the mingw version built on windows works fine.
+
+sudo dnf install mingw64-SDL2 mingw64-SDL2-static
+
 
 
 # npm

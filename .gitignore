@@ -40,6 +40,7 @@ local/src/pkg-config/src
 local/src/pkg-config/pkg-config-*.gz
 
 local/src/sdl2-2.0.10/build
+local/src/sdl2-2.0.10/build_tests
 local/src/sdl2-2.0.10/src
 
 local/src/texinfo-*/build

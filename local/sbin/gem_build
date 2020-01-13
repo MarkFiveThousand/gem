@@ -272,6 +272,24 @@ function gem_build_DownloadSource
 	fi
 }
 
+function gem_build_v_BuildFilePath_Src { gem_build_BuildFilePath_Src ;}
+function gem_build_BuildFilePath_Src
+{
+	echo "$(pwd)/src"
+}
+
+function gem_build_v_BuildFilePath_Build { gem_build_BuildFilePath_Build ;}
+function gem_build_BuildFilePath_Build
+{
+	echo "$(pwd)/build/${gem_path_suffix}"
+}
+
+function gem_build_v_BuildFilePath_Install { gem_build_BuildFilePath_Install ;}
+function gem_build_BuildFilePath_Install
+{
+	echo "${gem_fullpath_local}_${gem_path_suffix}"
+}
+
 function gem_v_BuildFilePaths { gem_script_v_Error "gem_v_BuildFilePaths() has been renamed." ;}
 function gem_build_v_BuildFilePaths { gem_build_BuildFilePaths ;}
 function gem_build_BuildFilePaths
@@ -286,9 +304,9 @@ function gem_build_BuildFilePaths
 	if [[ ! -d ${gem_fullpath_pkg} ]]; then
 		gem_script_v_Error "Failed to determine directory containing this script: $(basename \"${0}\")"
 	fi
-	gem_fullpath_src=${gem_fullpath_pkg}/src
-	gem_fullpath_build=${gem_fullpath_pkg}/build/${gem_path_suffix}
-	gem_fullpath_install=${gem_fullpath_local}_${gem_path_suffix}
+	gem_fullpath_src=$(gem_build_v_BuildFilePath_Src)
+	gem_fullpath_build=$(gem_build_v_BuildFilePath_Build)
+	gem_fullpath_install=$(gem_build_BuildFilePath_Install)
 
 	# Always use the pkg-config for the build machine, *not* for the host."
 	# local_x86_64-w64-mingw32, local_x86_64-pc-cygwin, and local_x86_64-pc-linux-gnu
@@ -342,42 +360,104 @@ function gem_build_BuildFilePaths
 	fi
 	gem_fullpath_pkg_config=${PKG_CONFIG}
 
-	# PKG_CONFIG_SYSROOT_DIR will be prepended to the -I and -L directories.
-	# We *do* want this for finding system libraries.  We *do not* want that
-	# for our gem libraries.  Otherwise
-	# -I/home/mhodges/gem/local_x86_64-w64-mingw32/release/include
-	# will become
+	# PKG_CONFIG_PATH
+	#
+	# If defined, this variable defines a colon-separated (on Windows,
+	# semicolon-separated) list of custom folders to be searched for .pc files
+	# **before** the system locations.  We are resetting this, because when 
+	# PKG_CONFIG_LIBDIR is defined PKG_CONFIG_PATH is ignored.
+	#
+	# PKG_CONFIG_LIBDIR
+	#
+	# This variable defines a colon-separated (on Windows, semicolon-separated)
+	# list of folders to replace the default pkg-config search path, which
+	# includes the system libraries. The default search path depends on
+	# distribution and is usually configured when the pkg-config executable is
+	# compiled. PKG_CONFIG_LIBDIR is intended for cross builds when it should
+	# point to the cross libraries, to avoid referring native libraries in
+	# cross application.  When $PKG_CONFIG_LIBDIR is specified, it will
+	# override the compiled in default directory and the PKG_CONFIG_PATH, which
+	# we are clearing.
+	#
+	# PKG_CONFIG_SYSROOT_DIR (Corresponds to SysrootDir in personality files.)
+	#
+	# PKG_CONFIG_SYSROOT_DIR is used for cross compiling.  It will be prepended
+	# to the -I and -L directories.	 We *do* want this for finding system
+	# libraries.  We *do not* want that for our gem libraries.  Otherwise
+	# -I/home/mhodges/gem/local_x86_64-w64-mingw32/release/include will become
+	# soemthing like
 	# -I/usr/x86_64-w64-mingw32/sys-root/home/mhodges/gem/local_x86_64-w64-mingw32/release/include
-	# when cross compiling.  If this becomes a problem we can add another
-	# version of gem_build_PkgConfig for system libraries that sets
-	# PKG_CONFIG_SYSROOT_DIR to gem_fullpath_sysroot.
-
-	export PKG_CONFIG_SYSROOT_DIR=
+	# when cross compiling, resulting in our gem libraries not being found.
+	#
+	# This problem seems to exist because we are not installing our libraries
+	# along side the system libraries, but rather in a different location.
 
 	# Building under MinGW on Windows.	# zlib.pc is in ${gem_fullpath_install}/share/pkgconfig
 	# Other .pc files are in ${gem_fullpath_install}/lib/pkgconfig
 #	export PKG_CONFIG_LIBDIR=${gem_fullpath_install}/lib/pkgconfig:${gem_fullpath_install}/share/pkgconfig
 
-	if [[ ${gem_os} == "Linux" ]]; then		# Running on Linux.
+	if [[ ${gem_os} == "Linux" ]]; then		# Running under Linux.
 		if [[ ${gem_host} == "linux" ]]; then
-			noop=0
-#			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=/usr/include
-#			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=/usr/lib:/usr/lib64
+			export PKG_CONFIG_SYSROOT_DIR=
+			export TEMP_SYSROOT_DIR=/usr
+			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=${TEMP_SYSROOT_DIR}/include
+			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=${TEMP_SYSROOT_DIR}/lib64
+			export PKG_CONFIG_LIBDIR="${TEMP_SYSROOT_DIR}/lib64/pkgconfig:${PKG_CONFIG_LIBDIR}"
+			export PKG_CONFIG_LIBDIR="${TEMP_SYSROOT_DIR}/share/pkgconfig:${PKG_CONFIG_LIBDIR}"
+			export PKG_CONFIG_LIBDIR="${gem_fullpath_install}/lib/pkgconfig:${PKG_CONFIG_LIBDIR}"
 		elif [[ ${gem_host} == "mingw" ]]; then	# Building for MinGW.
-#			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=/mingw/include
-#			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=/mingw/lib
-			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=/usr/x86_64-w64-mingw32/sys-root/include
-			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=/usr/x86_64-w64-mingw32/sys-root/lib
+			if [[ "x" == "x" ]]; then
+				# This works.  Don't fuck with it.
+				export PKG_CONFIG_SYSROOT_DIR=
+				export TEMP_SYSROOT_DIR=/usr/x86_64-w64-mingw32/sys-root
+				# This will break the -L path to our gem libraries.
+	#			export PKG_CONFIG_SYSROOT_DIR=${TEMP_SYSROOT_DIR}
+				export PKG_CONFIG_SYSTEM_INCLUDE_PATH=${TEMP_SYSROOT_DIR}/mingw/include
+				export PKG_CONFIG_SYSTEM_LIBRARY_PATH=${TEMP_SYSROOT_DIR}/mingw/lib
+				export PKG_CONFIG_LIBDIR="${TEMP_SYSROOT_DIR}/mingw/lib/pkgconfig:${PKG_CONFIG_LIBDIR}"
+				export PKG_CONFIG_LIBDIR="${TEMP_SYSROOT_DIR}/mingw/share/pkgconfig:${PKG_CONFIG_LIBDIR}"
+				export PKG_CONFIG_LIBDIR="${gem_fullpath_install}/lib/pkgconfig:${PKG_CONFIG_LIBDIR}"
+			elif [[ "x" == "y" ]]; then
+
+				# Try considering our gem libraries to be system libraries so
+				# that we can set PKG_CONFIG_SYSROOT_DIR correctly.
+				export PKG_CONFIG_SYSROOT_DIR=/usr/x86_64-w64-mingw32/sys-root
+				export PKG_CONFIG_SYSTEM_INCLUDE_PATH="mingw/include"
+
+				export PKG_CONFIG_SYSTEM_LIBRARY_PATH="mingw/lib:${gem_fullpath_install}/lib"
+				export PKG_CONFIG_SYSTEM_LIBRARY_PATH="${PKG_CONFIG_SYSTEM_LIBRARY_PATH}:${gem_fullpath_install}/lib"
+				export PKG_CONFIG_SYSTEM_LIBRARY_PATH="${PKG_CONFIG_SYSTEM_LIBRARY_PATH}:..${gem_fullpath_install}/lib"
+				export PKG_CONFIG_SYSTEM_LIBRARY_PATH="${PKG_CONFIG_SYSTEM_LIBRARY_PATH}:../..${gem_fullpath_install}/lib"
+				export PKG_CONFIG_SYSTEM_LIBRARY_PATH="${PKG_CONFIG_SYSTEM_LIBRARY_PATH}:../../..${gem_fullpath_install}/lib"
+				export PKG_CONFIG_SYSTEM_LIBRARY_PATH="${PKG_CONFIG_SYSTEM_LIBRARY_PATH}:../../../..${gem_fullpath_install}/lib"
+				export PKG_CONFIG_SYSTEM_LIBRARY_PATH="${PKG_CONFIG_SYSTEM_LIBRARY_PATH}:../../../../..${gem_fullpath_install}/lib"
+				export PKG_CONFIG_SYSTEM_LIBRARY_PATH="${PKG_CONFIG_SYSTEM_LIBRARY_PATH}:/usr/x86_64-w64-mingw32/sys-root${gem_fullpath_install}/lib"
+				export PKG_CONFIG_SYSTEM_LIBRARY_PATH="${PKG_CONFIG_SYSTEM_LIBRARY_PATH}:/usr/x86_64-w64-mingw32/sys-root/..${gem_fullpath_install}/lib"
+				export PKG_CONFIG_SYSTEM_LIBRARY_PATH="${PKG_CONFIG_SYSTEM_LIBRARY_PATH}:/usr/x86_64-w64-mingw32/sys-root/../..${gem_fullpath_install}/lib"
+				export PKG_CONFIG_SYSTEM_LIBRARY_PATH="${PKG_CONFIG_SYSTEM_LIBRARY_PATH}:/usr/x86_64-w64-mingw32/sys-root/../../..${gem_fullpath_install}/lib"
+				export PKG_CONFIG_SYSTEM_LIBRARY_PATH="${PKG_CONFIG_SYSTEM_LIBRARY_PATH}:/usr/x86_64-w64-mingw32/sys-root/../../../..${gem_fullpath_install}/lib"
+				export PKG_CONFIG_SYSTEM_LIBRARY_PATH="${PKG_CONFIG_SYSTEM_LIBRARY_PATH}:/usr/lib64${gem_fullpath_install}/lib"
+				export PKG_CONFIG_SYSTEM_LIBRARY_PATH="${PKG_CONFIG_SYSTEM_LIBRARY_PATH}:/usr/lib64/..${gem_fullpath_install}/lib"
+				export PKG_CONFIG_SYSTEM_LIBRARY_PATH="${PKG_CONFIG_SYSTEM_LIBRARY_PATH}:/usr/lib64/../..${gem_fullpath_install}/lib"
+				export PKG_CONFIG_SYSTEM_LIBRARY_PATH="${PKG_CONFIG_SYSTEM_LIBRARY_PATH}:/usr/lib64/../../..${gem_fullpath_install}/lib"
+				export PKG_CONFIG_SYSTEM_LIBRARY_PATH="${PKG_CONFIG_SYSTEM_LIBRARY_PATH}:/usr/lib64/../../../..${gem_fullpath_install}/lib"
+				export PKG_CONFIG_LIBDIR="/mingw/lib/pkgconfig:${PKG_CONFIG_LIBDIR}"
+				export PKG_CONFIG_LIBDIR="/mingw/share/pkgconfig:${PKG_CONFIG_LIBDIR}"
+				export PKG_CONFIG_LIBDIR="${gem_fullpath_install}/lib/pkgconfig:${PKG_CONFIG_LIBDIR}"
+			else
+				local noop=0
+			fi
+
 		elif [[ ${gem_host} == *"android_"* ]]; then	# Building for Android.
 			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=/usr/include
 			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=/usr/lib
 		fi
-	elif  [[ ${gem_os} == "MINGW64"* ]]; then	# Running in MinGW Windows.
+	elif  [[ ${gem_os} == "MINGW64"* ]]; then	# Running under MinGW Windows.
 		if [[ ${gem_host} == "mingw" ]]; then	# Building for MinGW.
 			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=/usr/include
 			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=/usr/lib
 		fi
-	elif  [[ ${gem_os} == "CYGWIN"* ]]; then	# Running in Cygwin Windows.
+	elif  [[ ${gem_os} == "CYGWIN"* ]]; then	# Running under Cygwin Windows.
 		if [[ ${gem_host} == "cygwin" ]]; then	# Building for Cygwin.
 			noop=0
 #			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=/usr/include
@@ -393,20 +473,17 @@ function gem_build_BuildFilePaths
 	export PKG_CONFIG_PATH=
 	export PKG_CONFIG_DIR=
 
-#echo
-#echo "----------------"
-#${PKG_CONFIG} --path zlib
-#echo "----------------"
-#/usr/bin/pkg-config --path zlib
-#echo "----------------"
-#exit
+#	echo $(pkg-config --cflags-only-I sdl2)
+#	echo $(pkg-config --libs-only-L sdl2)
+#	echo $(pkg-config --list-all)
+#	echo $(pkg-config --libs-only-l sdl2)
+#	echo $(pkg-config --libs-only-other sdl2)
+#	echo $(pkg-config --libs sdl2)
+#	echo $(pkg-config --path sdl2)
+#	echo $(pkg-config --list-package-names)
+#	exit
 
 # Source: https://linux.die.net/man/1/pkg-config
-# PKG_CONFIG_TOP_BUILD_DIR
-#
-# PKG_CONFIG_SYSTEM_INCLUDE_PATH
-#
-# PKG_CONFIG_SYSTEM_LIBRARY_PATH
 #
 # PKG_CONFIG_PATH
 #   A colon-separated (on Windows, semicolon-separated) list of directories to
@@ -455,7 +532,7 @@ function gem_build_BuildFilePaths
 #
 # PKG_CONFIG_LIBDIR
 #
-# 	Replaces the default pkg-config search directory.
+# 	Replaces the default directory where .pc files are searched for.
 
 
 #	pkg-config --list-all ; exit
@@ -506,6 +583,16 @@ function gem_build_UpdateWinePath
 			gem_script_v_Msg "Adding ${gem_fullpath} to wine path in ${gem_fullpath_wine_system_reg}."
 		fi
 	fi
+}
+
+function gem_build_v_SetFlags { gem_build_SetFlags ;}
+function gem_build_SetFlags
+{
+	gem_flags_configure="${gem_flags_configure}"
+	gem_flags_c="${gem_flags_c}"
+	gem_flags_cpp="${gem_flags_cpp}"
+	gem_flags_cxx="${gem_flags_cxx}"
+	gem_flags_ld="${gem_flags_ld}"
 }
 
 function gem_v_ValidateFilePaths { gem_script_v_Error "gem_v_ValidateFilePaths() has been renamed." ;}
@@ -713,7 +800,11 @@ function gem_build_String_AppendFlagsTo
 	fi
 
 	local temp="${temp_c} ${temp_cpp} ${temp_cxx} ${temp_ld}"
+
 	printf -v ${1} "${!1} %s" "${temp}"
+
+#echo "${1}" ; exit
+#echo "$temp" ; exit
 }
 
 function gem_build_PkgConfig
@@ -1245,12 +1336,14 @@ function gem_v_OnCommandLine_Configure_Autotools { gem_script_v_Error "gem_v_OnC
 function gem_build_v_OnCommandLine_Configure_Autotools { gem_build_OnCommandLine_Configure_Autotools ;}
 function gem_build_OnCommandLine_Configure_Autotools
 {
+# Temporarily removing to see if this is comflicting with pkc-config....
+#--with-sysroot=\"${gem_fullpath_sysroot}\" \
+
 	gem_cmd_line_configure="${gem_fullpath_src}/configure \
 --prefix=${gem_fullpath_install} \
 --host=${gem_platform_host} \
 --build=${gem_platform_build} \
 --target=${gem_platform_host} \
---with-sysroot=\"${gem_fullpath_sysroot}\" \
 ${gem_flags_host}"
 
 	# Append CMAKE_C_FLAGS, CMAKE_CPP_FLAGS, CMAKE_CXX_FLAGS, and CMAKE_LD_FLAGS
@@ -1577,7 +1670,6 @@ function gem_build_OnCommandLine_Build
 
 		gem_cmd_line_build="make \
 -j${gem_num_jobs}"
-${gem_fullpath_autotools_makefile}
 
 		if [[ ${gem_fullpath_autotools_makefile}x != "x" ]]; then
 			gem_cmd_line_build="${gem_cmd_line_build} \
@@ -1587,6 +1679,8 @@ ${gem_fullpath_autotools_makefile}"
 		# Append CMAKE_C_FLAGS, CMAKE_CPP_FLAGS, CMAKE_CXX_FLAGS, and
 		# CMAKE_LD_FLAGS or CFLAGS, CPPFLAGS, CXXFLAGS and LDFLAGS.
 		gem_build_String_AppendFlagsTo gem_cmd_line_build
+
+#echo "gem_cmd_line_build=${gem_cmd_line_build}" ; exit
 
 	elif [[ ${gem_build_script} == "meson" ]]; then
 
@@ -1980,6 +2074,7 @@ function gem_build_Main
 	gem_build_v_SelectCMakeGenerator
 	gem_build_v_ValidateCompatibility
 	gem_build_v_BuildFilePaths
+	gem_build_v_SetFlags
 	gem_build_v_UpdateWinePath
 
 	if [[ ${gem_option_redirect_output} == 1 ]]; then

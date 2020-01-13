@@ -7,7 +7,7 @@ function gem_build_v_SetDefaults
 {
 	gem_build_SetDefaults;
 
-	gem_download_src=1
+	gem_download_src=0
 
 	# Need gnu extensions for compile asm code.
 	gem_c_standard="-std=gnu11"	# c90, c99, c11, gnu90, gnu99, gnu11
@@ -35,27 +35,20 @@ function gem_build_v_SetFlags
 	gem_build_SetFlags
 
 	gem_flags_configure="${gem_flags_configure}"
-	gem_flags_c="${gem_flags_c} -I${gem_fullpath_install}/include/SDL2"
+	gem_flags_c="${gem_flags_c} $(pkg-config --cflags-only-I sdl2)"
 	gem_flags_cpp="${gem_flags_cpp}"
 	gem_flags_cxx="${gem_flags_cxx}"
 	gem_flags_ld="${gem_flags_ld}"
-
-	# Temporarily moved to gem_build.
-	# export PKG_CONFIG_LIBDIR="${gem_fullpath_install}/lib/pkgconfig:${PKG_CONFIG_LIBDIR}"
-	export PKG_CONFIG_LIBDIR="../../../mhodges/gem/local_x86_64-w64-mingw32/release/home/lib/pkgconfig:${PKG_CONFIG_LIBDIR}"
 }
 
-function gem_build_v_DownloadSource
+function gem_build_v_BuildFilePath_Src
 {
-	if [[ -d ./SDL || -d ./src ]]; then
-		gem_script_v_Error "The source tree already exists.  Defying order to download."
-	fi
-	gem_script_v_Msg "Sometimes the server runs slow.  This may take up to a minute to begin.  Please be patient..."
-	hg clone https://hg.libsdl.org/SDL SDL
+	echo "$(pwd)/src/test"
+}
 
-	if [[ -d ./SDL && ! -d ./src ]]; then
-		mv ./SDL ./src
-	fi
+function gem_build_v_BuildFilePath_Build
+{
+	echo "$(pwd)/build_tests/${gem_path_suffix}"
 }
 
 function gem_build_v_OnCommandLine_Configure_CMake
