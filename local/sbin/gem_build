@@ -444,8 +444,6 @@ function gem_build_BuildFilePaths
 				export PKG_CONFIG_LIBDIR="/mingw/lib/pkgconfig:${PKG_CONFIG_LIBDIR}"
 				export PKG_CONFIG_LIBDIR="/mingw/share/pkgconfig:${PKG_CONFIG_LIBDIR}"
 				export PKG_CONFIG_LIBDIR="${gem_fullpath_install}/lib/pkgconfig:${PKG_CONFIG_LIBDIR}"
-			else
-				local noop=0
 			fi
 
 		elif [[ ${gem_host} == *"android_"* ]]; then	# Building for Android.
@@ -454,8 +452,20 @@ function gem_build_BuildFilePaths
 		fi
 	elif  [[ ${gem_os} == "MINGW64"* ]]; then	# Running under MinGW Windows.
 		if [[ ${gem_host} == "mingw" ]]; then	# Building for MinGW.
-			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=/usr/include
-			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=/usr/lib
+			export PKG_CONFIG_SYSROOT_DIR=
+			export PKG_CONFIG_SYSTEM_INCLUDE_PATH="${PKG_CONFIG_SYSTEM_INCLUDE_PATH}\
+/mingw64/x86_64-w64-mingw32/include:\
+/mingw64/include:\
+/usr/include"
+			export PKG_CONFIG_SYSTEM_LIBRARY_PATH="${PKG_CONFIG_SYSTEM_LIBRARY_PATH}\
+/mingw64/x86_64-w64-mingw32/lib:\
+/mingw64/lib:\
+/usr/lib"
+			export PKG_CONFIG_LIBDIR="${PKG_CONFIG_LIBDIR}\
+${gem_fullpath_install}/lib/pkgconfig:\
+/mingw64/share/pkgconfig:\
+/mingw64/lib/pkgconfig:\
+/usr/lib/pkgconfig"
 		fi
 	elif  [[ ${gem_os} == "CYGWIN"* ]]; then	# Running under Cygwin Windows.
 		if [[ ${gem_host} == "cygwin" ]]; then	# Building for Cygwin.
@@ -473,14 +483,14 @@ function gem_build_BuildFilePaths
 	export PKG_CONFIG_PATH=
 	export PKG_CONFIG_DIR=
 
-#	echo $(pkg-config --cflags-only-I sdl2)
-#	echo $(pkg-config --libs-only-L sdl2)
-#	echo $(pkg-config --list-all)
-#	echo $(pkg-config --libs-only-l sdl2)
-#	echo $(pkg-config --libs-only-other sdl2)
-#	echo $(pkg-config --libs sdl2)
-#	echo $(pkg-config --path sdl2)
-#	echo $(pkg-config --list-package-names)
+#	echo $(pkg-config --cflags-only-I sdl2) ; echo
+#	echo $(pkg-config --libs-only-L sdl2) ; echo
+#	echo $(pkg-config --list-all) ; echo
+#	echo $(pkg-config --libs-only-l sdl2) ; echo
+#	echo $(pkg-config --libs-only-other sdl2) ; echo
+#	echo $(pkg-config --libs sdl2) ; echo
+#	echo $(pkg-config --path sdl2) ; echo
+#	echo $(pkg-config --list-package-names) ; echo
 #	exit
 
 # Source: https://linux.die.net/man/1/pkg-config
@@ -833,7 +843,7 @@ function gem_build_SetHost_common
 
 	# This is causing mingw under windows to hang during configure at "checking
 	# whether we are cross compiling..."
-	if [[ ${gem_host} == "mingw" ]]; then
+	if [[ ${gem_os} == "MINGW64"* ]]; then
 		gem_flags_ld="${gem_flags_ld} ${gem_flags_common}"
 	else
 		gem_flags_ld="-pie ${gem_flags_ld} ${gem_flags_common}"
@@ -1729,7 +1739,7 @@ function gem_build_OnInstall
 
 	eval "${gem_cmd_line_install} ${gem_redirect_suffix_install}"
 
-	if [[ ${gem_host} == *"mingw"*  ]]; then
+	if [[ ${gem_os} == "MINGW64"* ]]; then
 
 		cp /c/msys64/mingw64/bin/libgcc_s_seh-1.dll ${gem_fullpath_install}/bin
 		cp /c/msys64/mingw64/bin/libstdc++-6.dll ${gem_fullpath_install}/bin
