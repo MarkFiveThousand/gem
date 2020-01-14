@@ -396,16 +396,18 @@ function gem_build_BuildFilePaths
 	# Other .pc files are in ${gem_fullpath_install}/lib/pkgconfig
 #	export PKG_CONFIG_LIBDIR=${gem_fullpath_install}/lib/pkgconfig:${gem_fullpath_install}/share/pkgconfig
 
-	if [[ ${gem_os} == "Linux" ]]; then		# Running under Linux.
-		if [[ ${gem_host} == "linux" ]]; then
+	if [[ ${gem_os} == "Linux" ]]; then
+		if [[ ${gem_host} == "linux" ]]; then	# Linux native
 			export PKG_CONFIG_SYSROOT_DIR=
 			export TEMP_SYSROOT_DIR=/usr
 			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=${TEMP_SYSROOT_DIR}/include
 			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=${TEMP_SYSROOT_DIR}/lib64
-			export PKG_CONFIG_LIBDIR="${TEMP_SYSROOT_DIR}/lib64/pkgconfig:${PKG_CONFIG_LIBDIR}"
-			export PKG_CONFIG_LIBDIR="${TEMP_SYSROOT_DIR}/share/pkgconfig:${PKG_CONFIG_LIBDIR}"
-			export PKG_CONFIG_LIBDIR="${gem_fullpath_install}/lib/pkgconfig:${PKG_CONFIG_LIBDIR}"
-		elif [[ ${gem_host} == "mingw" ]]; then	# Building for MinGW.
+			export PKG_CONFIG_LIBDIR="${PKG_CONFIG_LIBDIR}\
+${gem_fullpath_install}/lib/pkgconfig:\
+${TEMP_SYSROOT_DIR}/share/pkgconfig:\
+${TEMP_SYSROOT_DIR}/lib64/pkgconfig"
+
+		elif [[ ${gem_host} == "mingw" ]]; then	# MinGW on Linux
 			if [[ "x" == "x" ]]; then
 				# This works.  Don't fuck with it.
 				export PKG_CONFIG_SYSROOT_DIR=
@@ -417,8 +419,8 @@ function gem_build_BuildFilePaths
 				export PKG_CONFIG_LIBDIR="${TEMP_SYSROOT_DIR}/mingw/lib/pkgconfig:${PKG_CONFIG_LIBDIR}"
 				export PKG_CONFIG_LIBDIR="${TEMP_SYSROOT_DIR}/mingw/share/pkgconfig:${PKG_CONFIG_LIBDIR}"
 				export PKG_CONFIG_LIBDIR="${gem_fullpath_install}/lib/pkgconfig:${PKG_CONFIG_LIBDIR}"
-			elif [[ "x" == "y" ]]; then
 
+			elif [[ "x" == "y" ]]; then
 				# Try considering our gem libraries to be system libraries so
 				# that we can set PKG_CONFIG_SYSROOT_DIR correctly.
 				export PKG_CONFIG_SYSROOT_DIR=/usr/x86_64-w64-mingw32/sys-root
@@ -446,12 +448,12 @@ function gem_build_BuildFilePaths
 				export PKG_CONFIG_LIBDIR="${gem_fullpath_install}/lib/pkgconfig:${PKG_CONFIG_LIBDIR}"
 			fi
 
-		elif [[ ${gem_host} == *"android_"* ]]; then	# Building for Android.
+		elif [[ ${gem_host} == *"android_"* ]]; then	# Android on Linux
 			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=/usr/include
 			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=/usr/lib
 		fi
-	elif  [[ ${gem_os} == "MINGW64"* ]]; then	# Running under MinGW Windows.
-		if [[ ${gem_host} == "mingw" ]]; then	# Building for MinGW.
+	elif  [[ ${gem_os} == "MINGW64"* ]]; then
+		if [[ ${gem_host} == "mingw" ]]; then	# MinGW native on Windows.
 			export PKG_CONFIG_SYSROOT_DIR=
 			export PKG_CONFIG_SYSTEM_INCLUDE_PATH="${PKG_CONFIG_SYSTEM_INCLUDE_PATH}\
 /mingw64/x86_64-w64-mingw32/include:\
@@ -467,12 +469,18 @@ ${gem_fullpath_install}/lib/pkgconfig:\
 /mingw64/lib/pkgconfig:\
 /usr/lib/pkgconfig"
 		fi
-	elif  [[ ${gem_os} == "CYGWIN"* ]]; then	# Running under Cygwin Windows.
-		if [[ ${gem_host} == "cygwin" ]]; then	# Building for Cygwin.
-			noop=0
-#			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=/usr/include
-#			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=/lib
-		elif [[ ${gem_host} == "mingw" ]]; then	# Building for MinGW.
+
+	elif  [[ ${gem_os} == "CYGWIN"* ]]; then
+		if [[ ${gem_host} == "cygwin" ]]; then	# Cygwin native on Windows
+			export PKG_CONFIG_SYSROOT_DIR=
+			export TEMP_SYSROOT_DIR=/usr
+			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=${TEMP_SYSROOT_DIR}/include
+			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=${TEMP_SYSROOT_DIR}/lib
+			export PKG_CONFIG_LIBDIR="${PKG_CONFIG_LIBDIR}\
+${gem_fullpath_install}/lib/pkgconfig:\
+${TEMP_SYSROOT_DIR}/share/pkgconfig"
+
+		elif [[ ${gem_host} == "mingw" ]]; then		# MinGW on Cygwin(Windows)
 			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=/usr/x86_64-w64-mingw32/sys-root/mingw/include
 			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=/usr/x86_64-w64-mingw32/sys-root/mingw/lib
 		fi
