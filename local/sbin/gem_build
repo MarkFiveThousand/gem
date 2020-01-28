@@ -396,16 +396,18 @@ function gem_build_BuildFilePaths
 	# Other .pc files are in ${gem_fullpath_install}/lib/pkgconfig
 #	export PKG_CONFIG_LIBDIR=${gem_fullpath_install}/lib/pkgconfig:${gem_fullpath_install}/share/pkgconfig
 
-	if [[ ${gem_os} == "Linux" ]]; then		# Running under Linux.
-		if [[ ${gem_host} == "linux" ]]; then
+	if [[ ${gem_os} == "Linux" ]]; then
+		if [[ ${gem_host} == "linux" ]]; then	# Linux native
 			export PKG_CONFIG_SYSROOT_DIR=
 			export TEMP_SYSROOT_DIR=/usr
 			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=${TEMP_SYSROOT_DIR}/include
 			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=${TEMP_SYSROOT_DIR}/lib64
-			export PKG_CONFIG_LIBDIR="${TEMP_SYSROOT_DIR}/lib64/pkgconfig:${PKG_CONFIG_LIBDIR}"
-			export PKG_CONFIG_LIBDIR="${TEMP_SYSROOT_DIR}/share/pkgconfig:${PKG_CONFIG_LIBDIR}"
-			export PKG_CONFIG_LIBDIR="${gem_fullpath_install}/lib/pkgconfig:${PKG_CONFIG_LIBDIR}"
-		elif [[ ${gem_host} == "mingw" ]]; then	# Building for MinGW.
+			export PKG_CONFIG_LIBDIR="${PKG_CONFIG_LIBDIR}\
+${gem_fullpath_install}/lib/pkgconfig:\
+${TEMP_SYSROOT_DIR}/share/pkgconfig:\
+${TEMP_SYSROOT_DIR}/lib64/pkgconfig"
+
+		elif [[ ${gem_host} == "mingw" ]]; then	# MinGW on Linux
 			if [[ "x" == "x" ]]; then
 				# This works.  Don't fuck with it.
 				export PKG_CONFIG_SYSROOT_DIR=
@@ -417,8 +419,8 @@ function gem_build_BuildFilePaths
 				export PKG_CONFIG_LIBDIR="${TEMP_SYSROOT_DIR}/mingw/lib/pkgconfig:${PKG_CONFIG_LIBDIR}"
 				export PKG_CONFIG_LIBDIR="${TEMP_SYSROOT_DIR}/mingw/share/pkgconfig:${PKG_CONFIG_LIBDIR}"
 				export PKG_CONFIG_LIBDIR="${gem_fullpath_install}/lib/pkgconfig:${PKG_CONFIG_LIBDIR}"
-			elif [[ "x" == "y" ]]; then
 
+			elif [[ "x" == "y" ]]; then
 				# Try considering our gem libraries to be system libraries so
 				# that we can set PKG_CONFIG_SYSROOT_DIR correctly.
 				export PKG_CONFIG_SYSROOT_DIR=/usr/x86_64-w64-mingw32/sys-root
@@ -446,12 +448,12 @@ function gem_build_BuildFilePaths
 				export PKG_CONFIG_LIBDIR="${gem_fullpath_install}/lib/pkgconfig:${PKG_CONFIG_LIBDIR}"
 			fi
 
-		elif [[ ${gem_host} == *"android_"* ]]; then	# Building for Android.
+		elif [[ ${gem_host} == *"android_"* ]]; then	# Android on Linux
 			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=/usr/include
 			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=/usr/lib
 		fi
-	elif  [[ ${gem_os} == "MINGW64"* ]]; then	# Running under MinGW Windows.
-		if [[ ${gem_host} == "mingw" ]]; then	# Building for MinGW.
+	elif  [[ ${gem_os} == "MINGW64"* ]]; then
+		if [[ ${gem_host} == "mingw" ]]; then	# MinGW native on Windows.
 			export PKG_CONFIG_SYSROOT_DIR=
 			export PKG_CONFIG_SYSTEM_INCLUDE_PATH="${PKG_CONFIG_SYSTEM_INCLUDE_PATH}\
 /mingw64/x86_64-w64-mingw32/include:\
@@ -467,14 +469,25 @@ ${gem_fullpath_install}/lib/pkgconfig:\
 /mingw64/lib/pkgconfig:\
 /usr/lib/pkgconfig"
 		fi
-	elif  [[ ${gem_os} == "CYGWIN"* ]]; then	# Running under Cygwin Windows.
-		if [[ ${gem_host} == "cygwin" ]]; then	# Building for Cygwin.
-			noop=0
-#			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=/usr/include
-#			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=/lib
-		elif [[ ${gem_host} == "mingw" ]]; then	# Building for MinGW.
-			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=/usr/x86_64-w64-mingw32/sys-root/mingw/include
-			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=/usr/x86_64-w64-mingw32/sys-root/mingw/lib
+
+	elif  [[ ${gem_os} == "CYGWIN"* ]]; then
+		if [[ ${gem_host} == "cygwin" ]]; then	# Cygwin native on Windows
+			export PKG_CONFIG_SYSROOT_DIR=
+			export TEMP_SYSROOT_DIR=/usr
+			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=${TEMP_SYSROOT_DIR}/include
+			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=${TEMP_SYSROOT_DIR}/lib
+			export PKG_CONFIG_LIBDIR="${PKG_CONFIG_LIBDIR}\
+${gem_fullpath_install}/lib/pkgconfig:\
+${TEMP_SYSROOT_DIR}/share/pkgconfig"
+
+		elif [[ ${gem_host} == "mingw" ]]; then		# MinGW on Cygwin(Windows)
+			export PKG_CONFIG_SYSROOT_DIR=
+			export TEMP_SYSROOT_DIR=/usr/x86_64-w64-mingw32/sys-root
+			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=${TEMP_SYSROOT_DIR}/mingw/include
+			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=${TEMP_SYSROOT_DIR}/mingw/lib
+			export PKG_CONFIG_LIBDIR="${PKG_CONFIG_LIBDIR}\
+${gem_fullpath_install}/lib/pkgconfig:\
+${TEMP_SYSROOT_DIR}/mingw/lib/pkgconfig"
 		fi
 	fi
 #	gem_script_ValidatePaths ${PKG_CONFIG_SYSTEM_INCLUDE_PATH}:${PKG_CONFIG_SYSTEM_LIBRARY_PATH}
@@ -932,16 +945,19 @@ function gem_build_SetHost_mingw
 	gem_platform_host=x86_64-w64-mingw32
 	gem_platform_arch=x86-64
 
+	gem_prefix_tools=
 	if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW on Windows
 		gem_fullpath_toolchain=/mingw64
 		gem_fullpath_sysroot=/mingw64
 	elif [[ ${gem_os} == "CYGWIN"* ]]; then	# MinGW under Cygwin on Windows.
+		# *FIX: Are we using gem_prefix_tools?
+		gem_prefix_tools=x86_64-w64-mingw32-
 		gem_fullpath_toolchain=
-		gem_fullpath_sysroot=
-		gem_script_v_Error "gem_build_SetHost_mingw: Need to implement building mingw under cygwin."
+		gem_fullpath_sysroot=/usr/x86_64-w64-mingw32/sys-root
+#		gem_script_v_Error "gem_build_SetHost_mingw: Need to implement building mingw under cygwin."
 	elif [[ ${gem_os} == "Linux" ]]; then		# MinGW on Linux
-		gem_fullpath_toolchain=/usr/${gem_platform_host}
-		gem_fullpath_sysroot=/usr/${gem_platform_host}/sys-root
+		gem_fullpath_toolchain=/usr/x86_64-w64-mingw32
+		gem_fullpath_sysroot=/usr/x86_64-w64-mingw32/sys-root
 	else
 		gem_script_v_Error "gem_build_SetHost_mingw: Unrecognized shell: ${gem_os}."
 	fi
@@ -949,7 +965,7 @@ function gem_build_SetHost_mingw
 	# Find the compiler's library directory.  The gcc library directory
 	# name includes an ever changing version number, so we'll enter the
 	# parent directory, then search for a file expected to be present (i.e.
-	# libgcc.a.)
+	# libgcc.a.)  When found we'll parse the path for the version number.
 	if [[ ${gem_os} == "CYGWIN"* || ${gem_os} == "Linux" ]]; then
 		pushd /usr/lib/gcc/x86_64-w64-mingw32 &>/dev/null
 	elif [[ ${gem_os} == "MINGW64"* ]]; then
@@ -976,46 +992,87 @@ function gem_build_SetHost_mingw
 			if [[ ! -d ${gem_fullpath_gcc_libs} ]]; then
 				gem_script_v_Error "gem_build_SetHost_mingw(): Library path does not exist: ${gem_fullpath_gcc_libs}.  Did the version number change?"
 			fi
+			# *FIX: Is this still required now that we have pkg-config working properly?
 			gem_flags_ld="${gem_flags_ld} -L${gem_fullpath_gcc_libs}"
 		fi
 
 		if [[ ${gem_use_clang} == 0 ]]; then
 			if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW on Windows
-				CC=${gem_fullpath_toolchain}/bin/${gem_platform_host}-gcc
-				CXX=${gem_fullpath_toolchain}/bin/${gem_platform_host}-g++
+				CC=${gem_fullpath_toolchain}/bin/x86_64-w64-mingw32-gcc
+				CXX=${gem_fullpath_toolchain}/bin/x86_64-w64-mingw32-g++
 			elif [[ ${gem_os} == "CYGWIN"* ]]; then	# MinGW under Cygwin on Windows.
-				gem_script_v_Error "gem_build_SetHost_mingw: Need to implement building mingw under cygwin."
+				CC=${gem_fullpath_toolchain}/bin/x86_64-w64-mingw32-gcc
+				CXX=${gem_fullpath_toolchain}/bin/x86_64-w64-mingw32-g++
 			elif [[ ${gem_os} == "Linux" ]]; then		# MinGW on Linux
-				CC=/bin/${gem_platform_host}-gcc
-				CXX=/bin/${gem_platform_host}-g++
+				CC=/bin/x86_64-w64-mingw32-gcc
+				CXX=/bin/x86_64-w64-mingw32-g++
 			else
 				gem_script_v_Error "gem_build_SetHost_mingw: Unrecognized shell: ${gem_os}."
 			fi
 		else	# clang
 			# For mingw builds on Linux.
-			CC=${gem_fullpath_local}/bin/${gem_platform_host}-clang
-			CXX=${gem_fullpath_local}/bin/${gem_platform_host}-clang++
+			CC=${gem_fullpath_local}/bin/x86_64-w64-mingw32-clang
+			CXX=${gem_fullpath_local}/bin/x86_64-w64-mingw32-clang++
 		fi
 
-		LD=${gem_fullpath_toolchain}/bin/ld
-		AR=${gem_fullpath_toolchain}/bin/ar
-		AS=${gem_fullpath_toolchain}/bin/as
-		NM=${gem_fullpath_toolchain}/bin/nm
-		STRIP=${gem_fullpath_toolchain}/bin/strip
-		RANLIB=${gem_fullpath_toolchain}/bin/ranlib
-		OBJDUMP=${gem_fullpath_toolchain}/bin/objdump
-		DLLTOOL=${gem_fullpath_toolchain}/bin/dlltool
+		LD=${gem_fullpath_toolchain}/bin/${gem_prefix_tools}ld
+		AR=${gem_fullpath_toolchain}/bin/${gem_prefix_tools}ar
+		AS=${gem_fullpath_toolchain}/bin/${gem_prefix_tools}as
+		NM=${gem_fullpath_toolchain}/bin/${gem_prefix_tools}nm
+		STRIP=${gem_fullpath_toolchain}/bin/${gem_prefix_tools}strip
+		RANLIB=${gem_fullpath_toolchain}/bin/${gem_prefix_tools}ranlib
+		OBJDUMP=${gem_fullpath_toolchain}/bin/${gem_prefix_tools}objdump
+		DLLTOOL=${gem_fullpath_toolchain}/bin/${gem_prefix_tools}dlltool
 		if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW on Windows
 			RESCOMP=${gem_fullpath_toolchain}/bin/windres
 		elif [[ ${gem_os} == "CYGWIN"* ]]; then	# MinGW under Cygwin on Windows.
-			gem_script_v_Error "gem_build_SetHost_mingw: Need to implement building mingw under cygwin."
+			RESCOMP=${gem_fullpath_toolchain}/bin/x86_64-w64-mingw32-windres
 		elif [[ ${gem_os} == "Linux" ]]; then		# MinGW on Linux
 			RESCOMP=${gem_fullpath_toolchain}/bin/x86_64-w64-mingw32-windres
 		else
 			gem_script_v_Error "gem_build_SetHost_mingw: Unrecognized shell: ${gem_os}."
 		fi
 	elif [[ ${gem_build_script} == "meson" ]]; then
-		noop=0
+		local noop=0
+	fi
+
+
+
+
+
+
+	if [[ ! -f ${CC} ]]; then
+		gem_script_v_Error "gem_build_SetHost_mingw: Failed to find executable: ${CC}"
+	fi
+	if [[ ! -f ${CXX} ]]; then
+		gem_script_v_Error "gem_build_SetHost_mingw: Failed to find executable: ${CXX}"
+	fi
+	if [[ ! -f ${LD} ]]; then
+		gem_script_v_Error "gem_build_SetHost_mingw: Failed to find executable: ${LD}"
+	fi
+	if [[ ! -f ${AR} ]]; then
+		gem_script_v_Error "gem_build_SetHost_mingw: Failed to find executable: ${AR}"
+	fi
+	if [[ ! -f ${AS} ]]; then
+		gem_script_v_Error "gem_build_SetHost_mingw: Failed to find executable: ${AS}"
+	fi
+	if [[ ! -f ${NM} ]]; then
+		gem_script_v_Error "gem_build_SetHost_mingw: Failed to find executable: ${NM}"
+	fi
+	if [[ ! -f ${STRIP} ]]; then
+		gem_script_v_Error "gem_build_SetHost_mingw: Failed to find executable: ${STRIP}"
+	fi
+	if [[ ! -f ${RANLIB} ]]; then
+		gem_script_v_Error "gem_build_SetHost_mingw: Failed to find executable: ${RANLIB}"
+	fi
+	if [[ ! -f ${OBJDUMP} ]]; then
+		gem_script_v_Error "gem_build_SetHost_mingw: Failed to find executable: ${OBJDUMP}"
+	fi
+	if [[ ! -f ${DLLTOOL} ]]; then
+		gem_script_v_Error "gem_build_SetHost_mingw: Failed to find executable: ${DLLTOOL}"
+	fi
+	if [[ ! -f ${RESCOMP} ]]; then
+		gem_script_v_Error "gem_build_SetHost_mingw: Failed to find executable: ${RESCOMP}"
 	fi
 
 	gem_build_v_SetHost_common

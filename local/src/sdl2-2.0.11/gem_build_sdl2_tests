@@ -101,6 +101,10 @@ function gem_build_v_OnInstall
 	elif [[ ${gem_os} == "CYGWIN"* ]]; then
 
 		gem_script_cp ${gem_fullpath_install}/bin/SDL2.dll ${gem_fullpath_build}
+
+		if [[ ${gem_host} == "cygwin" ]]; then	# Build for cygwin.
+			cp /cygdrive/c/cygwin64/bin/cygwin1.dll ${gem_fullpath_build}
+		fi
 	fi
 }
 
