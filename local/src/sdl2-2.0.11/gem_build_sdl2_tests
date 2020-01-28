@@ -17,10 +17,13 @@ function gem_build_v_SetDefaults
 #	gem_build_script="meson"
 
 	# Common Defaults
-	if [[ $(uname -s) == "MINGW64"* ]]; then	# MinGW shell on Windows.
+	if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW shell on Windows.
 		gem_host=mingw
 #		gem_host=msvc
-	elif [[ $(uname -s) == "Linux"* ]]; then	# Linux shell.
+	elif [[ ${gem_os} == "CYGWIN"* ]]; then	# Linux shell.
+		gem_host=cygwin
+#		gem_host=mingw
+	elif [[ ${gem_os} == "Linux"* ]]; then	# Linux shell.
 		gem_host=linux
 #		gem_host=mingw
 #		gem_host=android_arm64_v8a
@@ -94,6 +97,14 @@ function gem_build_v_OnInstall
 		cp /c/msys64/mingw64/bin/libwinpthread-1.dll ${gem_fullpath_install}/bin
 
 		gem_script_cp ${gem_fullpath_install}/bin/SDL2.dll ${gem_fullpath_build}
+
+	elif [[ ${gem_os} == "CYGWIN"* ]]; then
+
+		gem_script_cp ${gem_fullpath_install}/bin/SDL2.dll ${gem_fullpath_build}
+
+		if [[ ${gem_host} == "cygwin" ]]; then	# Build for cygwin.
+			cp /cygdrive/c/cygwin64/bin/cygwin1.dll ${gem_fullpath_build}
+		fi
 	fi
 }
 
