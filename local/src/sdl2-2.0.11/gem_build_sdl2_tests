@@ -17,10 +17,13 @@ function gem_build_v_SetDefaults
 #	gem_build_script="meson"
 
 	# Common Defaults
-	if [[ $(uname -s) == "MINGW64"* ]]; then	# MinGW shell on Windows.
+	if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW shell on Windows.
 		gem_host=mingw
 #		gem_host=msvc
-	elif [[ $(uname -s) == "Linux"* ]]; then	# Linux shell.
+	elif [[ ${gem_os} == "CYGWIN"* ]]; then	# Linux shell.
+		gem_host=cygwin
+#		gem_host=mingw
+	elif [[ ${gem_os} == "Linux"* ]]; then	# Linux shell.
 		gem_host=linux
 #		gem_host=mingw
 #		gem_host=android_arm64_v8a
@@ -75,7 +78,34 @@ function gem_build_v_OnBuild
 
 function gem_build_v_OnInstall
 {
-	gem_build_OnInstall
+	# Since the tests aren't going to be installed, we'll copy the relevant
+	# dlls into the build_tests directory, where the executables are.
+	gem_build_OnCommandLine_Install
+
+	if [[ ${gem_option_cmdline_only} -ne 0 ]]; then
+		gem_script_v_Msg_NotQuiet "${gem_cmd_line_install}"
+		return 1
+	fi
+
+	# The makefile doesn't support installing.
+#	eval "${gem_cmd_line_install} ${gem_redirect_suffix_install}"
+
+	if [[ ${gem_os} == "MINGW64"* ]]; then
+
+		cp /c/msys64/mingw64/bin/libgcc_s_seh-1.dll ${gem_fullpath_install}/bin
+		cp /c/msys64/mingw64/bin/libstdc++-6.dll ${gem_fullpath_install}/bin
+		cp /c/msys64/mingw64/bin/libwinpthread-1.dll ${gem_fullpath_install}/bin
+
+		gem_script_cp ${gem_fullpath_install}/bin/SDL2.dll ${gem_fullpath_build}
+
+	elif [[ ${gem_os} == "CYGWIN"* ]]; then
+
+		gem_script_cp ${gem_fullpath_install}/bin/SDL2.dll ${gem_fullpath_build}
+
+		if [[ ${gem_host} == "cygwin" ]]; then	# Build for cygwin.
+			cp /cygdrive/c/cygwin64/bin/cygwin1.dll ${gem_fullpath_build}
+		fi
+	fi
 }
 
 function gem_build_v_OnUninstall
