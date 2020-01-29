@@ -1036,45 +1036,6 @@ function gem_build_SetHost_mingw
 		local noop=0
 	fi
 
-
-
-
-
-
-	if [[ ! -f ${CC} ]]; then
-		gem_script_v_Error "gem_build_SetHost_mingw: Failed to find executable: ${CC}"
-	fi
-	if [[ ! -f ${CXX} ]]; then
-		gem_script_v_Error "gem_build_SetHost_mingw: Failed to find executable: ${CXX}"
-	fi
-	if [[ ! -f ${LD} ]]; then
-		gem_script_v_Error "gem_build_SetHost_mingw: Failed to find executable: ${LD}"
-	fi
-	if [[ ! -f ${AR} ]]; then
-		gem_script_v_Error "gem_build_SetHost_mingw: Failed to find executable: ${AR}"
-	fi
-	if [[ ! -f ${AS} ]]; then
-		gem_script_v_Error "gem_build_SetHost_mingw: Failed to find executable: ${AS}"
-	fi
-	if [[ ! -f ${NM} ]]; then
-		gem_script_v_Error "gem_build_SetHost_mingw: Failed to find executable: ${NM}"
-	fi
-	if [[ ! -f ${STRIP} ]]; then
-		gem_script_v_Error "gem_build_SetHost_mingw: Failed to find executable: ${STRIP}"
-	fi
-	if [[ ! -f ${RANLIB} ]]; then
-		gem_script_v_Error "gem_build_SetHost_mingw: Failed to find executable: ${RANLIB}"
-	fi
-	if [[ ! -f ${OBJDUMP} ]]; then
-		gem_script_v_Error "gem_build_SetHost_mingw: Failed to find executable: ${OBJDUMP}"
-	fi
-	if [[ ! -f ${DLLTOOL} ]]; then
-		gem_script_v_Error "gem_build_SetHost_mingw: Failed to find executable: ${DLLTOOL}"
-	fi
-	if [[ ! -f ${RESCOMP} ]]; then
-		gem_script_v_Error "gem_build_SetHost_mingw: Failed to find executable: ${RESCOMP}"
-	fi
-
 	gem_build_v_SetHost_common
 }
 
