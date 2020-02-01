@@ -12,7 +12,7 @@ function gem_build_v_SetDefaults
 	# Need gnu extensions for compile asm code.
 	gem_c_standard="-std=gnu11"	# c90, c99, c11, gnu90, gnu99, gnu11
 
-	gem_use_clang=1
+	gem_use_clang=0
 
 #	gem_build_script="cmake"
 	gem_build_script="autotools"
