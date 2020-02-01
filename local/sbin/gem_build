@@ -995,7 +995,7 @@ function gem_build_SetHost_mingw
 			# *FIX: Is this still required now that we have pkg-config working properly?
 			gem_flags_ld="${gem_flags_ld} -L${gem_fullpath_gcc_libs}"
 		fi
-
+echo "gem_use_clang=$gem_use_clang" ; exit
 		if [[ ${gem_use_clang} == 0 ]]; then
 			if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW on Windows
 				CC=${gem_fullpath_toolchain}/bin/x86_64-w64-mingw32-gcc
@@ -1010,9 +1010,18 @@ function gem_build_SetHost_mingw
 				gem_script_v_Error "gem_build_SetHost_mingw: Unrecognized shell: ${gem_os}."
 			fi
 		else	# clang
-			# For mingw builds on Linux.
-			CC=${gem_fullpath_local}/bin/x86_64-w64-mingw32-clang
-			CXX=${gem_fullpath_local}/bin/x86_64-w64-mingw32-clang++
+			if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW on Windows
+				CC=${gem_fullpath_toolchain}/bin/clang
+				CXX=${gem_fullpath_toolchain}/bin/clang++
+			elif [[ ${gem_os} == "CYGWIN"* ]]; then	# MinGW under Cygwin on Windows.
+				CC=${gem_fullpath_toolchain}/bin/x86_64-w64-mingw32-gcc
+				CXX=${gem_fullpath_toolchain}/bin/x86_64-w64-mingw32-g++
+			elif [[ ${gem_os} == "Linux" ]]; then		# MinGW on Linux
+				CC=/bin/x86_64-w64-mingw32-clang
+				CXX=/bin/x86_64-w64-mingw32-clang++
+			else
+				gem_script_v_Error "gem_build_SetHost_mingw: Unrecognized shell: ${gem_os}."
+			fi
 		fi
 
 		LD=${gem_fullpath_toolchain}/bin/${gem_prefix_tools}ld
