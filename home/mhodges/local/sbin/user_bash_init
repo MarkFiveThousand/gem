@@ -52,7 +52,7 @@ function gem_bash_init_Main()
 
     elif [[ ${gem_os} == "Linux" ]]; then
 
-        export gem_fullpath_android=${HOME}/android
+        export gem_fullpath_android=${HOME}/Android
         export gem_fullpath_android_sdk=${gem_fullpath_android}/Sdk
         export gem_fullpath_android_sdk_platform_tools=${gem_fullpath_android_sdk}/platform-tools
         export gem_fullpath_android_sdk_tools=${gem_fullpath_android_sdk}/tools
