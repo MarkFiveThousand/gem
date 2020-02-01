@@ -1,0 +1,258 @@
+# =============================================================================
+# Preface
+# =============================================================================
+# This document was written in Feb 2020.  Menu options and/or version numbers
+# may have changed by the time you are reading this.
+
+
+# =============================================================================
+# Download Android Studio
+# =============================================================================
+
+# Download the Android Studo IDE from: https://developer.android.com/studio
+
+# Update the version specified in the downloaded filename below:
+
+gem_filename_download=android-studio-ide-191.6010548-linux.tar.gz
+
+
+# Specify the desired install directory.  Modify gem_fullpath_android_studio to
+# install android studio in a different location.
+
+# NOTE: The Android subfolder should match the installation location shown
+# when configuring Android Studio in the further below step. Android is the
+# current default location.
+
+gem_fullpath_android_studio=${HOME}/Android
+mkdir ${gem_fullpath_android_studio}
+tar -xzf ${HOME}/Downloads/${gem_filename_download} -C ${gem_fullpath_android_studio}
+
+# Clean up the downloaded file.
+rm ${HOME}/Downloads/${gem_filename_download}
+
+
+# =============================================================================
+# Add an Icon to the Start Menu
+# =============================================================================
+
+# In windows terminology, adding a .desktop file is like adding a shortcut to
+# the start menu.  Applications for all users are added to /usr/share/applications/
+# Applications for a specific user are added to ${HOME}/.local/share/applications/.
+
+cat > ${HOME}/.local/share/applications/android-studio.desktop << EOF
+[Desktop Entry]
+Encoding=UTF-8
+Type=Application
+Name=Android Studio
+Name[en_US]=Android Studio
+Exec=${gem_fullpath_android_studio}/android-studio/bin/studio.sh
+Comment[en_US]=Android Studio
+StartupNotify=true
+Categories=Development
+Icon=${gem_fullpath_android_studio}/android-studio/bin/studio.png
+EOF
+
+
+# =============================================================================
+# Connect Your Android Device to Linux via the USB Connection
+# =============================================================================
+# Make sure that VirtualBox can identify your android device connected via USB.
+#
+# In Oracle VM virtualBox, select Devices on the menu bar, then USB.  The pop
+# up menu to the right lists all visible connected USB devices.  Mine shows up
+# as SAMSUNG_Android.
+#
+# Click on the Android device.   When the check is displayed next to
+# it, Linux can communicate with the device.
+#
+# IMPORTANT! The above step, checking your android device in Oracle VM
+# virtualBox must be repeated each time the device is connected to the PC.
+#
+# The android device bridge (ADB) manages communication between your android
+# device and pc.
+#
+# For ADB to recognize your device as a target for deploying debuggable APKs,
+# you must first enable USB debugging in the on-device developer options.
+#
+# Depending on the version of Android you're using, proceed as follows:
+#
+# * On Android 8.0 and higher, go to Settings > System > About phone and tap
+#   Build number seven times.
+#
+# * On Android 4.2 through 7.1.2, go to Settings > About phone and tap Build
+#   number seven times.
+#
+# While you are in the About phone screen, note the os version of your device.
+#
+# Return to the main Settings menu to find Developer options at the bottom. In
+# the Developer options menu, scroll down and enable USB debugging.
+#
+# Verify that linux can see the android device.  When you connect your device
+# to the pc, the device will display the following message, "Allow access to
+# phone data?" Select Allow.  At the point, you should be able to access the
+# device's file system within Windows.
+#
+# You may need to set the device transfer protocol.  In your device settings,
+# you should see a menu item titled Android System.  It should be set to "USB
+# for file transfer".  If not, tap it and select Use USB for Transferring
+# files.
+
+# To verify that ADB can see the device, run:
+
+/home/mhodges/Android/Sdk/platform-tools/adb devices
+
+# You will see either:
+#
+# List of devices attached
+# ce0817180ba890220c7e    unauthorized
+#
+# or
+#
+# List of devices attached
+# ce0817180ba890220c7e    device
+#
+# If you see the former, a dialog should be displayed on the device asking you
+# to allow the connection.  Tap Allow.  Run adb devices again.  It should now
+# show the later message.
+#
+# You are now ready to build and run a sample program.
+
+
+
+# =============================================================================
+# Install the Android SDK
+# =============================================================================
+#
+# Launch Android Studio.  We installed the launch icon under the Programming
+# submenu off the start menu.
+#
+# When the Welcome screen opens, select Next.
+#
+# When the Install Type screen opens, select Custom.
+#
+# Choose the UI theme of your liking.  Click Next.
+# 
+# Take note of the Android SDK Location.  The SDK will be installed in the
+# same directory that we installed the Android Studio application.
+#
+# It is highly recommended that you use a hardware android device.  If you
+# don't have a hardware Android device, select Android Virtual Device.
+# Note that virtual devices will run graphics applications exceedingly slow.
+# The Intel x86_64 device will run faster using virtualization technology.
+# However, it will not run within Linux itself running in a virtual machine,
+# as is my case.  As such, I have not tried this emulated android virtual
+# device.  If you don't have a hardware android device, you would have to
+# install the Linux operating system to run directly on the CPU, less the
+# VirtualBox tools.
+# 
+# In the Emulator Settings menu, click Finish.
+# 
+# In the Donwnloading Components menu, when the installation completes, click
+# Finish.
+# 
+# When the Android Studio Welcome screen shows, close it.  The Android SDK is
+# now installed under ${HOME}/Android/Sdk.
+
+
+# =============================================================================
+# Update the Android SDK
+# =============================================================================
+# *FIX: We need to modify these instructions to include installing the NDK at
+# at this time rather than in a separate step as shown in the section below.
+
+# Launch Android Studio.
+# 
+# At the bottom of the Welcome to Android Studio dialog, click Configure,
+# then SDK Manager.
+# 
+# In the left panel, Appearance & Behavior->System Settings->Android SDK should
+# be selected.  In the right panel, the SDK Platforms tab should be selected.
+# Check the box next to your Android version.  Mine is 9.0.  The latest, 10.0,
+# is selected by default.  I'm deselecting 10.0 to save disk space, since my
+# phone doesn't run that.  However, in the future, my phone may be upgraded to
+# 10.0.
+# 
+# At the bottom, click Show Package Details.  As I'm running version 9.0,
+# I'm unchecking Sources for Android 28 to save disk space, leaving only
+# Android SDK Platform 28 selected.
+# 
+# Click Apply, then OK in the Confirm Change dialog.
+# 
+# Accept the licenses, then click Next.
+# 
+# when the download completes, clock Finish, then OK, then close the 
+# Welcome to Android Studio window.
+#
+# Run Android Studio again.
+#
+# For me, the Android Studio Setup Wizard dialog opens, displaying the message
+# No Android SDK found.  Before continuing, you must download the necessary
+# components or select an existing SDK.  Click Next.
+#
+# The message Check the components you want to update/install.  Click Next to
+# continue.  Android SDK - (installed) is greyed out and unchecked.  Android
+# SDK Platform, API 29: Android 10.0 (Q) is also present.  Leave any others
+# unchecked.  Click Next.
+#
+# In the Verify Settings dialog, click Finish.
+#
+# In the Downloading Components dialog the following message is displayed,
+# Nothing to do!  Android SDK is up to date.  Click Finish.
+#
+# Close Android Studio then open it again.  It should open to the usual Welcome
+# to Android Studio dialog.
+
+
+# =============================================================================
+# Install the Android NDK (Native Development Kit)
+# =============================================================================
+# Source: https://developer.android.com/ndk/guides
+#
+# Usually Android applications are written in Java so developers don't have to
+# be concerned about the underlying hardware.  We are developing for the
+# hardware using C/C++.  This is known as writing native code.  As such, we
+# require compilers and development libraries for each supported CPU.
+# 
+# Our application will run in a thin Java framework.  Function calls will be
+# made from Java to our C/C++ via the Java Native Interface (JNI).
+# 
+# Launch Android Studio.
+# 
+# At the bottom of the Welcome to Android Studio dialog, click Configure,
+# then SDK Manager.
+# 
+# In the right panel click on the SDK Tools tab.  Check NDK (Side by side),
+# then click OK.  In the Confirm Changes dialog, click OK.  When the
+# installation is complete, click Finish.  Close Android Studio.
+
+
+# =============================================================================
+# Build a Sample To Confirm the Build Environment is Up To Date
+# =============================================================================
+# Launch Android Studio.
+# 
+# In the Welcome to Android Studio dialog, click "Import an Android code
+# sample."  
+# 
+# Scroll down to and select Ndk->San Angeles.  Click Next, then Finish.
+# 
+# Android Studio will build the project.
+# 
+# Even though I have CMake version 3.16.2 installed and in the path, Android
+# Studio is complaining that CMake version 3.10.2 is not installed.  Android
+# Studio seems to want it's own copy of CMake.  A link should be displayed
+# along with the error message.  Click the link to install their CMake, then
+# click Finsih.
+# 
+# Now it's displaying the following link:
+# Set cmake.dir in local.properties to /home/mhodges/Android/Sdk/cmake/3.10.2.4988404
+# Click the link.
+# 
+# Now the build progresses further.  Android Studio displays a notification
+# stating "Plugin Update Recommended, Android Gradle Plugin is ready to
+# update."  Click the update link.
+# 
+# Android Studio is now recommending that Gradle be updated.  Click "Update".
+# 
+# On the menu bar click Run->Run 'app'.  The sample program should load and run
+# on the device.

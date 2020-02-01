@@ -1141,7 +1141,6 @@ sudo dnf -y install mesa-libGLES-devel libXt-devel libXaw-devel
 # home built ones results in mouse annomolies on Fedrora and cross-compiling for
 # mingw on Fedora, while the mingw version built on windows works fine.
 
-sudo dnf install mingw64-SDL2 mingw64-SDL2-static
 
 
 
