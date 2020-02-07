@@ -1,7 +1,14 @@
 #!/bin/bash
-
+#  ___________                           __________
+# /\   _______\                         /\   ______\
+# \ \  \______/_     ___   ____ ____ ___\ \  \_____/_     ___   ___ ___  ______    ___    ___
+#  \ \  \ /\__  \  /'___`\/\   V    V   \\ \_______  \  /'   `\/\  \\  \/\   __\/' ._`\ /'___`\
+#   \ \  \\/__\  \/\  ___/\ \  \/\  \/\  \\/_______\  \/\  \\  \ \  \\  \ \  \ /\  \__//\  ___/
+#    \ \__________\ \____\ \ \__\ \__\ \__\ /\_________\ \_____/\ \______\ \__\\ \____/\ \____\
+#     \/__________/\/____/  \/__/\/__/\/__/ \/_________/\/____/  \/______/\/__/ \/___/  \/____/
 #
-# File: gem_bash_init
+#
+# File: user_bash_init
 #
 # Configure user-specific environment and startup programs.
 # 
@@ -21,6 +28,12 @@ function gem_bash_init_Main()
     # Path & Environment Variables
     # =========================================================================
 
+    # Add user's sbin directory to the path.
+#    gem_fullpath_user_sbin=${gem_fullpath_gem}/home/${USER}/local/sbin
+#    if [[ -d ${gem_fullpath_user_sbin} ]]; then
+#        PATH="${PATH}:${gem_fullpath_user_sbin}"
+#    fi
+
     # Git command line needs to know which editor you use:
     export EDITOR=code
 
@@ -32,10 +45,9 @@ function gem_bash_init_Main()
 
 
     # =========================================================================
-    # Mount Shares
+    # Mount Filesystems
     # =========================================================================
-
-#    source gem_mountall
+    gem_mountall
 
 
     # =========================================================================
@@ -143,7 +155,6 @@ function gem_bash_init_Main()
     export CRED_NAME_DATABASE_ADMIN=root
     export CRED_PASSWORD_DATABASE_ADMIN=xxxxxxxxx
     export CRED_PASSWORD_ROOT=xxxxxxxxx
-
 
 
     # Where would you like to go today?
