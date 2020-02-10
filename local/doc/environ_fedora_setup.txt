@@ -40,7 +40,7 @@ selinux appendix as appropriate.
 # The official documentation appears to be undergoing changes.  The document
 # linked to below is incomplete.
 #
-# https://docs.fedoraproject.org/en-US/fedora/f30/
+# https://docs.fedoraproject.org/en-US/fedora/f31/
 #
 # More complete documentation can be found at the Fedora wiki link below.  Enter
 # terms related to what you're looking for.  Pay attention to the dates on
@@ -430,58 +430,67 @@ selinux appendix as appropriate.
 #      consume the space we made available when we shrank the fedora-root
 #      partition.  After changing the "Desired Capacity", click another partion
 #      (e.g. fedora-root), then back to fedora-home to update "AVAILABLE
-#      SPACE."  I was able to grow my fedora-home to 271.09 GiB.  Allocate as
+#      SPACE."  I was able to grow my fedora-home to 275.03 GiB.  Allocate as
 #      much "AVAILABLE SPACE" to fedora-home as you can.  I had 1023 KiB
 #      remaining that I was unable to allocate to any partition.  Click the
 #      "Done" button at the upper left.
 #
-# 11.) In the "Summary of Changes" dialog box, click "Accept Changes."  You
-#      will be returned to the "Installation Summary" screen.  Click "Begin
-#      Installation".
+#      In the "Summary of Changes" dialog box, click "Accept Changes."  You
+#      will be returned to the "Installation Summary" screen.
 # 
-# 12.) While installing, in the "Installation Summary" screen, click "Root
-#      Password." Set a root password, then click "Done."  You will be
-#      returned to the "Configuration" screen.
+# 11.) Click "Root Password." Set a root password, then click "Done."  You will
+#      be returned to the "Installation Summary" screen.
 #
-# 13.) In the "Installation Summary" screen, click "User Creation".  Enter your
+# 12.) In the "Installation Summary" screen, click "User Creation".  Enter your
 #      first and last name.  A user name will be generated.  You may change it,
-#      if you prefer to have a different user name.  Do not check "Make this
-#      user administrator."  After entering a password, click "Done."
+#      if you prefer to have a different user name.
 #
-# 14.) After returning to the "Installation Summary" screen, click "Begin
+#      Do not check "Make this user administrator."
+#
+#      NOTE: On our Mingw and Cygwin shells on Windows, the user name will be
+#      Windows user name.  My use name on Fedora linus is mhodges.  For
+#      consistancy across build paltforms, I changed my Windows user name to
+#      mhodges.
+#
+#      Enter a password, then click "Done."
+#
+# 13.) After returning to the "Installation Summary" screen, click "Begin
 #      Installation."  When configuration is complete, click "Finish
-#      Installation."  To shutdown Fedora click the blue icon in the lower left
-#      corner of the desktop.  This is the equivalent of the Windows start
-#      menu.  Click "Leave", then "Shutdown."  Click "Yes" to agree to
-#      shutdown.  We'll use the following notation to indicate this, and
-#      similar, menu selections: Fedora->Leave->Shutdown.
+#      Installation."
 #
-# 15.) Before we reboot, we need to remove the installation .iso (disk) in the
+#      To shutdown Fedora click the blue icon in the lower left corner of the
+#      desktop.  This is the equivalent of the Windows start menu.  Click
+#      "Leave", then "Shutdown."  Click "Yes" to agree to shutdown.  We'll use
+#      the following notation to indicate this, and similar, menu selections:
+#      Fedora->Leave->Shutdown.
+#
+# 14.) Before we reboot, we need to remove the installation .iso (disk) in the
 #      virtual machine's optical drive.  Return to Oracle VM VirtualBox
 #      Manager.  In the left pane, select your virtual machine.  Click the
 #      "Settings" button on the top.
 #
-# 16.) In the left pane of the settings menu, click "Storage." In the right
+# 15.) In the left pane of the settings menu, click "Storage." In the right
 #      pane, under "Storage Devices" and "Controller: IDE", click
 #      "Fedora-LXQt-Live-x86_64-31-1.9.iso", or your similar .iso file name.
 #
-# 17.) To the far right, under "Attributes" and to the right of "Optical
+# 16.) To the far right, under "Attributes" and to the right of "Optical
 #      Drive:", click the blue disk icon, then click "Remove Disk from Virtual
 #      Drive."  Click "OK."
 #
-# 18.) Start your virtual machine. Log in.
+# 17.) Start your virtual machine. Log in.
 
 # NOTE: Fedora is connecting to the network via a virtual "wired connection".
 # However, it is using the host's connection, which may or may not be wired.
 # In any event, Fedora should obtain an internet connection through your host
 # pc.
 
-# 19.) We are going to be cutting and pasting commands from this document to
+# 18.) We are going to be cutting and pasting commands from this document to
 #      the terminal running in Fedora.  That means we will want a copy of this
-#      document in Fedora.  Use the web browser (which we will change later)
-#      Fedora->Internet->Falkon to email a copy of this file to yourself.
+#      document in Fedora.  Later, we will install Firefox and/or Chrome.  For
+#      now, use the web browserFedora->Internet->Falkon to email a copy of this
+#      file to yourself.
 #
-# 20.) Many updates have likely been released since the downloaded .iso
+# 19.) Many updates have likely been released since the downloaded .iso
 #      installation disk was created, so we'll now update the OS.  Open a
 #      command prompt terminal window.  Go to Fedora->System Tools->QTerminal.
 #      Enter the "su" command below to become super user (i.e. root/
