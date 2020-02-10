@@ -1875,6 +1875,10 @@ cp ~/.bashrc ~/.bashrc_old
 cat << EOF >> ~/.bashrc
 
 # Source our definitions
+
+# Return if not running interactively.
+[ -z "$PS1" ] && return
+
 gem_fullpath_gem_bash_init=~/gem/local/sbin/gem_bash_init
 gem_fullpath_user_bash_init=~/gem/home/$USER/local/sbin/user_bash_init
 

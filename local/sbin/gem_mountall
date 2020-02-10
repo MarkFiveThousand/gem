@@ -1,0 +1,20 @@
+#!/bin/bash
+#  ___________                           __________
+# /\   _______\                         /\   ______\
+# \ \  \______/_     ___   ____ ____ ___\ \  \_____/_     ___   ___ ___  ______   ____    ___
+#  \ \  \ /\__  \  /'___`\/\   V    V   \\ \_______  \  /'   `\/\  \\  \/\   __\/' ._`\ /'___`\
+#   \ \  \\/__\  \/\  ___/\ \  \/\  \/\  \\/_______\  \/\  \\  \ \  \\  \ \  \ /\  \__//\  ___/
+#    \ \__________\ \____\ \ \__\ \__\ \__\ /\_________\ \_____/\ \______\ \__\\ \____/\ \____\
+#     \/__________/\/____/  \/__/\/__/\/__/ \/_________/\/____/  \/______/\/__/ \/___/  \/____/
+
+gem_hostname_windows=mars
+
+
+if [[ ${gem_os} == "Linux" ]]; then
+
+    mkdir -p ${HOME}/gem/home/${USER}/mnt/${gem_hostname_windows}_msys64_${USER} &>/dev/null
+    sudo mount -t vboxsf -o uid=${USER},gid=${USER} ${gem_hostname_windows}_msys64_${USER} ${HOME}/gem/home/${USER}/mnt/${gem_hostname_windows}_msys64_${USER}
+
+    mkdir -p ${HOME}/gem/home/${USER}/mnt/${gem_hostname_windows}_root &>/dev/null
+    sudo mount -t vboxsf -o uid=${USER},gid=${USER} ${gem_hostname_windows}_root ${HOME}/gem/home/${USER}/mnt/${gem_hostname_windows}_root
+fi

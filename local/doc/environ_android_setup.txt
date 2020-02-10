@@ -256,3 +256,31 @@ EOF
 # 
 # On the menu bar click Run->Run 'app'.  The sample program should load and run
 # on the device.
+
+
+# =============================================================================
+# Some Android Operations
+# =============================================================================
+# This list is from README-android.md located in the docs directory in SDL2
+# src directory.
+#
+# You can see the output of log messages on the default device with:
+# 
+#    adb logcat
+# 
+# You can push files to the device with:
+# 
+#     adb push local_file remote_path_and_file
+# 
+# You can push files to the SD Card at /sdcard, for example:
+# 
+#     adb push moose.dat /sdcard/moose.dat
+# 
+# You can see the files on the SD card with a shell command:
+# 
+#     adb shell ls /sdcard/
+# 
+# You can start a command shell on the default device with:
+# 
+#     adb shell
+

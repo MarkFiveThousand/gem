@@ -2,6 +2,8 @@
 
 .gitconfig
 
+home/mhodges/mnt
+
 local_x86_64-w64-mingw32/
 local_x86_64-pc-windows-msvc/
 local_x86_64-pc-linux-gnu/

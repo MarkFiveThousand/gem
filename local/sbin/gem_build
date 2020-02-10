@@ -1071,6 +1071,22 @@ function gem_build_SetHost_common_android { gem_script_v_Error "gem_build_SetHos
 function gem_build_v_SetHost_android_common { gem_build_SetHost_android_common ;}
 function gem_build_SetHost_android_common
 {
+    # Validate android sdk directories.
+    if [[ ! -d ${gem_fullpath_android} ]]; then
+        gem_script_v_Error "Android directory does not exist: \${gem_fullpath_android}=${gem_fullpath_android}"
+    else
+
+    if [[ ! -d ${gem_fullpath_android_sdk} ]]; then
+        gem_script_v_Error "Android SDK directory does not exist: \${gem_fullpath_android_sdk}=${gem_fullpath_android_sdk}"
+    else
+        if [[ ! -d ${gem_fullpath_android_sdk_platform_tools} ]]; then
+            gem_script_v_Error "Android SDK platform tools directory does not exist: \${gem_fullpath_android_sdk_platform_tools}=$gem_fullpath_android_sdk_platform_tools}"
+        fi
+        if [[ ! -d ${gem_fullpath_android_sdk_tools} ]]; then
+            gem_script_v_Error "Android SDK tools directory does not exist: \${gem_fullpath_android_sdk_tools}=$gem_fullpath_android_sdk_tools}"
+        fi
+    fi
+
 	gem_platform_host_details_suffix=ndk_${gem_android_ndk_version}_api_${gem_android_api_level}_stl_${gem_android_standalone_toolchain_stl}_arch_${gem_platform_arch}
 	gem_fullpath_android_standalone_toolchain=${gem_fullpath_android_standalone_toolchain_root}/${gem_platform_host_details_suffix}
 
