@@ -892,7 +892,7 @@ sed -i "s|window.inactive.label.text.color: #000000|window.inactive.label.text.c
 sed -i "s|window.inactive.title.bg.border.color: #efece6|window.inactive.title.bg.color: #ffff00|g" themerc
 sed -i "s|window.inactive.title.bg.color: #efece6|window.inactive.title.bg.color: #e31674|g" themerc
 sed -i "s|window.inactive.title.bg.colorTo: #d9d2c7|window.inactive.title.bg.colorTo: #09002a|g" themerc
-sed -i "s|window.inactive.title.separator.color: #9a8e7c|window.inactive.title.separator.color: #332d19|g" themerc
+sed -i "s|window.inactive.title.separator.color: #9a8e7c|window.inactive.title.separator.color: #381f24|g" themerc
 
 
 
@@ -1521,7 +1521,7 @@ if [[ ! -f ${gem_fullpath_panel_conf}.bak ]]; then
     cp -f ${gem_fullpath_panel_conf} ${gem_fullpath_panel_conf}.bak
 fi
 # To restore:
-# cp -f ${gem_fullpath_panel_conf}.bak ${gem_fullpath_panel_conf}.bak
+# cp -f ${gem_fullpath_panel_conf}.bak ${gem_fullpath_panel_conf}
 
 sed -i ':a;N;$!ba;s|\[quicklaunch]\nalignment=Left|\[quicklaunch]\nalignment=Left\napps\\1\\desktop=/usr/share/applications/rxvt-unicode.desktop\napps\\2\\desktop=/usr/share/applications/pcmanfm-qt.desktop\napps\\3\\desktop=/usr/share/applications/google-chrome.desktop\napps\\4\\desktop=/usr/share/applications/code.desktop\napps\\size=4|g' ${gem_fullpath_panel_conf}
 
