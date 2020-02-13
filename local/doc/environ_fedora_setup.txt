@@ -837,7 +837,8 @@ cat /etc/hostname
 # NOTE: To resize any window you can alt-right-click and drag.
 # 
 # I chose Theme->Clearlooks-3.4.  Change gem_name_theme, below, if you chose a
-# different theme.
+# different theme.  I suggest not making any changes if this is your first time
+# through.
 #
 # Open a terminal window:
 #
@@ -862,7 +863,9 @@ cp themerc themerc.bak
 
 gem_name_theme=Clearlooks-3.4
 cd ~/.themes/${gem_name_theme}/openbox-3
-cp themerc.bak themerc
+y | cp themerc.bak themerc
+
+
 
 # Border Widths
 sed -i "s|border.width: 1|border.width: 6|g" themerc
@@ -916,6 +919,7 @@ sed -i "s|window.inactive.title.separator.color: #9a8e7c|window.inactive.title.s
 # Option 1: Download some forest backgrounds.
 #
 # I'm going to use these to cycle the background, so you may want to try this.
+# Download some forest images to use for desktop wallpaper.
 # -----------------------------------------------------------------------------
 
 su
@@ -939,6 +943,8 @@ done
 
 
 # Option 2: Use an image file in /home/${USER}/Downloads
+#
+# I'M NOT USING THIS, BUT IT SHOULD WORK...?
 # -----------------------------------------------------------------------------
 #
 # You should be running as root:
@@ -962,7 +968,9 @@ pcmanfm-qt --set-wallpaper=${gem_fullpath_image} --wallpaper-mode=stretch
 
 
 
-# Optionally cycle the desktop images:
+
+
+# Cycle the Desktop Images:
 # ------------------------------------
 # Right click on the desktop.
 #
@@ -982,6 +990,24 @@ su
 
 rm -f /usr/share/backgrounds/default.png
 
+
+# =============================================================================
+# ALERT!  If You're Installing as Root ...
+# =============================================================================
+# 
+# If you are setting up your user account, then skip this section. HOWEVER ...
+#
+# If you're setting up the root account, you still need to set up the rxvt
+# termial.  Find the section of this document:
+
+#     =========================================================
+#     Configure RXVT Terminal
+#     =========================================================
+
+#
+# Run the commands there to complete root's configuration.
+#
+# Then logout from the root account, and log back in as yourself, ${USER}.
 
 
 
@@ -1384,6 +1410,8 @@ cd /home/${USER}/gem/local/src/wclang
 cmake -DCMAKE_INSTALL_PREFIX=~/gem/local
 make
 make install
+
+
 
 
 
@@ -1955,10 +1983,17 @@ cd zlib-1.2.11
 cd ..
 
 
-# Build 
-# ----------
+# Build ZZipLib
+# -------------
 cd zziplib-0.1.3
 ./gem_build_zziplib -d -m -b -i
+cd ..
+
+
+# Build SDL
+# ---------
+cd 
+./gem_build_sdl2 -d -m -b -i
 cd ..
 
 

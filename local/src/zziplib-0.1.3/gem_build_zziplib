@@ -11,6 +11,8 @@
 . gem_script
 . gem_build
 
+export PYTHON=/usr/bin/python2
+
 function gem_build_v_SetDefaults
 {
 	gem_build_SetDefaults;
