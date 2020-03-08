@@ -253,16 +253,6 @@ date
 
 
 
-# CMake doesn't get along well with msys.  CMake-gui requires Qt to be
-# installed, which is ~3GB.  We're going to favor the Windows version instead.
-#
-# Download and install CMake under Windows (will be added to the path):
-#
-# https://cmake.org/download/
-
-
-
-
 
 # More meson
 # ----------
@@ -973,6 +963,34 @@ npp ${ESCAPE_FILE}_temp
 
 
 
+
+# =============================================================================
+# Install CMake
+# =============================================================================
+# CMake doesn't get along well with msys.  CMake-gui requires Qt to be
+# installed, which is ~3GB.  We're going to favor the Windows version instead.
+#
+# Download and install CMake under Windows (will be added to the path):
+#
+# https://cmake.org/download/
+
+
+
+
+
+# =============================================================================
+# Install VSCode
+# =============================================================================
+#
+# Download and install:
+#
+# https://code.visualstudio.com/download
+#
+# Add the C:\Program Files\CMake\bin\cmake.exe to your Windows path.  The CMake
+# extension for VSCode requires it for hints and documentation.
+#
+# Install the entension: CMake For VisualStudio Code, CMake langage support for
+# Visual Studio Code (the one made by twxs.)
 
 
 
