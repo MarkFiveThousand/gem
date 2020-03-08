@@ -2188,7 +2188,9 @@ function gem_build_Main
 
 	gem_build_v_SetDefaults
 
-	gem_build_ValidateNDKDir
+	if [[ ${gem_triple} == *"android"* ]]; then
+		gem_build_ValidateNDKDir
+	fi
 	gem_build_v_InitToolchain_${gem_triple}
 	gem_build_v_ValidateToolchain
 	gem_build_v_SetBuildType_${gem_build_type}
