@@ -590,11 +590,11 @@ function gem_build_SetFlags
 function gem_build_v_ValidateFilePaths { gem_build_ValidateFilePaths ;}
 function gem_build_ValidateFilePaths
 {
-	if [[ ${gem_build_script} == "cmake" ]]; then
+	if [[ ${gem_build_script_type} == "cmake" ]]; then
 		if [[ ! -f ${gem_fullpath_toolchain_cmake} ]]; then
 			gem_script_v_Error "gem_build_ValidateFilePaths: CMake toolchain file not found at: ${gem_fullpath_toolchain_cmake}"
 		fi
-	elif [[ ${gem_build_script} == "autotools" ]]; then
+	elif [[ ${gem_build_script_type} == "autotools" ]]; then
 		if [[ ! -d ${gem_fullpath_toolchain_autotools} ]]; then
 			gem_script_v_Error "gem_build_ValidateFilePaths: Autotools toolchain directory not found at: ${gem_fullpath_toolchain_autotools}"
 		fi
@@ -661,22 +661,22 @@ function gem_build_DebugDumpVars
 	fi
 
 	gem_script_v_Msg "----------------------------- gem_script_v_DebugDumpVars() ----------------------------"
-	gem_script_v_Msg "gem_os =               ${gem_os}"
-	gem_script_v_Msg "gem_triple =           ${gem_triple}"
+	gem_script_v_Msg "gem_os =                ${gem_os}"
+	gem_script_v_Msg "gem_triple =            ${gem_triple}"
 	gem_script_v_Msg "gem_triple_details_suffix ="
-	gem_script_v_Msg "                       ${gem_triple_details_suffix}"
-	gem_script_v_Msg "gem_build_type =       ${gem_build_type}"
-	gem_script_v_Msg "gem_build_script =     ${gem_build_script}"
-	gem_script_v_Msg "gem_lib_type =         ${gem_lib_type}"
-	gem_script_v_Msg "gem_path_suffix =      ${gem_path_suffix}"
-	gem_script_v_Msg "gem_fullpath_src =     ${gem_fullpath_src}"
-	gem_script_v_Msg "gem_fullpath_build =   ${gem_fullpath_build}"
-	gem_script_v_Msg "gem_fullpath_install = ${gem_fullpath_install}"
-	gem_script_v_Msg "gem_isCrossCompiling = ${gem_isCrossCompiling}"
+	gem_script_v_Msg "                        ${gem_triple_details_suffix}"
+	gem_script_v_Msg "gem_build_type =        ${gem_build_type}"
+	gem_script_v_Msg "gem_build_script_type = ${gem_build_script_type}"
+	gem_script_v_Msg "gem_lib_type =          ${gem_lib_type}"
+	gem_script_v_Msg "gem_path_suffix =       ${gem_path_suffix}"
+	gem_script_v_Msg "gem_fullpath_src =      ${gem_fullpath_src}"
+	gem_script_v_Msg "gem_fullpath_build =    ${gem_fullpath_build}"
+	gem_script_v_Msg "gem_fullpath_install =  ${gem_fullpath_install}"
+	gem_script_v_Msg "gem_isCrossCompiling =  ${gem_isCrossCompiling}"
 	gem_script_v_Msg "gem_fullpath_toolchain_autotools ="
-	gem_script_v_Msg "                       ${gem_fullpath_toolchain_autotools}"
-	gem_script_v_Msg "gem_fullpath_sysroot=  ${gem_fullpath_sysroot}"
-	if [[ ${gem_build_script} == "cmake" ]]; then
+	gem_script_v_Msg "                        ${gem_fullpath_toolchain_autotools}"
+	gem_script_v_Msg "gem_fullpath_sysroot=   ${gem_fullpath_sysroot}"
+	if [[ ${gem_build_script_type} == "cmake" ]]; then
 		gem_script_v_Msg "gem_fullpath_toolchain_cmake ="
 		gem_script_v_Msg "                       ${gem_fullpath_toolchain_cmake}"
 		gem_script_v_Msg "gem_cmake_generator =  ${gem_cmake_generator}"
@@ -758,21 +758,21 @@ function gem_build_String_AddFlags
 		gem_script_v_Error "gem_build_String_AddFlags() not called with one parameter, a variable name."
 	fi
 
-	if [[ ${gem_build_script} == "cmake" ]]; then
+	if [[ ${gem_build_script_type} == "cmake" ]]; then
 
 		lvalue_flags_c="-DCMAKE_C_FLAGS"
 		lvalue_flags_cpp="-DCMAKE_CPP_FLAGS"
 		lvalue_flags_cxx="-DCMAKE_CXX_FLAGS"
 		lvalue_flags_ld="-DCMAKE_LD_FLAGS"
 
-	elif [[ ${gem_build_script} == "autotools" ]]; then
+	elif [[ ${gem_build_script_type} == "autotools" ]]; then
 
 		lvalue_flags_c="CFLAGS"
 		lvalue_flags_cpp="CPPFLAGS"
 		lvalue_flags_cxx="CXXFLAGS"
 		lvalue_flags_ld="LDFLAGS"
 
-	elif [[ ${gem_build_script} == "meson" ]]; then
+	elif [[ ${gem_build_script_type} == "meson" ]]; then
 
 		gem_script_v_Error "gem_build_AddFlagsToString() not implemented for meson.  They are placed in an array in the meson cross file.  See gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common()."
 	fi
@@ -791,7 +791,7 @@ function gem_build_String_AddFlags
 		temp="${temp} ${lvalue_flags_ld}=\"${gem_flags_ld}\""
 	fi
 
-	if [[ ${gem_build_script} == "autotools" ]]; then
+	if [[ ${gem_build_script_type} == "autotools" ]]; then
 		printf -v ${1} "%s ${!1}" "${temp}"
 	else
 		printf -v ${1} "${!1} %s" "${temp}"
@@ -862,17 +862,17 @@ function gem_build_InitToolchain_x86_64-pc-linux-gnu
 	gem_fullpath_sysroot=/
 	gem_fullpath_toolchain_autotools=/usr
 
-	if [[ ${gem_build_script} == "cmake" ]]; then
+	if [[ ${gem_build_script_type} == "cmake" ]]; then
 		gem_fullpath_toolchain_cmake=${gem_fullpath_local}/toolchains/linux.toolchain.cmake
 
-	elif [[ ${gem_build_script} == "autotools" ]]; then
+	elif [[ ${gem_build_script_type} == "autotools" ]]; then
 
-		if [[ ${gem_use_clang} == 0 ]]; then
-			CC=${gem_fullpath_toolchain_autotools}/bin/gcc
-			CXX=${gem_fullpath_toolchain_autotools}/bin/g++
-		else	# clang
+		if [[ ${gem_use_clang} -ne 0 ]]; then
 			CC=${gem_fullpath_toolchain_autotools}/bin/clang
 			CXX=${gem_fullpath_toolchain_autotools}/bin/clang++
+		else	# clang
+			CC=${gem_fullpath_toolchain_autotools}/bin/gcc
+			CXX=${gem_fullpath_toolchain_autotools}/bin/g++
 		fi
 		LD=${gem_fullpath_toolchain_autotools}/bin/ld
 		AR=${gem_fullpath_toolchain_autotools}/bin/ar
@@ -882,7 +882,7 @@ function gem_build_InitToolchain_x86_64-pc-linux-gnu
 		RANLIB=${gem_fullpath_toolchain_autotools}/bin/ranlib
 		OBJDUMP=${gem_fullpath_toolchain_autotools}/bin/objdump
 
-	elif [[ ${gem_build_script} == "meson" ]]; then
+	elif [[ ${gem_build_script_type} == "meson" ]]; then
 		noop=0
 	fi
 	gem_build_v_InitToolchain_x86_64_common
@@ -893,10 +893,10 @@ function gem_build_InitToolchain_x86_64-pc-cygwin
 {
 	gem_fullpath_sysroot=/usr
 
-	if [[ ${gem_build_script} == "cmake" ]]; then
+	if [[ ${gem_build_script_type} == "cmake" ]]; then
 		gem_fullpath_toolchain_cmake=${gem_fullpath_local}/toolchains/cygwin.toolchain.cmake
 
-	elif [[ ${gem_build_script} == "autotools" ]]; then
+	elif [[ ${gem_build_script_type} == "autotools" ]]; then
 		gem_fullpath_toolchain_autotools=/usr
 
 		if [[ ${gem_use_clang} == 0 ]]; then
@@ -916,7 +916,7 @@ function gem_build_InitToolchain_x86_64-pc-cygwin
 		DLLTOOL=${gem_fullpath_toolchain_autotools}/bin/dlltool
 		RESCOMP=${gem_fullpath_toolchain_autotools}/bin/windres
 
-	elif [[ ${gem_build_script} == "meson" ]]; then
+	elif [[ ${gem_build_script_type} == "meson" ]]; then
 		noop=0
 	fi
 
@@ -964,10 +964,10 @@ function gem_build_InitToolchain_x86_64-w64-mingw32
 	popd &>/dev/null
 
 
-	if [[ ${gem_build_script} == "cmake" ]]; then
+	if [[ ${gem_build_script_type} == "cmake" ]]; then
 		gem_fullpath_toolchain_cmake=${gem_fullpath_local}/toolchains/mingw.toolchain.cmake
 
-	elif [[ ${gem_build_script} == "autotools" ]]; then
+	elif [[ ${gem_build_script_type} == "autotools" ]]; then
 
 		if [[ ${gem_os} != "MINGW64"* ]]; then	# Building for mingw on cygwin or linux.
 			if [[ ! -d ${gem_fullpath_gcc_libs} ]]; then
@@ -1022,7 +1022,7 @@ function gem_build_InitToolchain_x86_64-w64-mingw32
 		else
 			gem_script_v_Error "gem_build_InitToolchain_x86_64-w64-mingw32: Unrecognized shell: ${gem_os}."
 		fi
-	elif [[ ${gem_build_script} == "meson" ]]; then
+	elif [[ ${gem_build_script_type} == "meson" ]]; then
 		local noop=0
 	fi
 
@@ -1032,12 +1032,12 @@ function gem_build_InitToolchain_x86_64-w64-mingw32
 function gem_build_v_InitToolchain_x86_64-pc-windows-msvc { gem_build_InitToolchain_x86_64-pc-windows-msvc ;}
 function gem_build_InitToolchain_x86_64-pc-windows-msvc
 {
-	if [[ ${gem_build_script} == "cmake" ]]; then
+	if [[ ${gem_build_script_type} == "cmake" ]]; then
 		gem_script_v_Error "NOT REALLY AN ERROR: In gem_build_InitToolchain_x86_64-pc-windows-msvc(), did we mean to reference the mingw toolchain file?  Look into this."
 		gem_fullpath_toolchain_cmake=${gem_fullpath_local}/toolchains/mingw.toolchain.cmake
-	elif [[ ${gem_build_script} == "autotools" ]]; then
+	elif [[ ${gem_build_script_type} == "autotools" ]]; then
 		noop=0
-	elif [[ ${gem_build_script} == "meson" ]]; then
+	elif [[ ${gem_build_script_type} == "meson" ]]; then
 		noop=0
 	fi
 
@@ -1064,11 +1064,11 @@ function gem_build_InitToolchain_android_common
 	gem_fullpath_toolchain_autotools=${gem_fullpath_android_ndk}/toolchains/llvm/prebuilt/linux-x86_64
 	gem_fullpath_sysroot=${gem_fullpath_toolchain_autotools}/sysroot
 
-	if [[ ${gem_build_script} == "cmake" ]]; then
+	if [[ ${gem_build_script_type} == "cmake" ]]; then
 		#	gem_fullpath_toolchain_cmake=${gem_fullpath_local}/toolchains/android.toolchain.cmake
 		gem_fullpath_toolchain_cmake=${gem_fullpath_android_ndk}/build/cmake/android.toolchain.cmake
 
-	elif [[ ${gem_build_script} == "autotools" || ${gem_build_script} == "meson" ]]; then
+	elif [[ ${gem_build_script_type} == "autotools" || ${gem_build_script_type} == "meson" ]]; then
 
 		# https://android.googlesource.com/platform/ndk/+/master/docs/BuildSystemMaintainers.md
 
@@ -1195,9 +1195,9 @@ function gem_build_v_SetBuildType_common { gem_build_SetBuildType_common ;}
 function gem_build_SetBuildType_common
 {
 	# Define common build flags.
-	if [[ ${gem_build_script} == "cmake" ]]; then
+	if [[ ${gem_build_script_type} == "cmake" ]]; then
 		noop=0
-	elif [[ ${gem_build_script} == "autotools" ]]; then
+	elif [[ ${gem_build_script_type} == "autotools" ]]; then
 		if [[ ${gem_is_cplusplus} -ne 0 ]]; then
 			gem_flags_cxx="${gem_cxx_standard} -fexceptions -frtti ${gem_flags_cxx}"
 			gem_flags_ld="-lc++_shared ${gem_flags_ld}"
@@ -1207,7 +1207,7 @@ function gem_build_SetBuildType_common
 #			gem_flags_c="-Wall -Wextra -pedantic -Wconversion ${gem_flags_c}"
 #			gem_flags_c="-Wall -Wextra -Wpedantic -Wconversion ${gem_flags_c}"
 		fi
-	elif [[ ${gem_build_script} == "meson" ]]; then
+	elif [[ ${gem_build_script_type} == "meson" ]]; then
 		if [[ ${gem_is_cplusplus} -ne 0 ]]; then
 			gem_flags_cxx="${gem_cxx_standard} -fexceptions -frtti ${gem_flags_cxx}"
 			gem_flags_ld="-lc++_shared ${gem_flags_ld}"
@@ -1223,14 +1223,14 @@ function gem_build_SetBuildType_common
 function gem_build_v_SetBuildType_debug { gem_build_SetBuildType_debug ;}
 function gem_build_SetBuildType_debug
 {
-	if [[ ${gem_build_script} == "cmake" ]]; then
+	if [[ ${gem_build_script_type} == "cmake" ]]; then
 		noop=0
-	elif [[ ${gem_build_script} == "autotools" ]]; then
+	elif [[ ${gem_build_script_type} == "autotools" ]]; then
 		gem_flags_c="${gem_flags_c} -g -O0"
 		gem_flags_cpp="${gem_flags_cpp} -g -O0"
 		gem_flags_cxx="${gem_flags_cxx} -g -O0"
 		gem_flags_ld="${gem_flags_ld} "
-	elif [[ ${gem_build_script} == "meson" ]]; then
+	elif [[ ${gem_build_script_type} == "meson" ]]; then
 		noop=0
 	fi
 	gem_build_v_SetBuildType_common
@@ -1239,14 +1239,14 @@ function gem_build_SetBuildType_debug
 function gem_build_v_SetBuildType_release { gem_build_SetBuildType_release ;}
 function gem_build_SetBuildType_release
 {
-	if [[ ${gem_build_script} == "cmake" ]]; then
+	if [[ ${gem_build_script_type} == "cmake" ]]; then
 		noop=0
-	elif [[ ${gem_build_script} == "autotools" ]]; then
+	elif [[ ${gem_build_script_type} == "autotools" ]]; then
 		gem_flags_c="${gem_flags_c} -O2"
 		gem_flags_cpp="${gem_flags_cpp} -O2"
 		gem_flags_cxx="${gem_flags_cxx} -O2"
 		gem_flags_ld="${gem_flags_ld}"
-	elif [[ ${gem_build_script} == "meson" ]]; then
+	elif [[ ${gem_build_script_type} == "meson" ]]; then
 		noop=0
 	fi
 	gem_build_v_SetBuildType_common
@@ -1255,14 +1255,14 @@ function gem_build_SetBuildType_release
 function gem_build_v_SetBuildType_relwithdebinfo { gem_build_SetBuildType_relwithdebinfo ;}
 function gem_build_SetBuildType_relwithdebinfo
 {
-	if [[ ${gem_build_script} == "cmake" ]]; then
+	if [[ ${gem_build_script_type} == "cmake" ]]; then
 		noop=0
-	elif [[ ${gem_build_script} == "autotools" ]]; then
+	elif [[ ${gem_build_script_type} == "autotools" ]]; then
 		gem_flags_c="${gem_flags_c} -g -O2"
 		gem_flags_cpp="${gem_flags_cpp} -g -O2"
 		gem_flags_cxx="${gem_flags_cxx} -g -O2"
 		gem_flags_ld="${gem_flags_ld}"
-	elif [[ ${gem_build_script} == "meson" ]]; then
+	elif [[ ${gem_build_script_type} == "meson" ]]; then
 		noop=0
 	fi
 	gem_build_v_SetBuildType_common
@@ -1308,15 +1308,15 @@ function gem_build_OnConfigure
 
 function gem_build_OnCommandLine_Configure
 {
-	if [[ ${gem_build_script} == "cmake" ]]; then
+	if [[ ${gem_build_script_type} == "cmake" ]]; then
 
 		gem_build_v_OnCommandLine_Configure_CMake
 
-	elif [[ ${gem_build_script} == "autotools" ]]; then
+	elif [[ ${gem_build_script_type} == "autotools" ]]; then
 
 		gem_build_v_OnCommandLine_Configure_Autotools
 
-	elif [[ ${gem_build_script} == "meson" ]]; then
+	elif [[ ${gem_build_script_type} == "meson" ]]; then
 
 		gem_build_v_OnCommandLine_Configure_Meson
 	fi
@@ -1651,18 +1651,18 @@ function gem_build_Cmd_ConfigureHelp
 	fi
 	gem_script_cd ${gem_fullpath_src}
 
-	if [[ ${gem_build_script} == "cmake" ]]; then
+	if [[ ${gem_build_script_type} == "cmake" ]]; then
 
 		gem_script_v_Error "Configuration help is not implemented for CMake."
 
-	elif [[ ${gem_build_script} == "autotools" ]]; then
+	elif [[ ${gem_build_script_type} == "autotools" ]]; then
 
 		if [[ ! -f ./configure ]]; then
 			gem_script_v_Error "gem_build_Cmd_ConfigureHelp: The configuration file ${gem_fullpath_src}/configure does not exist.  Try configuring the project first using the -m option."
 		fi
 		./configure --help
 
-	elif [[ ${gem_build_script} == "meson" ]]; then
+	elif [[ ${gem_build_script_type} == "meson" ]]; then
 
 		meson configure --help
 	fi
@@ -1719,14 +1719,14 @@ function gem_build_OnBuild
 function gem_build_v_OnCommandLine_Build { gem_build_OnCommandLine_Build ;}
 function gem_build_OnCommandLine_Build
 {
-	if [[ ${gem_build_script} == "cmake" ]]; then
+	if [[ ${gem_build_script_type} == "cmake" ]]; then
 		gem_cmd_line_build="cmake \
 --build \
 . \
 --config \"${gem_build_type}\" \
 --parallel ${gem_num_jobs}"
 
-	elif [[ ${gem_build_script} == "autotools" ]]; then
+	elif [[ ${gem_build_script_type} == "autotools" ]]; then
 
 		gem_cmd_line_build="make \
 -j${gem_num_jobs}"
@@ -1742,7 +1742,7 @@ ${gem_fullpath_autotools_makefile}"
 
 #echo "gem_cmd_line_build=${gem_cmd_line_build}" ; exit
 
-	elif [[ ${gem_build_script} == "meson" ]]; then
+	elif [[ ${gem_build_script_type} == "meson" ]]; then
 
 		gem_cmd_line_build="ninja \
 -C \
@@ -1790,13 +1790,13 @@ function gem_build_OnInstall
 function gem_build_v_OnCommandLine_Install { gem_build_OnCommandLine_Install ;}
 function gem_build_OnCommandLine_Install
 {
-	if [[ ${gem_build_script} == "cmake" ]]; then
+	if [[ ${gem_build_script_type} == "cmake" ]]; then
 		gem_cmd_line_install="cmake --build . --target install"
 
-	elif [[ ${gem_build_script} == "autotools" ]]; then
+	elif [[ ${gem_build_script_type} == "autotools" ]]; then
 		gem_cmd_line_install="make install"
 
-	elif [[ ${gem_build_script} == "meson" ]]; then
+	elif [[ ${gem_build_script_type} == "meson" ]]; then
 		gem_cmd_line_install="ninja -C . install"
 	fi
 }
@@ -1832,13 +1832,13 @@ function gem_build_OnUninstall
 function gem_build_v_OnCommandLine_Uninstall { gem_build_OnCommandLine_Uninstall ;}
 function gem_build_OnCommandLine_Uninstall
 {
-	if [[ ${gem_build_script} == "cmake" ]]; then
+	if [[ ${gem_build_script_type} == "cmake" ]]; then
 		gem_cmd_line_uninstall="make uninstall"
 
-	elif [[ ${gem_build_script} == "autotools" ]]; then
+	elif [[ ${gem_build_script_type} == "autotools" ]]; then
 		gem_cmd_line_uninstall="make uninstall"
 
-	elif [[ ${gem_build_script} == "meson" ]]; then
+	elif [[ ${gem_build_script_type} == "meson" ]]; then
 		gem_cmd_line_uninstall="ninja -C . uninstall"
 	fi
 }
@@ -1874,13 +1874,13 @@ function gem_build_OnClean
 function gem_build_v_OnCommandLine_Clean { gem_build_OnCommandLine_Clean ;}
 function gem_build_OnCommandLine_Clean
 {
-	if [[ ${gem_build_script} == "cmake" ]]; then
+	if [[ ${gem_build_script_type} == "cmake" ]]; then
 		gem_cmd_line_clean="cmake --build . --target clean"
 
-	elif [[ ${gem_build_script} == "autotools" ]]; then
+	elif [[ ${gem_build_script_type} == "autotools" ]]; then
 		gem_cmd_line_clean="make clean"
 
-	elif [[ ${gem_build_script} == "meson" ]]; then
+	elif [[ ${gem_build_script_type} == "meson" ]]; then
 		gem_cmd_line_clean="ninja -C . clean"
 	fi
 }
@@ -1933,7 +1933,7 @@ function gem_build_Cmd_CPack
 	fi
 	gem_script_cd ${gem_fullpath_build}
 
-	if [[ ${gem_build_script} == "cmake" ]]; then
+	if [[ ${gem_build_script_type} == "cmake" ]]; then
 		cpack --config CPackConfig.cmake
 	else
 		gem_script_v_Error "gem_build_Cmd_CPack: CPack is only available while building using CMake."
@@ -2091,10 +2091,10 @@ function gem_build_Main
 	gem_c_standard="-std=c11"		# c90, c99, c11, c17, c2x, gnu90, gnu99, gnu11
 	gem_cxx_standard="-std=c++11"	# c++98, c++03, c++14, c++17, gnu++98, gnu++11, gnu++14, gnu++17
 
-#	gem_build_script="autotools"
-#	gem_build_script="meson"
-#	gem_build_script="cmake"
-	gem_build_script="<undefined>"
+#	gem_build_script_type="autotools"
+#	gem_build_script_type="meson"
+#	gem_build_script_type="cmake"
+	gem_build_script_type="<undefined>"
 
 	# Directories
 	gem_fullpath_local=${HOME}/gem/local

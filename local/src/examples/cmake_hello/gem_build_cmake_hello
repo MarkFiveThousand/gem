@@ -22,9 +22,9 @@ function gem_build_v_SetDefaults
 
 	gem_is_cplusplus=0
 
-	gem_build_script="cmake"
-#	gem_build_script="autotools"
-#	gem_build_script="meson"
+	gem_build_script_type="cmake"
+#	gem_build_script_type="autotools"
+#	gem_build_script_type="meson"
 
 	gem_build_type=release
 #	gem_build_type=debug
