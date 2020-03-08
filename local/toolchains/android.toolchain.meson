@@ -1,11 +1,11 @@
 # GEM_DIR_STANDALONE_TOOLCHAIN will be replaced in a copy of this file placed in the
-# build directory.  GEM_PLATFORM_HOST will also be replaced.
+# build directory.  GEM_TRIPLE will also be replaced.
 
 [binaries]
-c = 'GEM_DIR_STANDALONE_TOOLCHAIN/bin/GEM_PLATFORM_HOST-gcc'
-cpp = 'GEM_DIR_STANDALONE_TOOLCHAIN/bin/GEM_PLATFORM_HOST-g++'
-ar = 'GEM_DIR_STANDALONE_TOOLCHAIN/bin/GEM_PLATFORM_HOST-ar'
-strip = 'GEM_DIR_STANDALONE_TOOLCHAIN/bin/GEM_PLATFORM_HOST-strip'
+c = 'GEM_DIR_STANDALONE_TOOLCHAIN/bin/GEM_TRIPLE-gcc'
+cpp = 'GEM_DIR_STANDALONE_TOOLCHAIN/bin/GEM_TRIPLE-g++'
+ar = 'GEM_DIR_STANDALONE_TOOLCHAIN/bin/GEM_TRIPLE-ar'
+strip = 'GEM_DIR_STANDALONE_TOOLCHAIN/bin/GEM_TRIPLE-strip'
 pkgconfig = 'GEM_FULLPATH_PKGCONFIG_EXE'
 
 

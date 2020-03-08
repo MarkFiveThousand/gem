@@ -44,12 +44,12 @@ function gem_build_v_SetFlags
 	gem_flags_ld="${gem_flags_ld}"
 }
 
-function gem_build_v_BuildFilePath_Src
+function gem_build_v_GetFilePath_src
 {
 	echo "$(pwd)/src/test"
 }
 
-function gem_build_v_BuildFilePath_Build
+function gem_build_v_GetFilePath_build
 {
 	echo "$(pwd)/build_tests/${gem_path_suffix}"
 }

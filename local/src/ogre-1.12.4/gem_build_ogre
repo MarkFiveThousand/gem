@@ -15,11 +15,26 @@ function gem_build_v_SetDefaults
 {
 	gem_build_SetDefaults;
 
-	gem_c_standard="-std=c99"	# c90, c99, c11, gnu90, gnu99, gnu11
+	gem_download_src=1
+
+	# Need gnu extensions for compiling asembly code.
+#	gem_c_standard="-std=c99"	# c90, c99, c11, gnu90, gnu99, gnu11
+	gem_cxx_standard="-std=gnu++11"	# c++98, c++03, c++14, c++17, c++2a, gnu++98, gnu++11, gnu++14, gnu++17
+
+	gem_use_clang=1
+
+	gem_is_cplusplus=1
 
 	gem_build_script="cmake"
 #	gem_build_script="autotools"
 #	gem_build_script="meson"
+
+	gem_build_type=release
+#	gem_build_type=debug
+
+	gem_lib_type=shared			# gem_lib_type is not fully implemented.
+#	gem_lib_type=static
+#	gem_lib_type=both
 
 	# Common Defaults
 	if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW shell on Windows.
@@ -33,17 +48,17 @@ function gem_build_v_SetDefaults
 #		gem_host=mingw
 #		gem_host=android_arm64_v8a
 	fi
+}
 
-	gem_build_type=release
-#	gem_build_type=debug
+function gem_build_v_SetFlags
+{
+	gem_build_SetFlags
 
-	# Set build flags.
 	gem_flags_configure="${gem_flags_configure}"
-	gem_flags_c="${gem_flags_c}"
+	gem_flags_c="${gem_flags_c} -I${gem_fullpath_install}/include/SDL2"
 	gem_flags_cpp="${gem_flags_cpp}"
 	gem_flags_cxx="${gem_flags_cxx}"
 	gem_flags_ld="${gem_flags_ld}"
-	gem_flags_common="${gem_flags_common}"
 }
 
 function gem_build_v_DownloadSource
@@ -60,6 +75,8 @@ function gem_build_v_DownloadSource
 
 function gem_build_v_OnCommandLine_Configure_CMake
 {
+	gem_build_OnCommandLine_Configure_CMake
+
 	gem_cmd_line_configure="${gem_cmd_line_configure} \
 -DOGRE_BUILD_COMPONENT_CSHARP=FALSE \
 -DOGRE_BUILD_COMPONENT_PYTHON=FALSE \
@@ -83,7 +100,10 @@ function gem_build_v_OnCommandLine_Configure_CMake
 #		gem_flags_ld="-lpsapi ${gem_flags_ld}"
 #	fi
 
-	gem_build_OnCommandLine_Configure_CMake
+	# We're building our own dependencies.
+	gem_cmd_line_configure="${gem_cmd_line_configure} \
+-DOGRE_BUILD_DEPENDENCIES=FALSE \
+-DOGRE_DEPENDENCIES_DIR=${gem_fullpath_install}"
 
 #	echo ${gem_cmd_line_configure} ; exit
 }
@@ -112,15 +132,21 @@ function gem_build_v_OnInstall
 	gem_build_OnInstall
 
 	if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW shell on Windows.
-		gem_script_cp ${gem_fullpath_install}/bin/libzlib1.dll ${gem_fullpath_install}/bin/zlib1.dll 
-		gem_script_cp ${gem_fullpath_build}/zziplib-develop/zzip/libzzip-0.dll ${gem_fullpath_install}/bin/libzzip-0.dll
+		if [[ ! -f ${gem_fullpath_install}/bin/zlib1.dll ]]; then
+			gem_script_cp ${gem_fullpath_install}/bin/libzlib1.dll ${gem_fullpath_install}/bin/zlib1.dll
+		fi
+		if [[ ! -f ${gem_fullpath_install}/bin/libzzip-0.dll ]]; then
+			gem_script_cp ${gem_fullpath_build}/zziplib-develop/zzip/libzzip-0.dll ${gem_fullpath_install}/bin/libzzip-0.dll
+		fi
 	elif [[ ${gem_os} == "Linux"* ]]; then	# Linux shell.
 		if [[ ${gem_host} == "linux" ]]; then
 			gem_script_cp ${gem_fullpath_build}/Dependencies/lib64/libzzip-0.so ${gem_fullpath_install}/lib
 			gem_script_cp ${gem_fullpath_build}/Dependencies/lib64/libzzip-0.so.13 ${gem_fullpath_install}/lib
 			gem_script_cp ${gem_fullpath_build}/Dependencies/lib64/libzzip-0.so.13.0.69 ${gem_fullpath_install}/lib
 		elif [[ ${gem_host} == "mingw" ]]; then
-			gem_script_cp ${gem_fullpath_build}/zziplib-develop/zzip/libzzip-0.dll ${gem_fullpath_install}/bin/libzzip-0.dll
+			if [[ ! -f ${gem_fullpath_install}/bin/libzzip-0.dll ]]; then
+				gem_script_cp ${gem_fullpath_build}/zziplib-develop/zzip/libzzip-0.dll ${gem_fullpath_install}/bin/libzzip-0.dll
+			fi
 		fi
 	fi
 }
