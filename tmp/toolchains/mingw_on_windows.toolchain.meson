@@ -1,0 +1,26 @@
+[binaries]
+c = 'x86_64-w64-mingw32-gcc'
+cpp = 'x86_64-w64-mingw32-g++'
+ar = 'ar'
+strip = 'strip'
+windres = 'windres'
+pkgconfig = 'GEM_FULLPATH_PKGCONFIG_EXE'
+
+[properties]
+# Directory that contains 'bin', 'lib', etc
+root = '/mingw64'
+
+# Directory that contains 'bin', 'lib', etc for the toolchain and system libraries
+sys_root = '/mingw64'
+
+GEM_C_ARGS
+GEM_CPP_ARGS
+GEM_C_LINK_ARGS
+GEM_CPP_LINK_ARGS
+
+
+[host_machine]
+system = 'windows'
+cpu_family = 'x86_64'
+cpu = 'x86_64'
+endian = 'little'

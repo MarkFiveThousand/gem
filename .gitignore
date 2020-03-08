@@ -2,6 +2,15 @@
 
 .gitconfig
 
+#local/src/temp/
+#local/src/tmp/
+#local/temp/
+#local/tmp/
+#temp/
+#tmp/
+
+
+
 home/mhodges/mnt
 
 local_x86_64-w64-mingw32/
@@ -11,8 +20,13 @@ local_x86_64-pc-cygwin/
 local_aarch64-linux-android_*
 
 local/sbin/.vscode/
+local/sbin/gem_android_buildtoolchain
+local/sbin/gem_build.orig
 
 local/src/examples/cmake_hello/build
+
+local/src/freeimage-3.18.0/
+local/src/freetype-2.10.1/
 
 local/src/libffi-*/build
 local/src/libffi-*/src
@@ -21,6 +35,8 @@ local/src/libffi-*/libffi-*.gz
 local/src/libiconv-*/build
 local/src/libiconv-*/src
 local/src/libiconv-*/libiconv-*.gz
+
+local/src/LinderdaumSDK-0.6.08/
 
 local/src/gettext-*/build
 local/src/gettext-*/src
@@ -41,9 +57,13 @@ local/src/pkgconf-1.6.3/build
 local/src/pkgconf-1.6.3/src
 local/src/pkgconf-1.6.3/pkgconf-*.tar.xz
 
+local/src/pugixml-1.10/
+
 local/src/sdl2-2.0.11/build
 local/src/sdl2-2.0.11/build_tests
 local/src/sdl2-2.0.11/src
+
+local/src/sdl2-2.0.11/src_old
 
 local/src/texinfo-*/build
 local/src/texinfo-*/src
