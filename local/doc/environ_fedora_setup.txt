@@ -1245,6 +1245,9 @@ sudo sh -c 'echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.m
 sudo dnf -y check-update
 sudo dnf -y install code
 
+# Run VSCode and install the entension: CMake For VisualStudio Code, CMake
+# langage support for Visual Studio Code (the one made by twxs.)
+
 
 # Stop Code From Opening Directories
 # ----------------------------------
