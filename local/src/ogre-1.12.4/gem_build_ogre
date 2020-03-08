@@ -70,18 +70,11 @@ function gem_build_v_OnCommandLine_Configure_CMake
 	# such, we build sdl2 separately, then point to it.
 	if [[ ${gem_os} == "Linux"* ]]; then
 # SDL2_BINARY=
-	gem_cmd_line_configure="${gem_cmd_line_configure} \
+		gem_cmd_line_configure="${gem_cmd_line_configure} \
 -DSDL2MAIN_LIBRARY=~/gem/local_x86_64-pc-linux-gnu/release/lib/libSDL2main.a \
 -DSDL2_INCLUDE_DIR=~/gem/local_x86_64-pc-linux-gnu/release/include/SDL2 \
 -DSDL2_LIBRARY_TEMP=~/gem/local_x86_64-pc-linux-gnu/release/lib/libSDL2.a"
 	fi
-
-# Didn't find the missing -ldl error while cross compiling.  I think installing
-# mingw64-dlfcn or mingw64-dlfcn-static is the correct fix.
-
-#	if [[ ${gem_os} == "Linux"*  && ${gem_host} == "mingw" ]]; then
-#		gem_flags_ld="-lpsapi ${gem_flags_ld}"
-#	fi
 
 	gem_build_OnCommandLine_Configure_CMake
 

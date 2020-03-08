@@ -6,6 +6,8 @@ if(${CMAKE_HOST_SYSTEM_NAME} MATCHES "MINGW64_NT" OR	# CMake was installed using
 	${CMAKE_HOST_SYSTEM_NAME} MATCHES "Windows")		# CMake installed under Windows file system.
 	# Windows shell.
 	set(gem_fullpath_mingw_sysroot /mingw64/bin)
+elseif(${CMAKE_HOST_SYSTEM_NAME} MATCHES "CYGWIN_NT")	# Cross compiling for MinGW in Cygwin shell.
+	set(gem_fullpath_mingw_sysroot /usr/x86_64-w64-mingw32)
 else()	# Cross compiling for MinGW in Linux shell.
 	set(gem_fullpath_mingw_sysroot /usr/x86_64-w64-mingw32)
 endif()
@@ -18,7 +20,8 @@ list(REMOVE_DUPLICATES CMAKE_FIND_ROOT_PATH)
 set(CMAKE_C_COMPILER x86_64-w64-mingw32-gcc)
 set(CMAKE_CXX_COMPILER x86_64-w64-mingw32-g++)
 if(${CMAKE_HOST_SYSTEM_NAME} MATCHES "MINGW64_NT" OR	# CMake was installed using pacman.
-	${CMAKE_HOST_SYSTEM_NAME} MATCHES "Windows")		# CMake installed under Windows file system.
+	${CMAKE_HOST_SYSTEM_NAME} MATCHES "Windows" OR		# CMake installed under Windows file system.
+	${CMAKE_HOST_SYSTEM_NAME} MATCHES "CYGWIN_NT")
 	# Windows shell.
 	set(CMAKE_RC_COMPILER windres)
 else()	# Cross compiling for MinGW in Linux shell.
