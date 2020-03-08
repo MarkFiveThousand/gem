@@ -1,7 +1,7 @@
 #!/bin/bash
 #  ___________                           __________
 # /\   _______\                         /\   ______\
-# \ \  \______/_     ___   ____ ____ ___\ \  \_____/_     ___   ___ ___  ______    ___    ___
+# \ \  \______/_     ___   ____ ____ ___\ \  \_____/_     ___   ___ ___  ______   ____    ___
 #  \ \  \ /\__  \  /'___`\/\   V    V   \\ \_______  \  /'   `\/\  \\  \/\   __\/' ._`\ /'___`\
 #   \ \  \\/__\  \/\  ___/\ \  \/\  \/\  \\/_______\  \/\  \\  \ \  \\  \ \  \ /\  \__//\  ___/
 #    \ \__________\ \____\ \ \__\ \__\ \__\ /\_________\ \_____/\ \______\ \__\\ \____/\ \____\
@@ -10,7 +10,8 @@
 #
 # File: user_bash_init
 #
-# Configure user-specific environment and startup programs.
+# Configure user-specific environment and startup programs.  It is expected
+# that 
 # 
 
 function gem_bash_init_Main()
@@ -58,11 +59,9 @@ function gem_bash_init_Main()
 
     if [[ ${gem_os} == *"MINGW64"* || ${gem_os} == *"CYGWIN"* ]]; then
 
-        export gem_fullpath_android=$(cygpath "c:\android")
+        export gem_fullpath_android=$(cygpath "c:\Android")
         if [[ -d ${gem_fullpath_android} ]]; then
             export gem_fullpath_android_sdk=${gem_fullpath_android}/sdk-tools-windows-4333796
-            export gem_fullpath_android_sdk_platform_tools=${gem_fullpath_android_sdk}/platform-tools_r28.0.1-windows/platform-tools
-            export gem_fullpath_android_sdk_tools=${gem_fullpath_android_sdk}/tools
             export ANDROID_SDK=${gem_fullpath_android_sdk}
         fi
 
@@ -71,15 +70,13 @@ function gem_bash_init_Main()
         export gem_fullpath_android=${HOME}/Android
         if [[ -d ${gem_fullpath_android} ]]; then
             export gem_fullpath_android_sdk=${gem_fullpath_android}/Sdk
-            export gem_fullpath_android_sdk_platform_tools=${gem_fullpath_android_sdk}/platform-tools
-            export gem_fullpath_android_sdk_tools=${gem_fullpath_android_sdk}/tools
             export ANDROID_SDK=${gem_fullpath_android_sdk}
         fi
 
     else
 		echo "ERROR: Build platform not supported: ${gem_os}" ; exit
     fi
-    export PATH="${PATH}:${gem_fullpath_android_sdk_platform_tools}:${gem_fullpath_android_sdk_tools}"
+#    export PATH="${PATH}"
 
 
     # =========================================================================

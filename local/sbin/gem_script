@@ -61,7 +61,9 @@ function gem_v_ExitMsg { gem_script_Error "gem_v_ExitMsg() has been renamed.";}
 function gem_script_v_ExitMsg { gem_script_ExitMsg "$@";}
 function gem_script_ExitMsg
 {
-	gem_script_v_Msg_NotQuiet "$@"
+    if [[ ! -z $@ ]]; then
+		gem_script_v_Msg_NotQuiet "$@"
+	fi
 	exit 1
 }
 
@@ -79,6 +81,9 @@ function gem_v_ExitHelp { gem_script_Error "gem_v_ExitHelp() has been renamed.";
 function gem_script_v_ExitHelp { gem_script_ExitHelp "$@";}
 function gem_script_ExitHelp
 {
+    if [[ ! -z $@ ]]; then
+        gem_script_v_ExitMsg "\n$@\n\n"
+    fi
 	exit 0
 }
 
@@ -227,6 +232,18 @@ function gem_script_cp
 	local gem_result=$?
 	if [[ ${gem_result} -ne 0 ]]; then
 		gem_script_v_Error "gem_script_cp failed to copy file(s).  Error code: ${gem_result}, Command line: ${gem_cmd_line}."
+	fi
+}
+
+function gem_script_ln
+{
+	gem_script_ValidateFileParams ${@}
+
+	local gem_cmd_line="ln ${@}"
+	${gem_cmd_line}
+	local gem_result=$?
+	if [[ ${gem_result} -ne 0 ]]; then
+		gem_script_v_Error "gem_script_ln failed to create a symbolic link.  Error code: ${gem_result}, Command line: ${gem_cmd_line}."
 	fi
 }
 
