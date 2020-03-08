@@ -40,7 +40,7 @@ selinux appendix as appropriate.
 # The official documentation appears to be undergoing changes.  The document
 # linked to below is incomplete.
 #
-# https://docs.fedoraproject.org/en-US/fedora/f30/
+# https://docs.fedoraproject.org/en-US/fedora/f31/
 #
 # More complete documentation can be found at the Fedora wiki link below.  Enter
 # terms related to what you're looking for.  Pay attention to the dates on
@@ -430,77 +430,106 @@ selinux appendix as appropriate.
 #      consume the space we made available when we shrank the fedora-root
 #      partition.  After changing the "Desired Capacity", click another partion
 #      (e.g. fedora-root), then back to fedora-home to update "AVAILABLE
-#      SPACE."  I was able to grow my fedora-home to 271.09 GiB.  Allocate as
+#      SPACE."  I was able to grow my fedora-home to 275.03 GiB.  Allocate as
 #      much "AVAILABLE SPACE" to fedora-home as you can.  I had 1023 KiB
 #      remaining that I was unable to allocate to any partition.  Click the
 #      "Done" button at the upper left.
 #
-# 11.) In the "Summary of Changes" dialog box, click "Accept Changes."  You
-#      will be returned to the "Installation Summary" screen.  Click "Begin
-#      Installation".
+#      In the "Summary of Changes" dialog box, click "Accept Changes."  You
+#      will be returned to the "Installation Summary" screen.
 # 
-# 12.) While installing, in the "Installation Summary" screen, click "Root
-#      Password." Set a root password, then click "Done."  You will be
-#      returned to the "Configuration" screen.
+# 11.) Click "Root Password." Set a root password, then click "Done."  You will
+#      be returned to the "Installation Summary" screen.
 #
-# 13.) In the "Installation Summary" screen, click "User Creation".  Enter your
+# 12.) In the "Installation Summary" screen, click "User Creation".  Enter your
 #      first and last name.  A user name will be generated.  You may change it,
-#      if you prefer to have a different user name.  Do not check "Make this
-#      user administrator."  After entering a password, click "Done."
+#      if you prefer to have a different user name.
 #
-# 14.) After returning to the "Installation Summary" screen, click "Begin
+#      Do not check "Make this user administrator."
+#
+#      NOTE: On our Mingw and Cygwin shells on Windows, the user name will be
+#      Windows user name.  My use name on Fedora linus is mhodges.  For
+#      consistancy across build paltforms, I changed my Windows user name to
+#      mhodges.
+#
+#      Enter a password, then click "Done."
+#
+# 13.) After returning to the "Installation Summary" screen, click "Begin
 #      Installation."  When configuration is complete, click "Finish
-#      Installation."  To shutdown Fedora click the blue icon in the lower left
-#      corner of the desktop.  This is the equivalent of the Windows start
-#      menu.  Click "Leave", then "Shutdown."  Click "Yes" to agree to
-#      shutdown.  We'll use the following notation to indicate this, and
-#      similar, menu selections: Fedora->Leave->Shutdown.
+#      Installation."
 #
-# 15.) Before we reboot, we need to remove the installation .iso (disk) in the
+#      To shutdown Fedora click the blue icon in the lower left corner of the
+#      desktop.  This is the equivalent of the Windows start menu.  Click
+#      "Leave", then "Shutdown."  Click "Yes" to agree to shutdown.  We'll use
+#      the following notation to indicate this, and similar, menu selections:
+#      Fedora->Leave->Shutdown.
+#
+# 14.) Before we reboot, we need to remove the installation .iso (disk) in the
 #      virtual machine's optical drive.  Return to Oracle VM VirtualBox
 #      Manager.  In the left pane, select your virtual machine.  Click the
 #      "Settings" button on the top.
 #
-# 16.) In the left pane of the settings menu, click "Storage." In the right
+# 15.) In the left pane of the settings menu, click "Storage." In the right
 #      pane, under "Storage Devices" and "Controller: IDE", click
 #      "Fedora-LXQt-Live-x86_64-31-1.9.iso", or your similar .iso file name.
 #
-# 17.) To the far right, under "Attributes" and to the right of "Optical
+# 16.) To the far right, under "Attributes" and to the right of "Optical
 #      Drive:", click the blue disk icon, then click "Remove Disk from Virtual
 #      Drive."  Click "OK."
 #
-# 18.) Start your virtual machine. Log in.
+# 17.) Start your virtual machine. Log in.
 
 # NOTE: Fedora is connecting to the network via a virtual "wired connection".
 # However, it is using the host's connection, which may or may not be wired.
 # In any event, Fedora should obtain an internet connection through your host
 # pc.
 
-# 19.) We are going to be cutting and pasting commands from this document to
-#      the terminal running in Fedora.  That means we will want a copy of this
-#      document in Fedora.  Use the web browser (which we will change later)
-#      Fedora->Internet->Falkon to email a copy of this file to yourself.
+# Navigating the linux desktop with the current small window, is most easily
+# done by maximizing each application wndow and using alt-tab to cycle between
+# each one.
 #
-# 20.) Many updates have likely been released since the downloaded .iso
-#      installation disk was created, so we'll now update the OS.  Open a
-#      command prompt terminal window.  Go to Fedora->System Tools->QTerminal.
-#      Enter the "su" command below to become super user (i.e. root/
-#      administrator), followed by root's password.
-
-su
-# Enter root/administrator password.
-
-
 # After we update the operating system, we are going to install VirtualBox
 # Guest Additions.  Guest Additions will allow tighter integration between the
 # Windows and Linux operating systems.  That will enable us to share files,
 # copy and paste between Windows and Linux applications, and make the Linux
-# desktop resize along with the VirtualBox window.  Until that is done, you'll
-# have to either type in the below commands, or else email this document to
-# yourself on Linux so you can copy and paste them into the terminal.  I do the
-# latter.  To open the default web browser in Linux go to:
-# Fedora->Internet->Falkon.  We will install Google Chrome, and/or Firefox
-# shortly.
+# desktop resize along with the VirtualBox window.
+#
+# Until that is done, you'll have to either type in the below commands, or else
+# email this document to yourself on Linux so you can copy and paste them into
+# the terminal.  I do the latter.
+#
+# We will install Google Chrome, and/or Firefox shortly.  For now, open the
+# default web browser installed for LXQT:
+#
+# Fedora->Internet->Falkon.  
+# While viewing this document in the default text editor, enki, you may find it
+# easier to view by turning off line wrapping.  I get an error dialog displaying
+# when I open the following menu.  It's safe to ignore and click throught it.
+# Settings->Settings.  In the left panels, click Editor->Long Lines, and uncheck
+# "Wrap long lines".
+#
+# In the left panel click, Editor->Font.  In the right panel click
+# "Change font...".  Select 10 under "Change size", then click "OK"
+# 18.) We are going to be cutting and pasting commands from this document to
+#      the terminal running in Fedora.  That means we will want a copy of this
+#      document in Fedora.  Later, we will install Firefox and/or Chrome.  For
+#      now, use the web browserFedora->Internet->Falkon to email a copy of this
+#      file to yourself.
+#
+# 19.) Many updates have likely been released since the downloaded .iso
+#      installation disk was created, so we'll now update the OS.  Open a
+#      command prompt terminal window.  Go to Fedora->System Tools->QTerminal.
+#      Enter the "su" command below to become super user (i.e. root/
+#      administrator), followed by root's password.
+#
+# NOTE: After entering root's password, you may copy the below lines to the
+# clipboard using ctrl-c, then paste them into the terminal window using ctrl-
+# shift-v.  Later we will be installing a different terminal to replace
+# QTerminal with a more user-friendly one.
+
+su
+# Enter root/administrator password.
+
 
 dnf -y update
 dnf -y update kernel*
@@ -573,9 +602,8 @@ df
 #
 # VirtualBox Guest Additions allow tighter integration between the Windows and
 # Linux operating systems.  This will enable us to share files, copy and paste
-# between Windows and Linux applications, and make the Linux desktop resize
-# along with the VirtualBox window and more.  See the link above for more
-# details.
+# between Windows and Linux applications, make the Linux desktop resize along
+# with the VirtualBox window and more.  See the link above for more details.
 #
 #  1.) The beauty of an open source operating system is we are going to run a
 #      script that will compile the changes into the Fedora operating system
@@ -583,7 +611,7 @@ df
 #
 #      Click on "Devices" on the Oracle VM VirtualBox menu bar at the very top.
 #      At the bottom of the menu, select "Insert Guest Additions CD image..."
-#      The virtual CD is now inserted in the virtual CD drive.  When the
+#      This will insert the virtual CD into the virtual CD drive.  When the
 #      "Removable medium is inserted" dialog appears, click "Open in file
 #      manager", then click "OK."  The file manager (Fedora->Accessories->
 #      PCMandFM-Qt File Manager) will open.
@@ -608,11 +636,14 @@ df
 #
 #      a.) Open a terminal
 #      b.) Become super user: su
-#      c.) cd /run/media/$USER
+#      c.) cd /run/media/${USER}
 #      d.) cd into the guest additions directory.  It's named something similar
 #          to: VBox_GAs_6.0.14   You can type "VBox_GAs_" then press tab to
 #          complete the file name.
 #      e.) Run: ./VBoxLinuxAdditions.run
+#
+#
+#      When prompted, "Do you wish to continue? [yes/no], type y, then enter.
 #
 #      When the kernel has been rebuilt, complete the installation by pressing
 #      enter to close the terminal.  Close all currently running applications
@@ -622,6 +653,9 @@ df
 
 # After logging in, verify Guest Additions are working by resizing the window.
 # The desktop should resize accordingly.
+#
+# If you earlier reduced the font size in the text editor, enki, you may want to
+# return it to size 12 for easier viewing.
 #
 #  3.) On the bar at the bottom-right of the Fedora desktop there's a button to
 #      the left of the volume icon.  Hover the mouse over it to display the
@@ -640,12 +674,12 @@ df
 # =============================================================================
 # Terminal Settings
 # =============================================================================
-# We're going to change the colors in the terminal window.  Open a terminal
-# window:
+# We're going to change the text colors in the terminal window.  Open a
+# terminal window:
 #
 # Fedora->System Tools->QTerminal
 #
-# Copy and paste the following in the terminal window:
+# Copy and paste (ctrl-shift-v) the following in the terminal window:
 
 cat << EOF >> ~/.bashrc
 
@@ -660,15 +694,20 @@ gem_colors  # Call it.
 EOF
 
 
-# Define it again for root.  This is most important for VSCode to run with
-# --user-data-dir defined for root.
+# Define it again for root.  Login as root.
 
-su
+su -
 
-# Paste the above commands again, for root.
+# Paste the above commands again.  This time we're updating root's
+# ~/.bashrc.  
+After we clone the gem repo we'll come back and update root's ~/.bashrc.
 
 # Return to your user identity.
 exit
+
+# To see the changes, close QTerminal, then open it again.
+
+
 
 
 
@@ -681,19 +720,27 @@ exit
 #
 # In the left panel, change "Places" to "Directory tree."
 #
-# Change to file detail view: Edit->Preferences
+# Open Edit->Preferences. In the left pane, click Behavior.  In the right pane,
+# change "Default view mode:" from "Icon View" to "Detailed List View."
 #
-# In the left pane, click Behavior.  In the right pane, under Browsing change
-# "Default view mode:" from "Icon View" to "Detailed List View."
+# To change the path shown at the top from buttons to the location (like
+# Windows) select View->Path Bar->Location
 #
 # In the left pane, click Advanced.  In the right pane, set Terminal emulator:
 # urxvt 
 #
 # NOTE: We haven't installed urxvt terminal program yet, but we're going to.
 #
+# By default hidden "dot files" (files with names then begin with a period) are
+# not shown by PCManFM-Qt File Manager.  Leave it that way for cleaner
+# navigation.  When you need to view hidden dot files you can toggle their
+# display with View->Show Hidden.
+#
 # Click Ok.
 #
 # Close PCManFM-Qt File Manager
+
+
 
 
 
@@ -705,12 +752,6 @@ exit
 # Set gem_fedora_hostname to your desired name for your system.  I have multiple
 # installations, so chose f31v1 for my 1st installation of Fedora 31.
 
-gem_fedora_hostname=f31v1
-
-# In /etc/hostname replace localhost.localdomain with ${gem_hostname}.localdomain.
-# 
-# WARNING: Only run this once.
-# 
 # NOTE: The .localdomain suffix is required in the hostname file.  This makes
 # it a fully qualified domain name (FQDM).  When it shows up in windows, it
 # only shows the first portion.  If you leave off the .localdomain suffix Windows
@@ -721,7 +762,13 @@ gem_fedora_hostname=f31v1
 
 hostname
 
+# Become root to make the change.
 su
+
+
+# In /etc/hostname we're going to replace localhost.localdomain with
+# ${gem_hostname}.localdomain.  Change f31v1 to whatever you would like your
+# computer name to appear as on the network.
 
 gem_fedora_hostname=f31v1
 
@@ -769,9 +816,16 @@ cat /etc/hostname
 # I like Theme->Clearlooks-3.4
 #
 # Select Desktops->Number of desktops: 1
-
+#
+# Browse through the options shown in the left panel to familiarize yourself
+# with the available settings.
+#
 # Click "Close."
-
+#
+# Disable the "Leave" confirmation dialog.  Open Fedora->Preferences->
+# Session Settings.  In the left panel select Basic Settings.  In the
+# right panel, under Leave Session uncheck Ask for confirmation to leave
+# session.
 
 
 
@@ -786,7 +840,8 @@ cat /etc/hostname
 # NOTE: To resize any window you can alt-right-click and drag.
 # 
 # I chose Theme->Clearlooks-3.4.  Change gem_name_theme, below, if you chose a
-# different theme.
+# different theme.  I suggest not making any changes if this is your first time
+# through.
 #
 # Open a terminal window:
 #
@@ -806,13 +861,12 @@ cd ~/.themes/${gem_name_theme}/openbox-3
 cp themerc themerc.bak
 
 
+# If you mess up your local themerc file you can restore it from the back up
+# we just made by doing the following:
 
-
-# Quick reset for editing:
 gem_name_theme=Clearlooks-3.4
 cd ~/.themes/${gem_name_theme}/openbox-3
-cp themerc.bak themerc
-
+y | cp themerc.bak themerc
 
 
 
@@ -820,19 +874,31 @@ cp themerc.bak themerc
 sed -i "s|border.width: 1|border.width: 6|g" themerc
 sed -i "s|window.handle.width: 4|window.handle.width: 0|g" themerc
 
+# window.active.border.color:          The border whose width we just set.
+# window.active.title.bg.color:        Top/beginning of the gradient.
+# window.active.title.bg.colorTo:      Bottom/end of the gradient.
+# window.active.title.bg.border.color: Skinny rectangle around gradient.
+# window.active.title.separator.color: Border-width rectangle below the gradient.
+
+# Set Awesome window Colors!
+
 # Active Window
-sed -i "s|border.color: #1f252b|border.color: #4f6577|g" themerc
-sed -i "s|window.active.title.separator.color: #334c62|window.active.title.separator.color: #4f6577|g" themerc
-sed -i "s|window.active.title.bg.colorTo: #3c7cb7|window.active.title.bg.colorTo: #1e3e5b|g" themerc
-sed -i "s|window.active.title.bg.border.color: #7cb6ec|window.active.title.bg.border.color: #61aaae|g" themerc
+sed -i "s|### Window active|### Window active\nwindow.active.border.color: #40576d|g" themerc
+
+#sed -i "s|window.active.title.bg.color: #589bda|window.active.title.bg.color: #3c7cb7|g" themerc
+sed -i "s|window.active.title.bg.color: #589bda|window.active.title.bg.color: #2895e5|g" themerc
+sed -i "s|window.active.title.bg.colorTo: #3c7cb7|window.active.title.bg.colorTo: #00112a|g" themerc
+sed -i "s|window.active.title.bg.border.color: #7cb6ec|window.active.title.bg.border.color: #ff00ff|g" themerc
+sed -i "s|window.active.title.separator.color: #334c62|window.active.title.separator.color: #313742|g" themerc
 
 # Inactive Window
+sed -i "s|Flat Border Gradient Vertical|raised Border Gradient|g" themerc
+sed -i "s|window.inactive.border.color: #3d3a37|window.inactive.border.color: #593139|g" themerc
 sed -i "s|window.inactive.label.text.color: #000000|window.inactive.label.text.color: #fff0d5|g" themerc
-sed -i "s|window.inactive.title.bg.border.color: #ffffff|window.inactive.title.bg.border.color: #a6926c|g" themerc
-sed -i "s|window.inactive.title.separator.color: #9a8e7c|window.inactive.title.separator.color: #343021|g" themerc
-sed -i "s|window.inactive.title.bg.color: #efece6|window.inactive.title.bg.color: #742d17|g" themerc
-sed -i "s|window.inactive.title.bg.colorTo: #d9d2c7|window.inactive.title.bg.colorTo: #36150c|g" themerc
-
+sed -i "s|window.inactive.title.bg.border.color: #efece6|window.inactive.title.bg.color: #ffff00|g" themerc
+sed -i "s|window.inactive.title.bg.color: #efece6|window.inactive.title.bg.color: #e31674|g" themerc
+sed -i "s|window.inactive.title.bg.colorTo: #d9d2c7|window.inactive.title.bg.colorTo: #09002a|g" themerc
+sed -i "s|window.inactive.title.separator.color: #9a8e7c|window.inactive.title.separator.color: #381f24|g" themerc
 
 
 
@@ -856,6 +922,7 @@ sed -i "s|window.inactive.title.bg.colorTo: #d9d2c7|window.inactive.title.bg.col
 # Option 1: Download some forest backgrounds.
 #
 # I'm going to use these to cycle the background, so you may want to try this.
+# Download some forest images to use for desktop wallpaper.
 # -----------------------------------------------------------------------------
 
 su
@@ -871,47 +938,42 @@ https://wallpaperaccess.com/full/773468.jpg
 https://wallpaperaccess.com/full/773544.jpg
 https://wallpaperaccess.com/full/84681.jpg
 https://wallpaperaccess.com/full/84710.jpg
-https://wallpaperaccess.com/full/174804.jpg
 https://wallpaperaccess.com/full/174807.jpg
-https://wallpaperaccess.com/full/291270.jpg
-https://wallpaperaccess.com/full/279735.jpg
 "
 for file in ${gem_list_files}; do
 	wget ${file}
 done
 
 
-# Option 2: Use an image file in /home/$USER/Downloads
+# Option 2: Use an image file in /home/${USER}/Downloads
+#
+# I'M NOT USING THIS, BUT IT SHOULD WORK...?
 # -----------------------------------------------------------------------------
 #
 # You should be running as root:
 
 su
 
-cd /home/$USER/Downloads
+cd /home/${USER}/Downloads
 
 ls
 
 # Assign your file name here.
 gem_filename_image=<your file>.jpg
 
-cp /home/$USER/Downloads/${gem_filename_image} /usr/share/backgrounds
+cp /home/${USER}/Downloads/${gem_filename_image} /usr/share/backgrounds
 chown root:root /usr/share/backgrounds/${gem_filename_image}
 
-
-
-# Set and Apply the Background:
-# -----------------------------
-# Try this first:
-# Source: https://www.mankier.com/1/pcmanfm-qt
-
+# Set and apply the downloaded background image.
 gem_fullpath_image=/usr/share/backgrounds/732171.jpg
 
 pcmanfm-qt --set-wallpaper=${gem_fullpath_image} --wallpaper-mode=stretch
 
 
 
-# Optionally cycle the desktop images:
+
+
+# Cycle the Desktop Images:
 # ------------------------------------
 # Right click on the desktop.
 #
@@ -921,7 +983,7 @@ pcmanfm-qt --set-wallpaper=${gem_fullpath_image} --wallpaper-mode=stretch
 #
 # Check Enable Slide Show.
 #
-# Verify the following setting- Wallpaper image folder: /usr/share/backgrounds
+# Set Wallpaper image folder: /usr/share/backgrounds
 #
 # I prefer to check "Randomize the slide show."
 #
@@ -931,6 +993,24 @@ su
 
 rm -f /usr/share/backgrounds/default.png
 
+
+# =============================================================================
+# ALERT!  If You're Installing as Root ...
+# =============================================================================
+# 
+# If you are setting up your user account, then skip this section. HOWEVER ...
+#
+# If you're setting up the root account, you still need to set up the rxvt
+# termial.  Find the section of this document:
+
+#     =========================================================
+#     Configure RXVT Terminal
+#     =========================================================
+
+#
+# Run the commands there to complete root's configuration.
+#
+# Then logout from the root account, and log back in as yourself, ${USER}.
 
 
 
@@ -993,23 +1073,6 @@ sed -i "s|background=/usr/share/backgrounds/default.png|background=${gem_fullpat
 
 
 
-# -----------------------------------------------------------------------------
-*FIX: I think the rest of this is not necessary.  Verify and remove.
-
-# Does this change the theme?  I tried it, but it always looked the same.
-sddm-greeter --theme /usr/share/sddm/themes/02-lxqt-fedora
-
-# Use the following to try out installed themes:
-sddm-greeter --test-mode --theme /usr/share/sddm/themes/02-lxqt-fedora
-sddm-greeter --test-mode --theme /usr/share/sddm/themes/elarun
-sddm-greeter --test-mode --theme /usr/share/sddm/themes/maldives
-sddm-greeter --test-mode --theme /usr/share/sddm/themes/maya
-# -----------------------------------------------------------------------------
-
-
-
-
-
 # =============================================================================
 # Change the Bootup Theme (Animation)
 # =============================================================================
@@ -1021,6 +1084,8 @@ sddm-greeter --test-mode --theme /usr/share/sddm/themes/maya
 su
 
 dnf -y install plymouth-theme-spinfinity
+
+# It may take several seconds to set it...
 plymouth-set-default-theme spinfinity -R
 
 # Exit back to our user's identity
@@ -1035,12 +1100,15 @@ Fedora->Leave->Reboot
 # =============================================================================
 # Sudo
 # =============================================================================
+# The following changes will allow our user to run commands as root
+# i.e. super user.
 
 su
 
+
 cat > temp << EOF
 
-Defaults:$USER    !authenticate
+Defaults:${USER}    !authenticate
 ${USER} ALL=(root) NOPASSWD: /bin/dnf, /bin/mount, /bin/umount, /usr/sbin/reboot, /usr/sbin/shutdown, /bin/systemctl, /bin/rpm, /bin/touch, /bin/cat, /bin/chown, /bin/chmod, /bin/chgrp, /usr/sbin/alternatives, /bin/wget, /bin/sh, /usr/sbin/setenforce
 
 EOF
@@ -1058,7 +1126,7 @@ cat /etc/sudoers
 # =============================================================================
 
 # FIX: Holding off on these for now:
-sudo dnf -y install policycoreutils-gui and system-* xarchiver wine
+sudo dnf -y install policycoreutils-gui and system-*
 
 
 # System Utilities
@@ -1066,8 +1134,36 @@ sudo dnf -y install policycoreutils-gui and system-* xarchiver wine
 # rxvt-unicode is a nicer terminal.
 # samba allows us to share files with other computers on our local network.
 
-sudo dnf -y install rxvt-unicode samba xclip
+sudo dnf -y install rxvt-unicode samba xclip xarchiver wine
 sudo dnf -y groupinstall "Administration Tools"
+
+
+
+# Wine creates an "Open With" association between its own version of MS Windows
+# Notepad.exe and .txt files.  This needs to be removed.  We don't want to use
+# to use wine's notepade for editing .txt files, so we will remove the filename
+# associations.
+# Source: https://askubuntu.com/questions/186494/remove-wines-notepad-from-open-with-options
+
+# Back up wine's mimeinfo.cache before modifying it.
+gem_fullpath_winemimeinfo=${HOME}/.local/share/applications/mimeinfo.cache
+if [[ ! -f ${gem_fullpath_winemimeinfo}.bak ]]; then
+    cp ${gem_fullpath_winemimeinfo} ${gem_fullpath_winemimeinfo}.bak
+fi
+
+# Remove unwanted file associations.
+sed -i "s|text/plain=wine-extension-ini.desktop;wine-extension-txt.desktop;||g" ${gem_fullpath_winemimeinfo}
+gem_result=$?
+if [[ ${gem_result} -ne 0 ]]; then
+    echo "Failed to remove file association."
+fi
+
+sed -i "s|text/html=wine-extension-htm.desktop;||g" ${gem_fullpath_winemimeinfo}
+gem_result=$?
+if [[ ${gem_result} -ne 0 ]]; then
+    echo "Failed to remove file association."
+fi
+
 
 
 # Google Chrome
@@ -1084,38 +1180,15 @@ sudo dnf -y install google-chrome-stable
 sudo dnf -y install firefox
 
 
-# Gimp Image Editor
-# -----------------
-BEFORE installing gimp, view your application assocations, as described in the
-section further below.  Save the three *.list files in /usr/share/applications,
-so we can diff them after installing gimp.
+# Set rxvt as the default terminal for LXQt.  Open Fedora->Preferences->
+# Session Settings.
+#
+# In the left panel select Default Applications.  In the right panel set
+# Terminal Emulation to /usr/bin/urxvt.
 
-gnome-memeapps.list & mimeapps.list are identical.  kde-mimeapps.list doesn't
-have any references to gimp.
+# Set Web Browser to either /usr/bin/google-chrome-stable or /usr/bin/firefox.
 
-At first I thought Gimp associated all image types with itself.  However, after
-viewing the .list files, it appears they are mapped to eog (Eye of Gnome),
-which we have not installed.
 
-Is eog mentioned in the .list files prior to installing gimp?  It seems odd
-that by default images are mapped to an application that was not installed, by
-default.  Perhaps installing gimp resulted in the image file associations being
-mapped to eog, on the assumption that it would be installed along with gimp,
-which, of course, is a poor assumption.
-
-Somehow, in the absence of eog, it seems gimp is being used as an alternative,
-as it appears images are not be explicitly associated with gimp.  We're going
-to try to associate images with LXImage again.
-
-Images are mapped to eog.desktop (Eye of Gnome image viewer), which we have not
-installed.  We can install it:
-
-sudo dnf -y install eog
-
-Now images open using eog.  Do we like eog better than LXImage?  If so, then
-we're done.  To stick with LXImage, we'll have to diff the 3 files mentioned
-above to identify what we'll need to change back to LXImage.  See the file
-associations further below to see how to do that.
 
 
 # Gimp Image Editor
@@ -1123,11 +1196,21 @@ associations further below to see how to do that.
 sudo dnf -y install gimp
 
 
+# Open non-gimp images with lightweight LXImage.
+su
+
+
+sed -i "s|eog.desktop|lximage-qt.desktop|g" /usr/share/applications/mimeapps.list
+exit
+
+
+
 # VLC Video Player
 # ----------------
 # Source: https://www.videolan.org/vlc/download-fedora.html
 sudo dnf -y install https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
 sudo dnf -y install vlc
+
 
 
 # C/C++ Development Tools:
@@ -1140,7 +1223,6 @@ sudo dnf -y install mesa-libGLES-devel libXt-devel libXaw-devel
 # Noting here that I'm downloading the following files for SDL2.  Using the
 # home built ones results in mouse annomolies on Fedrora and cross-compiling for
 # mingw on Fedora, while the mingw version built on windows works fine.
-
 
 
 
@@ -1163,32 +1245,138 @@ sudo sh -c 'echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.m
 sudo dnf -y check-update
 sudo dnf -y install code
 
-# Install the Andromeda color theme, or whatever your favorite theme is. I like
-# the Andromeda theme (colorizer variation.)
 
-# *FIX: which icon theme(s) are we using?
+# Stop Code From Opening Directories
+# ----------------------------------
+# Why on Earth does VS Code want to open directories when, in Google Chrome we
+# right-click on a downloaded file and select Show in Folder?  We want to
+# remove this.
+
+su
+
+# Back up code.desktop
+gem_fullpath_code_desktop=/usr/share/applications/code.desktop
+if [[ ! -f ${gem_fullpath_code_desktop}.bak ]]; then
+    cp ${gem_fullpath_code_desktop} ${gem_fullpath_code_desktop}.bak
+fi
+
+# Remove VS Code association with mime type inode/directory.
+sed -i "s|MimeType=text/plain;inode/directory;|MimeType=text/plain;|g" ${gem_fullpath_code_desktop}
+gem_result=$?
+if [[ ${gem_result} -ne 0 ]]; then
+    echo "Sed failed."
+fi
+
+# Back up mimeinfo.cache
+gem_fullpath_mimeinfo_cache=/usr/share/applications/mimeinfo.cache
+if [[ ! -f ${gem_fullpath_mimeinfo_cache}.bak ]]; then
+    cp ${gem_fullpath_mimeinfo_cache} ${gem_fullpath_mimeinfo_cache}.bak
+fi
+
+# Remove VS Code association with mime type inode/directory.
+sed -i "s|inode/directory=code.desktop;pcmanfm-qt.desktop;|inode/directory=pcmanfm-qt.desktop;|g" ${gem_fullpath_mimeinfo_cache}
+gem_result=$?
+if [[ ${gem_result} -ne 0 ]]; then
+    echo "Sed failed."
+fi
+
+# These changes will take effect the next time you log in.
 
 
+# Choose a color theme
+# --------------------
+# We're going to install the Andromeda color theme, or whatever your favorite
+# theme is. I like the Andromeda theme (colorizer variation.)
+#
+# Fedora->Programming->Visual Studio Code
+#
+# From the button bar on the left side, click the bottom Extensions icon. search
+# for "Andromeda".  Choose the Andromedra "Dark theme with a ..." by clicking
+# on the green Install button.
+#
+# The Extension:Andromeda interface opens in VS Code.  On that screen click
+# the blue Set Color Scheme button.
+#
+# Select the Andromeda:Colorizer theme.
+#
+# Close the "Extension: Andromeda" windows by clicking the X at the top.
+#
+# Close the extension sidebar by clicking the Extensions icon on the left.
+
+
+# Running VS Code as root
+# -----------------------
 # When running the VSCode as root we specify --user-data-dir.  Earlier in this
-# install procedure we appended settings to $USER and root's .bashrc file that
-# specified to use a separate user data directory for root and $USER.  This is
-# to prevent root from stomping on $USER's data directory.
+# install procedure we appended settings to ${USER} and root's .bashrc file that
+# specify to use a separate user data directory for root and ${USER}.  This is
+# to prevent root from stomping on ${USER}'s data directory.
 #
 # For root, we have set the following alias:
 
 alias code='/usr/bin/code --user-data-dir=/root/.config/Code/'
 
-# For our user, we have set the following alias, using $USER=mhodges:
+# For our user, we have set the following alias, using ${USER}=mhodges:
 
 alias code='/usr/bin/code --user-data-dir=/home/mhodges/.config/Code/'
 
 
 
-# Verify that is already used by standard users, and that I'm not creating a directory
-# unique to what one guy on the internet was recommending.
-#
-# /usr/bin/code --user-data-dir=${HOME}/.config/Code/ $@
+# FTP Server (optional)
+# ---------------------
+sudo dnf -y install vsftpd
 
+
+
+# Web Programming (optional)
+# --------------------------
+sudo dnf -y install mariadb mariadb-server php php-common php-pecl-apc php-cli php-pear php-pdo php-pgsql php-pecl-memcache php-pecl-memcached php-gd php-mbstring php-mcrypt php-xml php-devel phpmyadmin
+
+
+
+# VNC, remote desktop service (optional)
+# --------------------------------------
+sudo dnf -y install tigervnc-server x11vnc 
+
+
+
+# wclang for cross compiling for Windows (optional)
+# -------------------------------------------------
+# clang is a tool to cross compile source code easily with clang on Linux/Unix
+# for Windows.  Wclang is basically a wrapper for clang, which allows you to
+# directly target Windows.  Wclang detects the target and headers automatically
+# and adds them to the clang invocation command.  After the installation you
+# will have "<mingw-triplet>-clang", "<mingw-triplet>-clang++" available as
+# "compiler".
+
+# Enable the repository.
+sudo dnf -y copr enable mati865/wclang
+
+# Install wclang.
+sudo dnf -y install wclang
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Alternatively, you can build WCLang:
+#
+# Source:  https://github.com/tpoechtrager/wclang
+#
+# Download from repository.
+mkdir -p /home/${USER}/gem/local/src
+cd /home/${USER}/gem/local/src
+git clone https://github.com/tpoechtrager/wclang.git
+
+# Build it.
+cd /home/${USER}/gem/local/src/wclang
+cmake -DCMAKE_INSTALL_PREFIX=~/gem/local
+make
+make install
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+
+
+# NOTE: Skip the remaining two applications,  Their installation instructions
+# are under construction.
 
 # ESLint
 # ------
@@ -1198,7 +1386,7 @@ alias code='/usr/bin/code --user-data-dir=/home/mhodges/.config/Code/'
 # can install npm just fine, but "eslint --init".  See:
 # https://github.com/eslint/eslint/issues/10618
 #
-# Here's what I had from the first time around.  In /home/$USER/www/eslint, I
+# Here's what I had from the first time around.  In /home/${USER}/www/eslint, I
 # had the following file:
 
 mkdir -p ~/www/eslint/
@@ -1293,78 +1481,15 @@ ESLint was installed locally. We recommend using this local copy instead of your
 
 
 
-# wclang for cross compiling for Windows.
-# ---------------------------------------
-# *FIX: Skipping wclang, for now.
-
-# clang is a tool to cross compile source code easily with
-# clang on Linux/Unix for Windows.  Wclang is basically a wrapper for clang,
-# which allows you to directly target Windows.  Wclang detects the target and
-# headers automatically and adds them to the clang invocation command.  After
-# the installation you will have "<mingw-triplet>-clang",
-# "<mingw-triplet>-clang++" available as "compiler".
-
-sudo dnf -y copr enable mati865/wclang
-
-# IMPORTANT: The below line is not working as of Fedora 29. Building has
-# worked in the past.  Okay! We're all good now.  Installing using dnf works
-# fine.
-#
-# sudo dnf -y install wclang
-#
-#
-# Alternatively, you can build WCLang:
-# Source:  https://github.com/tpoechtrager/wclang
-#
-# Download from repository.
-mkdir -p /home/$USER/gem/local/src
-cd /home/$USER/gem/local/src
-git clone https://github.com/tpoechtrager/wclang.git
-
-# Build it.
-cd /home/$USER/gem/local/src/wclang
-cmake -DCMAKE_INSTALL_PREFIX=~/gem/local
-make
-make install
-
-
-
-# FTP Server
-# ----------
-sudo dnf -y install vsftpd
-
-
-# Web Programming
-# ---------------
-sudo dnf -y install mariadb mariadb-server php php-common php-pecl-apc php-cli php-pear php-pdo php-pgsql php-pecl-memcache php-pecl-memcached php-gd php-mbstring php-mcrypt php-xml php-devel phpmyadmin
-
-
-
-# VNC
-# ---
-sudo dnf -y install tigervnc-server x11vnc 
-
-
-
 
 # =============================================================================
 # Change LXQt Clock Time Display to 12 hour rather than 24 hour
 # =============================================================================
+# Note: The settings are stored in ~/.config/lxqt/panel.conf.
 #
-# *FIX: I think this is set in ~/.config/lxqt/panel.conf.  This is the way we
-# want it.  Try adding the customFormat line as shown below.  That, along with
-# many other world clock settings are added, after configuring it via the gui.
-#
-# [worldclock]
-# alignment=Right
-# autoRotate=true
-# customFormat="'<b>'HH:mm:ss'</b><br/><font size=\"-2\">'ddd, d MMM yyyy'<br/>'TT'</font>'"
+# Right click on the clock and select Configure "World clock."  In the Display
+# format tab, under the Time and Format Check Use 12-hour format.
 
-
-# Set it manually, for now:
-#
-# Right click on the clock and select Configure "World clock."  Check Display
-# format->Time->Use 12-hour format.
 
 
 
@@ -1463,9 +1588,7 @@ xrdb -load ~/.Xdefaults
 
 
 
-
-
-# Set the ctrl-alt-t desktop shortcut:
+# Change the ctrl-alt-t desktop shortcut from QTerminal to rxvt.
 #
 # Fedora->Preferences->Shortcut Keys
 #
@@ -1491,23 +1614,23 @@ if [[ ! -f ${gem_fullpath_panel_conf}.bak ]]; then
     cp -f ${gem_fullpath_panel_conf} ${gem_fullpath_panel_conf}.bak
 fi
 # To restore:
-# cp -f ${gem_fullpath_panel_conf}.bak ${gem_fullpath_panel_conf}.bak
+# cp -f ${gem_fullpath_panel_conf}.bak ${gem_fullpath_panel_conf}
 
 sed -i ':a;N;$!ba;s|\[quicklaunch]\nalignment=Left|\[quicklaunch]\nalignment=Left\napps\\1\\desktop=/usr/share/applications/rxvt-unicode.desktop\napps\\2\\desktop=/usr/share/applications/pcmanfm-qt.desktop\napps\\3\\desktop=/usr/share/applications/google-chrome.desktop\napps\\4\\desktop=/usr/share/applications/code.desktop\napps\\size=4|g' ${gem_fullpath_panel_conf}
 
 # To reload our modified panel script we're going to logout, then back in.
 # Fedora->Leave->Logout
 
+
 # *FIX: Remove the desktop button to the left.
 
 # *FIX: Change "Leave" to Logout.
 
-# *FIX: Change "Lock Screen" to Logout.
 
 
 
 
-# *FIX: Skip this section.
+# *FIX: Skip this section.  It will likely be removed.
 # =============================================================================
 # File Associations
 # =============================================================================
@@ -1652,7 +1775,7 @@ su
 
 # Update the file name version accordingly:
 
-gem_fullpath_rpm=/home/$USER/Downloads/jdk-13.0.1_linux-x64_bin.rpm
+gem_fullpath_rpm=/home/${USER}/Downloads/jdk-13.0.2_linux-x64_bin.rpm
 
 # Install:
 sudo rpm -ivh ${gem_fullpath_rpm}
@@ -1698,7 +1821,7 @@ sudo alternatives --config jar
 # these instructions, in their current state, may not work if gem is installed
 # elsewhere.
 
-gem_fullpath_gem_parent=/home/$USER
+gem_fullpath_gem_parent=/home/${USER}
 
 cd ${gem_fullpath_gem_parent}
 
@@ -1765,6 +1888,7 @@ git config master.merge refs/heads/master
 # Run the ssh-keygen command shown below, replacing "john@example.com" with
 # your own email address.
 
+
 ssh-keygen -t rsa -C "your@email.address"
 
 # The following section is mostly quoted from the above link:
@@ -1806,9 +1930,16 @@ cat ~/.ssh/id_rsa.pub
 # possible, you can use the following commands to have this copied to your
 # clipboard:
 
+# Change 'gem_fullpath_id_rsa_pub=~/.ssh/id_rsa.pub' below to reflect the
+# location and name of your key file 
+
+
+
 function gem_copy_id_rsa_pub()
 {
+    # Change if needed.
     gem_fullpath_id_rsa_pub=~/.ssh/id_rsa.pub
+
     if [[ ! -f ${gem_fullpath_id_rsa_pub} ]]; then
         echo "ERROR: Public key does not exist: ${gem_fullpath_id_rsa_pub}."; return
     fi
@@ -1834,9 +1965,14 @@ gem_copy_id_rsa_pub
 # Finally, paste the contents of the clipboard into the body of an email to the
 # Git maintainer, markhodges5000@gmail.com.
 
-# Wait for the Git maintainer to add your key to the reposotory, thereby
+# Wait for the Git maintainer to add your key to the repository, thereby
 # allowing you to perform push operations.
 
+
+IMPORTANT!  Leave yourself a sticky note: When you have write access
+come back and do this, or else your won't be able to push or pull from the repo.:
+---------------------------
+cd ~/gem
 
 # Add upstream (tracking) reference, used by argument-less git-pull and other
 # commands.  It tells git fetch/git pull which branch to merge.
@@ -1856,31 +1992,96 @@ sed -i "/function gem_colors()/,/gem_colors  # Call it./d" ~/.bashrc
 # Unless you have preferred settings for your bash environment, you may want to
 # copy user mhodges' environment settings located in
 # ~/gem/home/mhodges/local/sbin/user_bash_init.
-gem_fullpath_user_sbin=~/gem/home/${USER}/local/sbin/
-mkdir -p ${gem_fullpath_user_sbin}
-cp ~/gem/home/mhodges/local/sbin/user_bash_init ${gem_fullpath_user_sbin}
+
+# Copy mhodges' user_bash_init file as our own for a starter.
+if [[ $(whoami) != "root" ]]; then
+    gem_fullpath_user_sbin=~/gem/home/${USER}/local/sbin/
+    mkdir -p ${gem_fullpath_user_sbin}
+    cp ~/gem/home/mhodges/local/sbin/user_bash_init ${gem_fullpath_user_sbin}
+fi
 
 
 # Add calls to gem's bash scripts to ~/.bashrc to prepare the environment.
-cp ~/.bashrc ~/.bashrc_old
+y | cp ~/.bashrc ~/.bashrc.bak
 cat << EOF >> ~/.bashrc
 
-# Source our definitions
-gem_fullpath_gem_bash_init=~/gem/local/sbin/gem_bash_init
-gem_fullpath_user_bash_init=~/gem/home/$USER/local/sbin/user_bash_init
+# Source our definitions.  NOTE: When running as root ${USER}'s gem installation
+# will be referenced.
+if [[ ${USER} != "root" ]]; then
+    gem_fullpath_gem_bash_init=/home/${USER}/gem/local/sbin/gem_bash_init
+    gem_fullpath_user_bash_init=/home/${USER}/gem/home/${USER}/local/sbin/user_bash_init
 
-if [[ -f \${gem_fullpath_gem_bash_init} ]]; then
-    source \${gem_fullpath_gem_bash_init}
-    if [[ -f \${gem_fullpath_user_bash_init} ]]; then
-        source \${gem_fullpath_user_bash_init}
+    if [[ -f \${gem_fullpath_gem_bash_init} ]]; then
+        source \${gem_fullpath_gem_bash_init}
+        if [[ -f \${gem_fullpath_user_bash_init} ]]; then
+            source \${gem_fullpath_user_bash_init}
+        else
+            echo "\$BASH_SOURCE(\${LINENO}) WARNING: \${gem_fullpath_user_bash_init} not found."
+        fi
     else
-        echo "\$BASH_SOURCE(\${LINENO}) WARNING: \${gem_fullpath_user_bash_init} not found."
+        echo "\$BASH_SOURCE(\${LINENO}) WARNING: \${gem_fullpath_gem_bash_init} not found."
     fi
-else
-    echo "\$BASH_SOURCE(\${LINENO}) WARNING: \${gem_fullpath_gem_bash_init} not found."
 fi
-
 EOF
+
+
+# IMPORTANT!  If you initialized the color prompt earlier for root, you should
+# repeat the above steps as root.
+
+# Note: You must use "su", not "su -":
+
+su
+
+
+
+# =============================================================================
+# Did You Remember to Do This?
+# =============================================================================
+# After receiving confirmation that the Gem github administrator has provided
+# you with write access to the Gem repository, you must execute the
+# "git push ..." command described earlier, or you won't be able to write to
+# the github repository.
+#
+# Did you login as root and set your theme settings?  This is not critical but
+# if you run applications after su-ing as root without doing this you'll be
+# back to the default LXQT themes and icons.
+
+
+
+# =============================================================================
+# Building the Gem Libraries
+# =============================================================================
+
+# Build each of the Gem libraries.
+cd ${gem_fullpath_gem}/local/src
+
+
+# Build zlib
+# ----------
+cd zlib-1.2.11
+./gem_build_zlib -d -m -b -i
+cd ..
+
+
+# Build ZZipLib
+# -------------
+cd zziplib-0.1.3
+./gem_build_zziplib -d -m -b -i
+cd ..
+
+
+# Build SDL
+# ---------
+cd 
+./gem_build_sdl2 -d -m -b -i
+cd ..
+
+
+# Build Ogre
+# ----------
+cd 
+./gem_build_ogre -d -m -b -i
+cd ..
 
 
 

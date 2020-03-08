@@ -16,12 +16,12 @@
 gem_filename_download=android-studio-ide-191.6010548-linux.tar.gz
 
 
-# Specify the desired install directory.  Modify gem_fullpath_android_studio to
-# install android studio in a different location.
+# Specify the desired install directory.  Modify gem_fullpath_android_studio
+# below to install android studio in a different location.
 
-# NOTE: The Android subfolder should match the installation location shown
-# when configuring Android Studio in the further below step. Android is the
-# current default location.
+# NOTE: The Android subdirectory should match the installation location shown
+# when configuring Android Studio in the further below step. ${HOME}/Android is
+# the current default installation location.
 
 gem_fullpath_android_studio=${HOME}/Android
 mkdir ${gem_fullpath_android_studio}
@@ -51,6 +51,45 @@ StartupNotify=true
 Categories=Development
 Icon=${gem_fullpath_android_studio}/android-studio/bin/studio.png
 EOF
+
+
+# =============================================================================
+# Install the Android SDK
+# =============================================================================
+#
+# Launch Android Studio.  We installed the launch icon under the Programming
+# submenu off the start menu.
+#
+# When the Welcome screen opens, select Next.
+#
+# When the Install Type screen opens, select Custom.
+#
+# Choose the UI theme of your liking.  Click Next.
+# 
+# Take note of the Android SDK Location.  The SDK will be installed in the
+# same directory that we installed the Android Studio application.
+#
+# It is highly recommended that you use a hardware android device.  If you
+# don't have a hardware Android device, select Android Virtual Device.
+# Note that virtual devices will run graphics applications exceedingly slow.
+# The Intel x86_64 device will run faster using virtualization technology.
+# However, it will not run within Linux itself running in a virtual machine,
+# as is my case.  As such, I have not tried this emulated android virtual
+# device.  If you don't have a hardware android device, you would have to
+# install the Linux operating system to run directly on the CPU, less the
+# VirtualBox tools.
+# 
+# Click Next.
+#
+# In the Verify Settings dialog, review your settings, then click Next.
+#
+# In the Emulator Settings menu, click Finish.
+# 
+# In the Donwnloading Components menu, when the installation completes, click
+# Finish.
+# 
+# When the Android Studio Welcome screen shows, close it.  The Android SDK is
+# now installed under ${HOME}/Android/Sdk.
 
 
 # =============================================================================
@@ -89,19 +128,33 @@ EOF
 #
 # Verify that linux can see the android device.  When you connect your device
 # to the pc, the device will display the following message, "Allow access to
-# phone data?" Select Allow.  At the point, you should be able to access the
-# device's file system within Windows.
+# phone data?" Select Allow.
 #
-# You may need to set the device transfer protocol.  In your device settings,
-# you should see a menu item titled Android System.  It should be set to "USB
-# for file transfer".  If not, tap it and select Use USB for Transferring
-# files.
+# On your android device, you may see a dialog titled Allow USB debugging?
+# Select OK.
+#
+# At the point, you should be able to access the device's file system within
+# Windows.
+#
+# TROUBLESHOOTING:  1.) You need a high quality USB cable.  High quality means
+# that all the USB pins are implemented for your cable.  2.)  Try disconnecting
+# then reconnecting the USB cable to display the permission menus to display
+# again.  3.) Make sure you have clicked on your phone in Oracle VM VirtualBox.
+# It's found under Oracle VM VirtualBox->Devices->USB.  4.) Verify that you can
+# navigate the android device filesystem through windows.  5.) You may need to
+# set the device transfer protocol.  In your device settings, you should see a
+# menu item titled Android System.  It should be set to "USB for file
+# transfer".  If not, tap it and select Use USB for Transferring files.  6.)
+# You must click through both the "Allow USB debugging?" and "Allow access to
+# phone data?"  If you don't see these messages, they may have timed out and
+# dismissed themselves.  Disconnect, then reconnect the USB cable to your
+# android device to prompt their display.
 
 # To verify that ADB can see the device, run:
 
 /home/mhodges/Android/Sdk/platform-tools/adb devices
 
-# You will see either:
+# If all has gone according to plan so far, you will see either:
 #
 # List of devices attached
 # ce0817180ba890220c7e    unauthorized
@@ -120,44 +173,9 @@ EOF
 
 
 # =============================================================================
-# Install the Android SDK
-# =============================================================================
-#
-# Launch Android Studio.  We installed the launch icon under the Programming
-# submenu off the start menu.
-#
-# When the Welcome screen opens, select Next.
-#
-# When the Install Type screen opens, select Custom.
-#
-# Choose the UI theme of your liking.  Click Next.
-# 
-# Take note of the Android SDK Location.  The SDK will be installed in the
-# same directory that we installed the Android Studio application.
-#
-# It is highly recommended that you use a hardware android device.  If you
-# don't have a hardware Android device, select Android Virtual Device.
-# Note that virtual devices will run graphics applications exceedingly slow.
-# The Intel x86_64 device will run faster using virtualization technology.
-# However, it will not run within Linux itself running in a virtual machine,
-# as is my case.  As such, I have not tried this emulated android virtual
-# device.  If you don't have a hardware android device, you would have to
-# install the Linux operating system to run directly on the CPU, less the
-# VirtualBox tools.
-# 
-# In the Emulator Settings menu, click Finish.
-# 
-# In the Donwnloading Components menu, when the installation completes, click
-# Finish.
-# 
-# When the Android Studio Welcome screen shows, close it.  The Android SDK is
-# now installed under ${HOME}/Android/Sdk.
-
-
-# =============================================================================
 # Update the Android SDK
 # =============================================================================
-# *FIX: We need to modify these instructions to include installing the NDK at
+# *FIX: We should to modify these instructions to include installing the NDK at
 # at this time rather than in a separate step as shown in the section below.
 
 # Launch Android Studio.
@@ -167,11 +185,11 @@ EOF
 # 
 # In the left panel, Appearance & Behavior->System Settings->Android SDK should
 # be selected.  In the right panel, the SDK Platforms tab should be selected.
-# Check the box next to your Android version.  Mine is 9.0.  The latest, 10.0,
-# is selected by default.  I'm deselecting 10.0 to save disk space, since my
-# phone doesn't run that.  However, in the future, my phone may be upgraded to
-# 10.0.
-# 
+# Check the box next to your Android version.  Mine is 9.0.  The latest (at the
+# time of this writing) 10.0, is selected by default.  I'm deselecting 10.0 to
+# save disk space, since my current device doesn't support it, and selecting
+# Android 9.0.
+#
 # At the bottom, click Show Package Details.  As I'm running version 9.0,
 # I'm unchecking Sources for Android 28 to save disk space, leaving only
 # Android SDK Platform 28 selected.
@@ -256,3 +274,31 @@ EOF
 # 
 # On the menu bar click Run->Run 'app'.  The sample program should load and run
 # on the device.
+
+
+# =============================================================================
+# Some Android Operations
+# =============================================================================
+# This list is from README-android.md located in the docs directory in SDL2
+# src directory.
+#
+# You can see the output of log messages on the default device with:
+# 
+#    adb logcat
+# 
+# You can push files to the device with:
+# 
+#     adb push local_file remote_path_and_file
+# 
+# You can push files to the SD Card at /sdcard, for example:
+# 
+#     adb push moose.dat /sdcard/moose.dat
+# 
+# You can see the files on the SD card with a shell command:
+# 
+#     adb shell ls /sdcard/
+# 
+# You can start a command shell on the default device with:
+# 
+#     adb shell
+

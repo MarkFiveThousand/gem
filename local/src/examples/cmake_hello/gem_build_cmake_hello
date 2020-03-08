@@ -1,0 +1,108 @@
+#!/bin/bash
+#  ___________                           __________
+# /\   _______\                         /\   ______\
+# \ \  \______/_     ___   ____ ____ ___\ \  \_____/_     ___   ___ ___  ______    ___    ___
+#  \ \  \ /\__  \  /'___`\/\   V    V   \\ \_______  \  /'   `\/\  \\  \/\   __\/' ._`\ /'___`\
+#   \ \  \\/__\  \/\  ___/\ \  \/\  \/\  \\/_______\  \/\  \\  \ \  \\  \ \  \ /\  \__//\  ___/
+#    \ \__________\ \____\ \ \__\ \__\ \__\ /\_________\ \_____/\ \______\ \__\\ \____/\ \____\
+#     \/__________/\/____/  \/__/\/__/\/__/ \/_________/\/____/  \/______/\/__/ \/___/  \/____/
+
+
+. gem_script
+. gem_build
+
+function gem_build_v_SetDefaults
+{
+	gem_build_SetDefaults;
+
+	gem_c_standard="-std=gnu11"	# c90, c99, c11, gnu90, gnu99, gnu11
+	gem_cxx_standard="-std=gnu++11"	# c++98, c++03, c++14, c++17, c++2a, gnu++98, gnu++11, gnu++14, gnu++17
+
+	gem_use_clang=1
+
+	gem_is_cplusplus=0
+
+	gem_build_script="cmake"
+#	gem_build_script="autotools"
+#	gem_build_script="meson"
+
+	gem_build_type=release
+#	gem_build_type=debug
+
+#	gem_lib_type=shared			# gem_lib_type is not fully implemented.
+#	gem_lib_type=static
+#	gem_lib_type=both
+
+	# Common Defaults
+	if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW shell on Windows.
+		gem_host=mingw
+#		gem_host=msvc
+	elif [[ ${gem_os} == "CYGWIN"* ]]; then		# Cygwin shell on Windows.
+		gem_host=cygwin
+#		gem_host=mingw
+	elif [[ ${gem_os} == "Linux"* ]]; then	# Linux shell.
+		gem_host=linux
+#		gem_host=mingw
+#		gem_host=android_arm64_v8a
+	fi
+
+	gem_project_name=cmake_hello
+
+
+	gem_cmake_params=" \
+-Dgem_triple=${gem_triple} \
+-Dgem_project_name=${gem_project_name}"
+}
+
+function gem_build_v_OnConfigure
+{
+	# "checking whether we are cross compiling..." hangs when gem_flags_ld
+	# contains "-pie", so we'll remove it.
+	gem_flags_ld=$(printf "%s\n" "${gem_flags_ld//-pie/}")
+
+	gem_build_v_DebugDumpVars
+	gem_build_OnConfigure
+}
+
+function gem_build_v_OnCommandLine_Build
+{
+	gem_build_OnCommandLine_Build
+}
+
+function gem_build_v_OnBuild
+{
+	gem_build_v_DebugDumpVars
+	gem_build_OnBuild
+}
+
+function gem_build_v_OnInstall
+{
+	gem_build_OnInstall
+}
+
+function gem_build_v_OnUninstall
+{
+	gem_build_OnUninstall
+}
+
+function gem_build_v_Cmd_Clean
+{
+	gem_build_Cmd_Clean
+}
+
+# =============================================================================
+#                                       gem_Main
+# =============================================================================
+function gem_script_v_OnArg
+{
+	arg=$(echo ${1} | tr '[A-Z]' '[a-z]')	# Lowercase args.
+	case ${arg} in
+		*)	gem_build_OnArg "$@" ;	return $?
+	esac
+}
+
+function gem_script_v_Main
+{
+	gem_build_Main "$@"
+}
+gem_script_v_Main $@

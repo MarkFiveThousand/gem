@@ -1,0 +1,312 @@
+#!/bin/bash
+
+# USAGE:
+# 
+# This script *must* be run in the parent of the src/ folder.
+#
+# Uncomment PROJ_LIB_DIR if your are building a library.
+
+THISSCRIPT_NUM_ARGS=$#
+THISSCRIPT_ARGS=$@
+
+
+function initialize()
+{
+	PROJ_NAME=hello
+
+
+	# Set the target plaform.  For now, we assume target is the same as the host.
+	# This will have to change for android development, which involves cross-compiling.
+	# Note: PROJ_TARGET_PLATFORM is the OS we are building for.  GEM_OS_HOST_BUILD is the OS
+	# we are building on.
+	PROJ_TARGET_PLATFORM=${GEM_OS_HOST_BUILD}
+
+	PROJ_DIR=$(pwd)			# Current folder; parent of source tree.
+
+	CMAKE_C_FLAGS="${CMAKE_C_FLAGS} "
+	CMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} "
+	CMAKE_CPP_FLAGS="${DCMAKE_CPP_FLAGS} "
+	CMAKE_EXE_LINKER_FLAGS="${CMAKE_EXE_LINKER_FLAGS} "
+	CMAKE_INSTALL_PREFIX=""
+
+	PROJ_BIN_DIR=$PROJ_DIR/bin
+	PROJ_BIN_FULLPATH=""
+	PROJ_BUILD_CONFIG=""
+	PROJ_BUILD_DIR=$PROJ_DIR/build
+	PROJ_BUILD_FULLPATH=""
+	PROJ_BUILD_LEVEL=""
+	PROJ_INSTALL_DIR=$PROJ_DIR/install
+	PROJ_INSTALL_FULLPATH=""
+	PROJ_LIB_DIR=$PROJ_DIR/lib
+	PROJ_EXE_NAME=$PROJ_NAME
+	PROJ_SRC_DIR=$PROJ_DIR/src
+}
+
+function echoVars()
+{
+	# Note: PROJ_TARGET_PLATFORM is the OS we are building for.  GEM_OS_HOST_BUILD is the OS
+	# we are building on.
+
+	echo "CMAKE_MAKE_PROGRAM = $CMAKE_MAKE_PROGRAM"
+	echo "PROJ_TARGET_PLATFORM = $PROJ_TARGET_PLATFORM"
+	echo "PROJ_NAME = $PROJ_NAME"
+	echo "PROJ_DIR = $PROJ_DIR"
+	echo "- - - - - - - - - - - - - - - - - - - - - - - -"
+	echo "CMAKE_C_FLAGS = $CMAKE_C_FLAGS"
+	echo "CMAKE_CXX_FLAGS = $CMAKE_CXX_FLAGS"
+	echo "CMAKE_CPP_FLAGS = $CMAKE_CPP_FLAGS"
+	echo "CMAKE_EXE_LINKER_FLAGS = $CMAKE_EXE_LINKER_FLAGS"
+	echo "CMAKE_INSTALL_PREFIX = $CMAKE_INSTALL_PREFIX"
+
+	echo "GEM_OS_HOST_BUILD = $GEM_OS_HOST_BUILD"
+
+	echo "PROJ_BIN_DIR = $PROJ_BIN_DIR"
+	echo "PROJ_BIN_FULLPATH = $PROJ_BIN_FULLPATH"
+	echo "PROJ_BUILD_CONFIG = $PROJ_BUILD_CONFIG"
+	echo "PROJ_BUILD_DIR = $PROJ_BUILD_DIR"
+	echo "PROJ_BUILD_FULLPATH = $PROJ_BUILD_FULLPATH"
+	echo "PROJ_BUILD_LEVEL = $PROJ_BUILD_LEVEL"
+	echo "PROJ_EXE_NAME = $PROJ_EXE_NAME"
+	echo "PROJ_INSTALL_DIR = $PROJ_INSTALL_DIR"
+	echo "PROJ_INSTALL_FULLPATH = $PROJ_INSTALL_FULLPATH"
+	echo "PROJ_LIB_DIR = $PROJ_LIB_DIR"
+	echo "PROJ_LIB_FULLPATH = $FULLPATH"
+	echo "PROJ_SRC_DIR = $PROJ_SRC_DIR"
+}
+
+function echoHelp()
+{
+	echo "============================================================================="
+	echo "IMPORTANT: This script must be located in the parent of the source tree."
+	echo
+	echo "FILE STRUCTURE:"
+	echo ""
+	echo "    EXAMPLE:"
+	echo "        my_project/       Parent of source tree.  buildtool script here."
+	echo "            bin/          Install location"
+	echo "            build/        Object & cmake files"
+	echo "            src/          Source tree"
+	echo
+	echo "USAGE:"
+	echo "    Arguments:"
+	echo "        build   (must be preceded by \"debug\" or \"release\")"
+	echo "        clean   (must be preceded by \"debug\" or \"release\")"
+	echo "        install (must be preceded by \"debug\" or \"release\")"
+	echo "        cmake   (must be preceded by \"debug\" or \"release\")"
+	echo
+	echo "EXAMPLE USAGE:"
+	echo ""
+	echo "    buildtool cmake"
+	echo "    buildtool debug build"
+	echo "    buildtool release clean"
+	echo ""
+	echo "============================================================================="
+}
+
+
+
+# =============================================================================
+#                                      build
+# =============================================================================
+function func_build()
+{
+    ValidateBuildConfig
+
+    cd ${PROJ_BUILD_FULLPATH}
+
+#   make -j9 # VERBOSE=1
+
+	if [ 1 -eq 2 ]; then
+
+		make > $PROJ_DIR/build_output.txt 2>&1
+		echo "Output sent to build_output.txt"
+	else
+
+		make
+	fi
+}
+
+
+# =============================================================================
+#                                      install
+# =============================================================================
+function func_install()
+{
+    ValidateBuildConfig
+
+    cd ${PROJ_BUILD_FULLPATH}
+
+	make install
+}
+
+
+# =============================================================================
+#                                      clean
+# =============================================================================
+function func_clean()
+{
+    ValidateBuildConfig
+
+    cd ${PROJ_BUILD_FULLPATH}
+
+	make clean
+
+	# FIX: What else to clean up here?
+#	rm -rf ${PROJ_INSTALL_FULLPATH}/*
+}
+
+
+# =============================================================================
+#                                      cmake
+# =============================================================================
+function func_cmake()
+{
+    ValidateBuildConfig
+
+    if [ ! -d ${PROJ_BUILD_FULLPATH} ]; then
+        mkdir -p ${PROJ_BUILD_FULLPATH}
+    else
+        rm -fr ${PROJ_BUILD_FULLPATH}/*
+    fi
+
+	cd ${PROJ_BUILD_FULLPATH}
+
+	# =========================================================================
+	# Target-specific Settings
+	# =========================================================================
+    if [ $PROJ_TARGET_PLATFORM == "GEM_OS_HOST_BUILD_MINGW" ]; then
+
+		CMAKE_MAKE_PROGRAM="/c/msys64/mingw64/bin/mingw32-make.exe"
+
+	elif [ $PROJ_TARGET_PLATFORM == "GEM_OS_HOST_BUILD_LINUX" ]; then
+
+		CMAKE_MAKE_PROGRAM="/bin/make"
+	fi
+
+cmake $PROJ_SRC_DIR -G"Unix Makefiles" \
+		-DCMAKE_C_FLAGS="${CMAKE_C_FLAGS}" \
+		-DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS}" \
+		-DCMAKE_CPP_FLAGS="${CMAKE_CPP_FLAGS}" \
+		-DCMAKE_EXE_LINKER_FLAGS="${CMAKE_EXE_LINKER_FLAGS}" \
+		-DCMAKE_INSTALL_PREFIX="${DIR_BIN_FULLPATH}" \
+		-DCMAKE_MAKE_PROGRAM="${CMAKE_MAKE_PROGRAM}" \
+\
+		-DGEM_OS_HOST_BUILD="${GEM_OS_HOST_BUILD}" \
+\
+		-DPROJ_BIN_DIR=${PROJ_BIN_DIR} \
+		-DPROJ_BIN_FULLPATH=${PROJ_BIN_FULLPATH} \
+		-DPROJ_BUILD_CONFIG=${PROJ_BUILD_CONFIG} \
+		-DPROJ_BUILD_DIR=${PROJ_BUILD_DIR} \
+		-DPROJ_BUILD_FULLPATH=${PROJ_BUILD_FULLPATH} \
+		-DPROJ_BUILD_LEVEL=${PROJ_BUILD_LEVEL} \
+		-DPROJ_DIR=${PROJ_DIR} \
+		-DPROJ_EXE_NAME=${PROJ_EXE_NAME} \
+		-DPROJ_INSTALL_DIR=${PROJ_INSTALL_DIR} \
+		-DPROJ_INSTALL_FULLPATH=${PROJ_INSTALL_FULLPATH} \
+		-DPROJ_LIB_DIR=${PROJ_LIB_DIR} \
+		-DPROJ_LIB_FULLPATH=${PROJ_LIB_FULLPATH} \
+		-DPROJ_NAME=${PROJ_NAME} \
+		-DPROJ_SRC_DIR=${PROJ_SRC_DIR} \
+		-DPROJ_TARGET_PLATFORM=${PROJ_TARGET_PLATFORM}
+}
+
+
+# =============================================================================
+#                           ValidateBuildConfig
+# =============================================================================
+function ValidateBuildConfig()
+{
+    if [ -z $PROJ_BUILD_CONFIG ]    # If string empty...
+    then
+        echo "ERROR: You must include a PROJ_BUILD_CONFIG before a command.  Valid PROJ_BUILD_CONFIGs are Debug and Release."
+        exit;
+    fi
+    if [ $PROJ_BUILD_CONFIG != "Debug" ] && [ $PROJ_BUILD_CONFIG != "Release" ]
+    then
+        echo "ERROR: You must include a PROJ_BUILD_CONFIG before a command.  Valid PROJ_BUILD_CONFIGs are Debug and Release."
+        exit;
+    fi
+}
+
+# =============================================================================
+#                                       Main
+# =============================================================================
+
+function main()
+{
+	# If no params, display help.
+	if [ $THISSCRIPT_NUM_ARGS -eq 0 ]
+	then
+		echoHelp;
+		return
+	fi
+
+	if [ ! -d $(pwd)/src ]; then
+		echo "ERROR: This script must be run in the parent of the source folder src/."
+		return
+	fi
+
+	initialize
+	
+	# Iterate over all the arguments.
+	for arg in $THISSCRIPT_ARGS
+	do
+		case "$arg" in
+		build)
+			FUNC=func_build
+			;;
+		install)
+			FUNC=func_install
+			;;
+		clean)
+			FUNC=func_clean
+			;;
+		cmake)
+			FUNC=func_cmake
+			;;
+		debug|DEBUG|Debug)
+			PROJ_BUILD_CONFIG=Debug
+			PROJ_BUILD_LEVEL=GEM_BUILD_LEVEL_DEBUG
+			PROJ_BUILD_FULLPATH=$PROJ_BUILD_DIR/$PROJ_TARGET_PLATFORM/$PROJ_BUILD_CONFIG
+			PROJ_BIN_FULLPATH=$PROJ_BIN_DIR/$PROJ_TARGET_PLATFORM/$PROJ_BUILD_CONFIG
+			PROJ_INSTALL_FULLPATH=$PROJ_INSTALL_DIR/$PROJ_TARGET_PLATFORM/$PROJ_BUILD_CONFIG
+			PROJ_LIB_FULLPATH=$PROJ_LIB_DIR/$PROJ_TARGET_PLATFORM/$PROJ_BUILD_CONFIG
+			;;
+		release|RELEASE|Release)
+			PROJ_BUILD_CONFIG=Release
+			PROJ_BUILD_LEVEL=GEM_BUILD_LEVEL_RELEASE
+			PROJ_BUILD_FULLPATH=$PROJ_BUILD_DIR/$PROJ_TARGET_PLATFORM/$PROJ_BUILD_CONFIG
+			PROJ_BIN_FULLPATH=$PROJ_BIN_DIR/$PROJ_TARGET_PLATFORM/$PROJ_BUILD_CONFIG
+			PROJ_INSTALL_FULLPATH=$PROJ_INSTALL_DIR/$PROJ_TARGET_PLATFORM/$PROJ_BUILD_CONFIG
+			PROJ_LIB_FULLPATH=$PROJ_LIB_DIR/$PROJ_TARGET_PLATFORM/$PROJ_BUILD_CONFIG
+			;;
+		master|MASTER|Master)
+			PROJ_BUILD_CONFIG=Master
+			PROJ_BUILD_LEVEL=GEM_BUILD_LEVEL_MASTER
+			PROJ_BUILD_FULLPATH=$PROJ_BUILD_DIR/$PROJ_TARGET_PLATFORM/$PROJ_BUILD_CONFIG
+			PROJ_BIN_FULLPATH=$PROJ_BIN_DIR/$PROJ_TARGET_PLATFORM/$PROJ_BUILD_CONFIG
+			PROJ_INSTALL_FULLPATH=$PROJ_INSTALL_DIR/$PROJ_TARGET_PLATFORM/$PROJ_BUILD_CONFIG
+			PROJ_LIB_FULLPATH=$PROJ_LIB_DIR/$PROJ_TARGET_PLATFORM/$PROJ_BUILD_CONFIG
+			;;
+		GoldMaster|GOLDMASTER|GoldMaster)
+			PROJ_BUILD_CONFIG=Release
+			PROJ_BUILD_LEVEL=GEM_BUILD_LEVEL_GOLDMASTER
+			PROJ_BUILD_FULLPATH=$PROJ_BUILD_DIR/$PROJ_TARGET_PLATFORM/$PROJ_BUILD_CONFIG
+			PROJ_BIN_FULLPATH=$PROJ_BIN_DIR/$PROJ_TARGET_PLATFORM/$PROJ_BUILD_CONFIG
+			PROJ_INSTALL_FULLPATH=$PROJ_INSTALL_DIR/$PROJ_TARGET_PLATFORM/$PROJ_BUILD_CONFIG
+			PROJ_LIB_FULLPATH=$PROJ_LIB_DIR/$PROJ_TARGET_PLATFORM/$PROJ_BUILD_CONFIG
+			;;
+		*)
+			# Unrecognised parameter
+			echo "ERROR: Incorrect Usage."
+			echo ""
+			echoHelp
+			return
+			;;
+		esac
+	done
+
+	$FUNC	# Invoke the function.
+}
+main
+

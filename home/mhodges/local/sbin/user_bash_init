@@ -1,9 +1,17 @@
 #!/bin/bash
-
+#  ___________                           __________
+# /\   _______\                         /\   ______\
+# \ \  \______/_     ___   ____ ____ ___\ \  \_____/_     ___   ___ ___  ______   ____    ___
+#  \ \  \ /\__  \  /'___`\/\   V    V   \\ \_______  \  /'   `\/\  \\  \/\   __\/' ._`\ /'___`\
+#   \ \  \\/__\  \/\  ___/\ \  \/\  \/\  \\/_______\  \/\  \\  \ \  \\  \ \  \ /\  \__//\  ___/
+#    \ \__________\ \____\ \ \__\ \__\ \__\ /\_________\ \_____/\ \______\ \__\\ \____/\ \____\
+#     \/__________/\/____/  \/__/\/__/\/__/ \/_________/\/____/  \/______/\/__/ \/___/  \/____/
 #
-# File: gem_bash_init
 #
-# Configure user-specific environment and startup programs.
+# File: user_bash_init
+#
+# Configure user-specific environment and startup programs.  It is expected
+# that 
 # 
 
 function gem_bash_init_Main()
@@ -21,6 +29,12 @@ function gem_bash_init_Main()
     # Path & Environment Variables
     # =========================================================================
 
+    # Add user's sbin directory to the path.
+#    gem_fullpath_user_sbin=${gem_fullpath_gem}/home/${USER}/local/sbin
+#    if [[ -d ${gem_fullpath_user_sbin} ]]; then
+#        PATH="${PATH}:${gem_fullpath_user_sbin}"
+#    fi
+
     # Git command line needs to know which editor you use:
     export EDITOR=code
 
@@ -32,10 +46,11 @@ function gem_bash_init_Main()
 
 
     # =========================================================================
-    # Mount Shares
+    # Mount Filesystems
     # =========================================================================
-
-#    source gem_mountall
+    if [[ ${USER} != "root" ]]; then
+        gem_mountall
+    fi
 
 
     # =========================================================================
@@ -44,36 +59,24 @@ function gem_bash_init_Main()
 
     if [[ ${gem_os} == *"MINGW64"* || ${gem_os} == *"CYGWIN"* ]]; then
 
-        export gem_fullpath_android=$(cygpath "c:\android")
-        export gem_fullpath_android_sdk=${gem_fullpath_android}/sdk-tools-windows-4333796
-        export gem_fullpath_android_sdk_platform_tools=${gem_fullpath_android_sdk}/platform-tools_r28.0.1-windows/platform-tools
-        export gem_fullpath_android_sdk_tools=${gem_fullpath_android_sdk}/tools
-        export ANDROID_SDK=${gem_fullpath_android_sdk}
+        export gem_fullpath_android=$(cygpath "c:\Android")
+        if [[ -d ${gem_fullpath_android} ]]; then
+            export gem_fullpath_android_sdk=${gem_fullpath_android}/sdk-tools-windows-4333796
+            export ANDROID_SDK=${gem_fullpath_android_sdk}
+        fi
 
     elif [[ ${gem_os} == "Linux" ]]; then
 
         export gem_fullpath_android=${HOME}/Android
-        export gem_fullpath_android_sdk=${gem_fullpath_android}/Sdk
-        export gem_fullpath_android_sdk_platform_tools=${gem_fullpath_android_sdk}/platform-tools
-        export gem_fullpath_android_sdk_tools=${gem_fullpath_android_sdk}/tools
-        export ANDROID_SDK=${gem_fullpath_android_sdk}
+        if [[ -d ${gem_fullpath_android} ]]; then
+            export gem_fullpath_android_sdk=${gem_fullpath_android}/Sdk
+            export ANDROID_SDK=${gem_fullpath_android_sdk}
+        fi
 
     else
-		echo "ERROR: Build platform not supported: ${gem_os}"
+		echo "ERROR: Build platform not supported: ${gem_os}" ; exit
     fi
-
-    # Validate android sdk directories.
-    if [[ ! -d ${gem_fullpath_android_sdk} ]]; then
-        echo "$BASH_SOURCE(${LINENO}) WARNING: Android SDK directory does not exist: \${gem_fullpath_android_sdk}=${gem_fullpath_android_sdk}"
-    else
-        if [[ ! -d ${gem_fullpath_android_sdk_platform_tools} ]]; then
-            echo "$BASH_SOURCE(${LINENO}) WARNING: Android SDK platform tools directory does not exist: \${gem_fullpath_android_sdk_platform_tools}=$gem_fullpath_android_sdk_platform_tools}"
-        fi
-        if [[ ! -d ${gem_fullpath_android_sdk_tools} ]]; then
-            echo "$BASH_SOURCE(${LINENO}) WARNING:  Android SDK tools directory does not exist: \${gem_fullpath_android_sdk_tools}=$gem_fullpath_android_sdk_tools}"
-        fi
-    fi
-    export PATH="${PATH}:${gem_fullpath_android_sdk_platform_tools}:${gem_fullpath_android_sdk_tools}"
+#    export PATH="${PATH}"
 
 
     # =========================================================================
@@ -88,11 +91,13 @@ function gem_bash_init_Main()
         fi
     elif [[ ${gem_os} == "Linux" ]]; then
 
-        which code &>/dev/null
-        if [[ $? -ne 0 ]]; then
-            echo "$BASH_SOURCE(${LINENO}) WARNING: Failed to find Visual Studio Code in directory: ${gem_fullpath_vscode}"
+        gem_fullpath_vscode=$(which code)
+        if [[ $? -ne 0 ]] || [[ ! -f ${gem_fullpath_vscode} ]]; then
+            echo "$BASH_SOURCE(${LINENO}) WARNING: Failed to find Visual Studio Code."
         fi
     fi
+    # Escape spaces.
+    gem_fullpath_vscode_exe=$(echo ${gem_fullpath_vscode} | sed 's/ /\\ /g')
 
 
     # =========================================================================
@@ -128,11 +133,7 @@ function gem_bash_init_Main()
     # Aliases
     # =========================================================================
     alias ls='ls -al --color=auto'
-    if [[ ${gem_os} == *"MINGW64"* || ${gem_os} == *"CYGWIN"* ]]; then
-        # Escape spaces.
-        gem_fullpath_vscode_exe=$(echo ${gem_fullpath_vscode} | sed 's/ /\\ /g')
-        alias code="${gem_fullpath_vscode_exe} --user-data-dir=${HOME}/.config/Code/"
-    fi
+    alias code="${gem_fullpath_vscode_exe} --user-data-dir=${HOME}/.config/Code/"
 
 
     # =========================================================================
@@ -145,9 +146,10 @@ function gem_bash_init_Main()
     export CRED_PASSWORD_ROOT=xxxxxxxxx
 
 
-
     # Where would you like to go today?
-    cd ~/gem/local/src
+    if [[ -d ${gem_fullpath_gem} ]]; then
+        cd ${gem_fullpath_gem}/local/src
+    fi
 }
 gem_bash_init_Main
 

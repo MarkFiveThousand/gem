@@ -9,27 +9,37 @@ function gem_build_v_SetDefaults
 
 	gem_download_src=1
 
-	# Need gnu extensions for compile asm code.
-	gem_c_standard="-std=gnu11"	# c90, c99, c11, gnu90, gnu99, gnu11
+	# Need gnu extensions for compiling asembly code.
+#	gem_c_standard="-std=gnu11"	# c90, c99, c11, gnu90, gnu99, gnu11
+	gem_cxx_standard="-std=gnu++11"	# c++98, c++03, c++14, c++17, c++2a, gnu++98, gnu++11, gnu++14, gnu++17
 
 	gem_use_clang=1
 
-#	gem_build_script="cmake"
-	gem_build_script="autotools"
+	gem_is_cplusplus=0
+
+	gem_build_script="cmake"
+#	gem_build_script="autotools"
 #	gem_build_script="meson"
 
-	# Common Defaults
-	if [[ $(uname -s) == "MINGW64"* ]]; then	# MinGW shell on Windows.
+	gem_build_type=release
+#	gem_build_type=debug
+
+	gem_lib_type=shared			# gem_lib_type is not fully implemented.
+#	gem_lib_type=static
+#	gem_lib_type=both
+
+	# Set default build host.
+	if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW shell on Windows.
 		gem_host=mingw
 #		gem_host=msvc
-	elif [[ $(uname -s) == "Linux"* ]]; then	# Linux shell.
+	elif [[ ${gem_os} == "CYGWIN"* ]]; then		# Cygwin shell on Windows.
+		gem_host=cygwin
+#		gem_host=mingw
+	elif [[ ${gem_os} == "Linux"* ]]; then	# Linux shell.
 		gem_host=linux
 #		gem_host=mingw
 #		gem_host=android_arm64_v8a
 	fi
-
-	gem_build_type=release
-#	gem_build_type=debug
 }
 
 function gem_build_v_SetFlags
@@ -41,10 +51,6 @@ function gem_build_v_SetFlags
 	gem_flags_cpp="${gem_flags_cpp}"
 	gem_flags_cxx="${gem_flags_cxx}"
 	gem_flags_ld="${gem_flags_ld}"
-
-	# Temporarily moved to gem_build.
-	# export PKG_CONFIG_LIBDIR="${gem_fullpath_install}/lib/pkgconfig:${PKG_CONFIG_LIBDIR}"
-	export PKG_CONFIG_LIBDIR="../../../mhodges/gem/local_x86_64-w64-mingw32/release/home/lib/pkgconfig:${PKG_CONFIG_LIBDIR}"
 }
 
 function gem_build_v_DownloadSource
@@ -53,7 +59,12 @@ function gem_build_v_DownloadSource
 		gem_script_v_Error "The source tree already exists.  Defying order to download."
 	fi
 	gem_script_v_Msg "Sometimes the server runs slow.  This may take up to a minute to begin.  Please be patient..."
-	hg clone https://hg.libsdl.org/SDL SDL
+
+	gem_script_v_Msg "---------------------------------"
+	gem_script_v_Msg "NOTE: We are cloning a changeset."
+	gem_script_v_Msg "---------------------------------"
+
+	hg clone -r 13498 https://hg.libsdl.org/SDL SDL
 
 	if [[ -d ./SDL && ! -d ./src ]]; then
 		mv ./SDL ./src
@@ -62,6 +73,7 @@ function gem_build_v_DownloadSource
 
 function gem_build_v_OnCommandLine_Configure_CMake
 {
+
 	gem_build_OnCommandLine_Configure_CMake
 }
 
@@ -112,5 +124,10 @@ function gem_script_v_OnArg
 function gem_script_v_Main
 {
 	gem_build_Main "$@"
+
+	gem_script_v_Msg "-----------------------------------------"
+	gem_script_v_Msg "NOTE: We are building a cloned changeset."
+	gem_script_v_Msg "-----------------------------------------"
+
 }
 gem_script_v_Main $@

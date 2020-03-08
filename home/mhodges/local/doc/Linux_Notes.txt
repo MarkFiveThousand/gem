@@ -1,0 +1,455 @@
+==========================================================
+Archives
+==========================================================
+
+wget
+----------------------------------------------------------
+An example of getting zlib:
+wget -c http://www.zlib.net/zlib-1.2.8.tar.gz
+
+tar
+----------------------------------------------------------
+EXTRACTION EXAMPLES:
+
+tar xfz zlib-1.2.8.tar.gz
+tar xf  libpng-1.6.2.tar.gz
+tar xf  flac-1.3.0.tar.xz
+tar xfj openal-soft-1.15.1.tar.bz2
+
+  -x, --extract, --get       extract files from an archive
+  -f, --file=ARCHIVE         use archive file or device ARCHIVE
+      --force-local          archive file is local even if it has a colon
+  -j, --bzip2                filter the archive through bzip2
+  -z, --gzip, --gunzip, --ungzip   filter the archive through gzip
+  -v 
+
+COMPRESSION EXAMPLE:
+
+tar -czvf MyDir.tar.gz MyDir
+
+==========================================================
+Arguments
+==========================================================
+Arguments script and function arguments can be accessed as follows:
+$0		Script/function(?) name
+$1		First param, etc.
+$#		Number of parameters
+$@		A concatenated list of all the parameters.  Usually best to surround in
+		quotes.    ("$@")
+
+==========================================================
+Bash
+==========================================================
+The order scripts are executed during login is detailed
+here:
+http://linux.about.com/library/cmd/blcmdl1_sh.htm
+
+
+==========================================================
+case / switch
+==========================================================
+VAR=bug
+# use $1 for first parameter
+
+case $VAR in
+
+	mark | Mark)
+		echo "Hi Mark"
+		;;
+	hodges)
+		echo "Hi Hodges"
+		;;
+	*)
+		echo "Hi Dude"
+		;;
+esac
+
+
+
+
+==========================================================
+chmod
+==========================================================
+Changes the permissions of a file.
+
+chmod [option] <file/directory>
+
+Note: -R for recursive
+
+Permission bits:
+
+	dir?  Ownr  Grup  Others
+    d     rwx   rwx   rwx
+          421   421   421
+
+Example:
+
+	drwxr-xr-x.   2 root root 4096 Nov 10 23:24 html
+
+	Means html is dir. Owner(root) has rwx.  All
+        others have r-x.
+
+==========================================================
+chown
+==========================================================
+Changes the owner of the file.
+
+chown [options] new_owner object(s)
+
+
+==========================================================
+chgrp
+==========================================================
+Changes the group that the file belongs to.
+
+chgrp [options] new_owner object(s)
+
+
+==========================================================
+chcon
+==========================================================
+Changes SELinux context of a file.
+
+Good primer selinux at:
+https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/6/html/security-enhanced_linux/sect-security-enhanced_linux-working_with_selinux-selinux_contexts_labeling_files
+
+
+==========================================================
+cp
+==========================================================
+Unless you want something special, you never need -r because -a (for archive)
+is always the safest and probably what you expected to happen.
+
+Recursive means that cp copies the contents of directories, and if a directory
+has subdirectories they are copied (recursively) too. Without -R, the cp
+command skips directories. -r is identical with -R on Linux, it differs in some
+edge cases on some other unix variants.
+
+By default, cp creates a new file which has the same content as the old file,
+and the same permissions but restricted by the umask; the copy is dated from
+the time of the copy, and belongs to the user doing the copy. With the -p
+option, the copy has the same modification time, the same access time, and the
+same permissions as the original. It also has the same owner and group as the
+original, if the user doing the copy has the permission to create such files.
+
+The -a option means -R and -p, plus a few other preservation options. It
+attempts to make a copy that's as close to the original as possible: same
+directory tree, same file types, same contents, same metadata (times,
+permissions, extended attributes, etc.).
+
+
+==========================================================
+groups
+==========================================================
+Shows what group the logged in user is in.
+
+
+==========================================================
+groupadd
+==========================================================
+Create a new group.
+
+
+==========================================================
+gpasswd
+==========================================================
+Add a user to a group.
+
+gpasswd -a <username> <groupname>
+
+
+
+Remove a user from a group.
+
+gpasswd -d <username> <groupname>
+
+
+==========================================================
+useradd
+==========================================================
+Create/update a user.
+
+All user account related information is stored in
+/etc/passwd, /etc/shadow and /etc/group.
+
+
+
+==========================================================
+userdel
+==========================================================
+Remove a user.
+
+
+
+==========================================================
+deluser
+==========================================================
+Remove a user from a group.
+
+deluser <username> <groupname>
+
+
+
+==========================================================
+diff
+==========================================================
+NO DETAILS ON DIFF, YET.  HOWEVER, IF YOU ARE HERE LOOKING
+FOR A WAY TO DIFF DIRECTORIES OF FILES WITHOUT DIFFING THE
+FILES THEMSELVES SEE DOCUMENTATION FOR 'find'.
+
+
+
+==========================================================
+usermod
+==========================================================
+Modify a user account (Add user to a group.)
+
+Example:
+	Add user mhodges to the www group.
+
+	usermod -a -G www mhodges
+
+==========================================================
+find
+==========================================================
+http://www.codecoffee.com/tipsforlinux/articles/21.html
+
+Examples:
+
+	find -name myfile.txt
+
+        Recursively find all *.c files in folder /home/mhodges (current
+        directory will be searched if omited):
+
+	find /home/mhodges -name "*.c"
+	
+        To recursively find files of different types, -o as a separator:
+		
+	find . -name \*.h -o -name \*.c -o -name \*.cpp
+
+ALSO:
+	To diff the presence of files, based upon file name only,
+	but not diff the contents of the files, this script is
+	recommended:
+	
+DIR1=
+DIR2=
+find $DIR1 -printf "%P\n" | sort > file1
+find $DIR2 -printf "%P\n" | sort | diff - file1
+
+
+==========================================================
+File Permissions
+==========================================================
+Getting permissions:
+
+	ls -l    to show file permissions.
+	ls -Z    to show SELinux context.
+
+Permission bits:
+
+	dir?  Ownr  Grup  Others
+    d     rwx   rwx   rwx
+          421   421   421
+
+Example:
+
+	drwxr-xr-x.   2 root root 4096 Nov 10 23:24 html
+
+	Means html is dir. Owner(root) has rwx.  All
+        others have r-x.
+
+
+==========================================================
+grep
+==========================================================
+Search file(s) for "string"
+
+Returns 0 if string was found.  Non-zero otherwise.
+
+Useful flags:
+
+	-r	Recurse
+	-n	Show line numbers
+	-q  Do not output found text, only exit code.
+	-i  Ignore case
+	-s  Suppress error messages about nonexistent or unreadable files.
+	-c  Suppress normal output; instead print a count of matching lines for each
+	    input file. With the -v (--invert-match) option, count non-matching lines.
+
+Examples:
+	Search a file for a string:
+
+		grep "mystring" myfile.txt
+
+	Recursively search files for a string:
+
+		grep -r "string"
+		grep -r "string" /path/to/dir
+
+	Only search certain file types (* must be escaped):
+	
+		grep --include \*.txt "string"
+
+	Search certain file types (separate with -o):
+	
+		grep --include \*.c -o --include \*.h "string"
+
+
+
+
+==========================================================
+if
+==========================================================
+
+a="2"
+if [[ $a == "1" ]] || [[ $a == "2" ]]; then
+	echo "abc"
+elif [[ $a == "3" ]]; then
+	echo "def"
+else
+	echo "ghi"
+fi
+
+
+Interesting note: [ is actually a command called the test command.  [ returns a
+zero exit code for true, and a non-zero exit code for false.
+
+Check if a file exists:
+$ [ -f /etc/passwd ] && echo "File exists" || echo "File does not exist"
+
+or does NOT exist:
+$ [ ! -f /etc/passwd ] && echo "File exists" || echo "File does not exist"
+
+Check if a directory exists:
+$ [ -d /var/logs ] && echo "Directory exists" || echo "Directory does not exist"
+
+
+==========================================================
+ls
+==========================================================
+-A		all entries, including .
+-l		use long listing format
+-r		reverse order while sorting
+-R		recursive
+-t		sort by modification time
+
+
+
+==========================================================
+ln
+==========================================================
+Create a symbolic link.
+
+There are two types of links:
+
+symbolic links:     A symbolic path indicating the abstract location of another
+                    file.
+hard links:         Refer to the specific location of physical data.
+
+
+ln -s {target-filename} {symbolic-filename}
+
+ln -s /home/mhodges/shares/titan_mhodges/projects /home/mhodges/projects
+
+
+
+==========================================================
+patch
+==========================================================
+When patch fails:
+http://www.markusbe.com/2009/11/how-to-apply-a-patch-and-solve-hunk-failed-cant-find-file-to-patch-and-others/#hunk-failed
+
+How to Create and Apply Patches:
+http://jungels.net/articles/diff-patch-ten-minutes.html
+
+
+Create a Patch
+----------------------------------------------------------
+diff -u original.c new.c > original.patch
+
+
+Apply a Patch
+----------------------------------------------------------
+patch foo.txt < bar.patch (overrides the file name in the
+                           patch file)
+
+
+
+==========================================================
+Pipes
+==========================================================
+
+foo > stdout.txt 2> stderr.txt
+
+Or, if you want it all in the same file:
+foo > allout.txt 2>&1
+
+Or, to append to a file:
+message >> log.txt
+
+==========================================================
+sed
+==========================================================
+Search and replace.
+
+sed 's|find this text|replace with this text|g' input.txt > output.txt
+
+
+==========================================================
+Regular Expressions
+==========================================================
+Stanford has a cool website where you can paste regular expressions
+and receive pseudo-code/english verbage translations:
+http://xenon.stanford.edu/~xusch/regexp/
+
+To start with, forward slashes / delineate the beginning and ending of
+a regular expression.  Also,
+
+^ denotes the start of string, and
+$ denotes the end of string.
+
+So, the most basic (i.e. empty) regular expression is:
+
+/^$/           /^ means here comes the beginning, and $/ means there
+               goes the end.  There is no content in between.
+
+[ : beginning of character group
+a-z : any lowercase letter
+A-Z : any uppercase letter
+0-9 : any digit
+_ : underscore
+\s : space
+] : end of character group
+* : zero or more of the preceding characters are acceptable.
++ : one or more of the preceding characters are acceptable.
+
+Parentheses (): Besides grouping part of a regular expression
+	together, parentheses also create a *numbered* capturing group. It
+	stores the part of the string matched by the part of the regular
+	expression inside the parentheses.
+	
+	For example:
+	
+		The interesting part of the regular expression /^([0-9]){6}$/
+		is ([0-9]){6}.  [0-9] means we accept numerical digits 0-9.
+		The parentheses in ([0-9]) means we are going to *count* those
+		digits.  The following {6} means we only accept exactly 6 digits.
+
+
+==========================================================
+Time, ellapsed
+==========================================================
+Store the start time.  Note this should be an atomic operation.  If
+the hour changes between these two calls, the result will be wrong.
+
+build_start_time_hour=$(date +"%H")
+build_start_time_min=$(date +"%M")
+
+Echo the ellapsed time:
+
+echo "$(($(date +"%H") - $build_start_time_hour)) hours, $(($(date +"%M") - $build_start_time_min)) minutes"
+
+Notice the subtraction must be inside of double parentheses.
+
+

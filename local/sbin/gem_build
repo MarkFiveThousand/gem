@@ -8,18 +8,8 @@
 #     \/__________/\/____/  \/__/\/__/\/__/ \/_________/\/____/  \/______/\/__/ \/___/  \/____/
 
 
-# To build a custom standalone toolchain run:
-#
-# ${HOME}/Android/toolchains/buildtoolchain
-#
-# Options:
-#
-# ARCH:  arm | arm64 | x86 | x86_64
-# STL:   gnustl | libc++ | stlport
-
-
-
-# gem_platform_host is what the code will run on. It defaults to $(uname -s).
+# ANDROID: This appears the be very important:
+# https://android.googlesource.com/platform/ndk/+/master/docs/BuildSystemMaintainers.md
 #
 # Android: I read that NEON_CFLAGS=-D__ARM_NEON__ should be passed to
 # configure for aarch64.  This is because the condition that checks for
@@ -29,16 +19,6 @@
 # This appears to be very useful for Android:
 # https://github.com/dogo/AndroidFFmpeg/blob/master/build_android.sh
 
-# IMPORTANT! SDL2's configure script will need to be slightly changed.  It
-# looks for '*-*-androideabi' for android builds.  However, as you can see
-# in the below table, you will need to add '*-*-android' in the config's
-# case statements to support other abis.
-# Source: https://developer.android.com/ndk/guides/standalone_toolchain.html
-#
-# ARM-based		arm-linux-androideabi-<gcc-version>
-# ARM64-based	aarch64-linux-android-<gcc-version>
-# x86-based		x86-<gcc-version>
-# X86-64-based	x86_64-<gcc-version>
 
 # Found these flags: -mandroid -march=mips32 -mtune=mips32 -mips32 -mhard-float 
 # -Wno-multichar -DANDROID -fPIC  -ffunction-sections -funwind-tables 
@@ -82,8 +62,8 @@
 #   http://landinghub.visualstudio.com/visual-cpp-build-tools (it's the file
 #   visualcppbuildtools_full.exe).
 
-function gem_v_ExitHelp { gem_script_v_Error "gem_v_ExitHelp() has been renamed." ;}
-function gem_build_v_ExitHelp { gem_build_ExitHelp "$@";}
+
+function gem_script_v_ExitHelp { gem_build_ExitHelp "$@";}
 function gem_build_ExitHelp
 {
 	gem_script_v_Msg "============================================================================="
@@ -118,10 +98,11 @@ function gem_build_ExitHelp
 	gem_script_v_Msg "  -cmdline     Do not perform operations or output any text other than the command line.  Implies -q: Quiet Mode."
 	gem_script_v_Msg "  -diag        Contrast clean configure versus configure with our params."
 	gem_script_v_Msg
-	gem_script_v_Msg "Host host:"
+	gem_script_v_Msg "Host:"
 	gem_script_v_Msg
-	gem_script_v_Msg "  -host        {linux | cygwin | mingw | msvc | android_x86 | android_v7vfpv3 |"
-	gem_script_v_Msg "                android_arm_v7_plus_neon | android_arm64_v8a}"
+	gem_script_v_Msg "  -host        {x86_64-pc-linux-gnu | x86_64-pc-cygwin | x86_64-w64-mingw32 |"
+	gem_script_v_Msg "                x86_64-pc-windows-msvc | x86_64-linux-android |"
+	gem_script_v_Msg "                armv7a-linux-androideabi | aarch64-linux-android}"
 	gem_script_v_Msg
 	gem_script_v_Msg "Build type:"
 	gem_script_v_Msg
@@ -137,108 +118,60 @@ function gem_build_ExitHelp
 	gem_script_v_Msg "               Default: ${gem_fullpath_install}"
 	gem_script_v_Msg "Android:"
 	gem_script_v_Msg
-	gem_script_v_Msg "  -android-standalone Path to android stand alone toolchain."
-	gem_script_v_Msg "                      Default: ${gem_fullpath_android_standalone_toolchain}"
-	gem_script_v_Msg
 	gem_script_v_Msg "  -android-api        Android api."
 	gem_script_v_Msg "                      Default: ${gem_android_api_level}"
 	gem_script_v_Msg
 	gem_script_v_Msg "Examples of common usage:"
 	gem_script_v_Msg
-	gem_script_v_Msg "    \$ ./$(basename ${0}) -host linux -type debug -c -m -b -i"
-	gem_script_v_Msg "    \$ ./$(basename ${0}) -host android_arm64_v8a -type release -m"
-	gem_script_v_Msg "    \$ ./$(basename ${0}) -host mingw -type release -m"
+	gem_script_v_Msg "    \$ ./$(basename ${0}) -host x86_64-pc-linux-gnu -type debug -c -m -b -i"
+	gem_script_v_Msg "    \$ ./$(basename ${0}) -host aarch64-linux-android -type release -m"
+	gem_script_v_Msg "    \$ ./$(basename ${0}) -host x86_64-w64-mingw32 -type release -m"
 	gem_script_v_Msg
 	gem_script_v_Msg "============================================================================="
-	gem_script_v_ExitMsg "${1}"
+	gem_script_v_ExitMsg "\n${1}\n"
 }
 
-function gem_v_SetDefaults { gem_script_v_Error "gem_v_SetDefaults() has been renamed." ;}
 function gem_build_v_SetDefaults { gem_build_SetDefaults ;}
 function gem_build_SetDefaults
 {
-	gem_use_clang=0			# Else gcc.
-	gem_is_cplusplus=0
-	gem_c_standard="-std=c11"	# c90, c99, c11, c17, c2x, gnu90, gnu99, gnu11
-	gem_cxx_standard="-std=c++11"	# c++98, c++03, c++14, c++17, gnu++98, gnu++11, gnu++14, gnu++17
-
-#	gem_build_script="autotools"
-#	gem_build_script="meson"
-#	gem_build_script="cmake"
-	gem_build_script="<undefined>"
-
-	# Directories
-	gem_fullpath_local=${HOME}/gem/local
-	# gem_fullpath_install is set further below in function gem_build_v_BuildFilePaths().
-
-	gem_os=$(uname -s)
-
-	# Common Defaults
-	if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW shell on Windows.
-		gem_host=mingw
-#		gem_host=msvc
-	elif [[ ${gem_os} == "CYGWIN"* ]]; then	# MinGW shell on Windows.
-		gem_host=cygwin
-#		gem_host=mingw
-	elif [[ ${gem_os} == "Linux"* ]]; then	# Linux shell.
-		gem_host=linux
-#		gem_host=mingw
-#		gem_host=android_arm64_v8a
-	fi
-
-	gem_flags_c="${CFLAGS}"
-	gem_flags_cpp="${CPPFLAGS}"
-	gem_flags_cxx="${CXXFLAGS}"
-	gem_flags_ld="${LDFLAGS}"
-
-	# NOTE: ${gem_build_type} is passed to CMake. If you want to change these,
-	# you'll have to map your new values to these expected values when you run
-	# CMake.
-	gem_build_type=release
-#	gem_build_type=debug
-#	gem_build_type=relwithdebinfo
-
-	gem_lib_type=shared
-#	gem_lib_type=static
-
-	# gem_fullpath_makefile allows the make file to be specified.  This is
-	# handy when building a Windows package (zlib) that provides a Windows-
-	# specific make file, instead of producing one via a configure script.
-	gem_fullpath_autotools_makefile=
-
-	gem_num_jobs=4
-
-	# Android Defaults
-	# The ndk version needs to be passed to cmake.  We're currently parsing it from
-	# ANDROID_NDK, which I'm not even sure if we're using, otherwise.
-#	gem_android_ndk_version=17b
-	gem_android_ndk_version=18b
-	gem_android_api_level=28
-	gem_android_standalone_toolchain_stl=libc++
-
-	gem_fullpath_android=${HOME}/android
-	gem_adb_exe=${gem_fullpath_android_sdk}/platform-tools/adb
-	gem_fullpath_android_sdk=${gem_fullpath_android}/Sdk
-	gem_fullpath_android_ndk=${gem_fullpath_android}/android-ndk-r${gem_android_ndk_version}
-	gem_fullpath_android_standalone_toolchain_root=${gem_fullpath_android}/standalone-toolchains
-
-	# Application Defaults
-	gem_filename_project_exe="<undefined>"
-
-	# Initialize variables
-	gem_str_not_implemented="Operation for host \"${gem_host}\" on OS \"${gem_os}\" is not yet implemented."
+	local noop=0
 }
 
-function gem_v_DownloadSource { gem_script_v_Error "gem_v_DownloadSource() has been renamed." ;}
+# Sets and validates ${gem_fullpath_android_ndk}.
+function gem_build_ValidateNDKDir
+{
+    gem_fullpath_ndk_parent=${gem_fullpath_android_sdk}/ndk
+    if [[ ! -d ${gem_fullpath_ndk_parent} ]]; then
+        gem_script_v_ExitMsg "ERROR: Failed to find the android ndk directory at ${gem_fullpath_ndk_parent}.  This can happen if you're using an older version of the ndk.  The directory structures have been modified several times over several versions."
+    fi
+
+    local counter=0
+    for entry in ${gem_fullpath_ndk_parent}/${gem_android_ndk_version}*
+    do
+        entry=$(basename ${entry})
+        if [[ -d ${gem_fullpath_ndk_parent}/${entry} ]]; then
+            ((counter++))
+        fi
+    done
+
+    if [[ ${counter} -eq 0 ]]; then
+        gem_script_ExitMsg "ERROR: Failed to find ndk version ${gem_android_ndk_version} in directory ${gem_fullpath_ndk_parent}"
+    fi
+    if [[ ${counter} -gt 1 ]]; then
+        gem_script_ExitMsg "ERROR: Found multiple ndks of version ${gem_android_ndk_version} in directory ${gem_fullpath_ndk_parent}.  Specify the full version number (e.g. 21.0.1234)."
+    fi
+
+    gem_fullpath_android_ndk=${gem_fullpath_ndk_parent}/${entry}
+    if [[ ! -d ${gem_fullpath_android_ndk} ]]; then
+        gem_script_v_ExitMsg "ERROR: Android ndk does not exist at: ${gem_fullpath_android_ndk}"
+    fi
+}
+
 function gem_build_v_DownloadSource { gem_build_DownloadSource ;}
 function gem_build_DownloadSource
 {
 	# Parse gem_filename_url.
 	gem_filename_archive=${gem_filename_url##*/}
-	gem_filename_base=${gem_filename_archive%".tar"*}		# Remove everything *after* '.tar'
-	gem_filename_exten=${gem_filename_archive#*${gem_filename_base}.}
-	gem_filename_version=${gem_filename_base#*"-"}		# Remove everything *before* '-'
-	gem_filename_pkg=${gem_filename_base%"-"*}
 
 	# Download
 	if [[ ! -f ${gem_filename_archive} ]]; then
@@ -247,56 +180,86 @@ function gem_build_DownloadSource
 			gem_script_v_Error "gem_build_v_DownloadSource: wget failed to download source archive: ${gem_filename_url}"
 		fi
 	fi
-	# Decompress
-	if [[ -d ${gem_fullpath_src} ]]; then
-		gem_script_v_Msg "MESSAGE: The source tree already exists.  Defying order to decompress."
+
+	if [[ ${gem_filename_archive} == *".zip" ]]; then
+
+		unzip ${gem_filename_archive}
+
 	else
-		gem_script_mkdir -p ${gem_fullpath_src}
-		gem_flags_tar="<undefined>"
-		if [[ ${gem_filename_exten} == *".gz" ]]; then
-			gem_flags_tar="xzf"
-		elif  [[ ${gem_filename_exten} == *".xz" ]]; then
-			gem_flags_tar="xf"
-		elif  [[ ${gem_filename_exten} == *".bz2" ]]; then
-			gem_flags_tar="xjf"
+		gem_filename_base=${gem_filename_archive%".tar"*}		# Remove everything *after* '.tar'
+		gem_filename_exten=${gem_filename_archive#*${gem_filename_base}.}
+		gem_filename_version=${gem_filename_base#*"-"}		# Remove everything *before* '-'
+		gem_filename_pkg=${gem_filename_base%"-"*}
+
+		# Decompress
+		if [[ -d ${gem_fullpath_src} ]]; then
+			gem_script_v_Msg "MESSAGE: The source tree already exists.  Defying order to decompress."
+		else
+			gem_script_mkdir -p ${gem_fullpath_src}
+			gem_flags_tar="<undefined>"
+			if [[ ${gem_filename_exten} == *".gz" ]]; then
+				gem_flags_tar="xzf"
+			elif  [[ ${gem_filename_exten} == *".xz" ]]; then
+				gem_flags_tar="xf"
+			elif  [[ ${gem_filename_exten} == *".bz2" ]]; then
+				gem_flags_tar="xjf"
+			fi
+			if [[ ${gem_flags_tar} == "<undefined>" ]]; then
+				gem_script_v_Error "gem_build_v_DownloadSource: Unable to decompress downloaded file with extension \"${gem_filename_exten}\"."
+			fi
+			tar -${gem_flags_tar} ${gem_filename_archive} -C ${gem_fullpath_src}
+			if [[ $? != 0 ]]; then
+				gem_script_v_Error "gem_build_v_DownloadSource: Failed to uncompress the source archive: ${gem_filename_archive}"
+			fi
+			gem_script_cp -rf ${gem_fullpath_src}/${gem_filename_base}/* ${gem_fullpath_src}
+			gem_script_rm -rf ${gem_fullpath_src}/${gem_filename_base}
 		fi
-		if [[ ${gem_flags_tar} == "<undefined>" ]]; then
-			gem_script_v_Error "gem_build_v_DownloadSource: Unable to decompress downloaded file with extension \"${gem_filename_exten}\"."
-		fi
-		tar -${gem_flags_tar} ${gem_filename_archive} -C ${gem_fullpath_src}
-		if [[ $? != 0 ]]; then
-			gem_script_v_Error "gem_build_v_DownloadSource: Failed to uncompress the source archive: ${gem_filename_archive}"
-		fi
-		gem_script_cp -rf ${gem_fullpath_src}/${gem_filename_base}/* ${gem_fullpath_src}
-		gem_script_rm -rf ${gem_fullpath_src}/${gem_filename_base}
 	fi
 }
 
-function gem_build_v_BuildFilePath_Src { gem_build_BuildFilePath_Src ;}
-function gem_build_BuildFilePath_Src
+function gem_build_v_GetFilePath_src { gem_build_GetFilePath_src ;}
+function gem_build_GetFilePath_src
 {
-	echo "$(pwd)/src"
+	if [[ "${gem_fullpath_pkg}"x == "x" ]]; then
+		gem_script_v_Error "gem_fullpath_pkg referenced before being set."
+	fi
+	echo ${gem_fullpath_pkg}/src
 }
 
-function gem_build_v_BuildFilePath_Build { gem_build_BuildFilePath_Build ;}
-function gem_build_BuildFilePath_Build
+function gem_build_v_GetFilePath_build { gem_build_GetFilePath_build ;}
+function gem_build_GetFilePath_build
 {
-	echo "$(pwd)/build/${gem_path_suffix}"
+	if [[ "${gem_fullpath_pkg}"x == "x" ]]; then
+		gem_script_v_Error "gem_fullpath_pkg referenced before being set."
+	fi
+	if [[ "${gem_path_suffix}"x == "x" ]]; then
+		gem_script_v_Error "gem_path_suffix referenced before being set."
+	fi
+	echo ${gem_fullpath_pkg}/build/${gem_path_suffix}
 }
 
-function gem_build_v_BuildFilePath_Install { gem_build_BuildFilePath_Install ;}
-function gem_build_BuildFilePath_Install
+function gem_build_v_GetFilePath_install { gem_build_GetFilePath_install ;}
+function gem_build_GetFilePath_install
 {
-	echo "${gem_fullpath_local}_${gem_path_suffix}"
+	if [[ "${gem_fullpath_local}"x == "x" ]]; then
+		gem_script_v_Error "gem_fullpath_local referenced before being set."
+	fi
+	if [[ "${gem_path_suffix}"x == "x" ]]; then
+		gem_script_v_Error "gem_path_suffix referenced before being set."
+	fi
+	echo ${gem_fullpath_local}_${gem_path_suffix}
 }
 
-function gem_v_BuildFilePaths { gem_script_v_Error "gem_v_BuildFilePaths() has been renamed." ;}
 function gem_build_v_BuildFilePaths { gem_build_BuildFilePaths ;}
 function gem_build_BuildFilePaths
 {
-	gem_path_suffix=${gem_platform_host}
-	if [[ ${gem_platform_host_details_suffix}x != "x" ]]; then
-		gem_path_suffix=${gem_path_suffix}_${gem_platform_host_details_suffix}
+	# The suffix on paths is required when multiple parameters may produce
+	# different binaries.  This is needed where android builds may be produced
+	# for various build parameters.  Each output must be produced in it's own
+	# directory, so we append the build parameters to the directory name.
+	gem_path_suffix=${gem_triple}
+	if [[ ${gem_triple_details_suffix}x != "x" ]]; then
+		gem_path_suffix=${gem_path_suffix}_${gem_triple_details_suffix}
 	fi
 	gem_path_suffix=${gem_path_suffix}/${gem_build_type}
 
@@ -304,12 +267,11 @@ function gem_build_BuildFilePaths
 	if [[ ! -d ${gem_fullpath_pkg} ]]; then
 		gem_script_v_Error "Failed to determine directory containing this script: $(basename \"${0}\")"
 	fi
-	gem_fullpath_src=$(gem_build_v_BuildFilePath_Src)
-	gem_fullpath_build=$(gem_build_v_BuildFilePath_Build)
-	gem_fullpath_install=$(gem_build_BuildFilePath_Install)
+	gem_fullpath_build=$(gem_build_v_GetFilePath_build)
+	gem_fullpath_src=$(gem_build_v_GetFilePath_src)
+	gem_fullpath_install=$(gem_build_v_GetFilePath_install)
 
-	# Always use the pkg-config for the build machine, *not* for the host."
-	# local_x86_64-w64-mingw32, local_x86_64-pc-cygwin, and local_x86_64-pc-linux-gnu
+	# Always use the tool executables for the build machine, *not* for the host.
 	if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW shell on Windows.
 		gem_fullpath_tool_bin=${gem_fullpath_local}/../local_x86_64-w64-mingw32/release/bin
 	elif [[ ${gem_os} == "CYGWIN"* ]]; then	# Cygwin shell on Windows.
@@ -397,7 +359,7 @@ function gem_build_BuildFilePaths
 #	export PKG_CONFIG_LIBDIR=${gem_fullpath_install}/lib/pkgconfig:${gem_fullpath_install}/share/pkgconfig
 
 	if [[ ${gem_os} == "Linux" ]]; then
-		if [[ ${gem_host} == "linux" ]]; then	# Linux native
+		if [[ ${gem_triple} == "x86_64-pc-linux-gnu" ]]; then	# Linux native
 			export PKG_CONFIG_SYSROOT_DIR=
 			export TEMP_SYSROOT_DIR=/usr
 			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=${TEMP_SYSROOT_DIR}/include
@@ -407,7 +369,7 @@ ${gem_fullpath_install}/lib/pkgconfig:\
 ${TEMP_SYSROOT_DIR}/share/pkgconfig:\
 ${TEMP_SYSROOT_DIR}/lib64/pkgconfig"
 
-		elif [[ ${gem_host} == "mingw" ]]; then	# MinGW on Linux
+		elif [[ ${gem_triple} == "x86_64-w64-mingw32" ]]; then	# MinGW on Linux
 			if [[ "x" == "x" ]]; then
 				# This works.  Don't fuck with it.
 				export PKG_CONFIG_SYSROOT_DIR=
@@ -448,12 +410,12 @@ ${TEMP_SYSROOT_DIR}/lib64/pkgconfig"
 				export PKG_CONFIG_LIBDIR="${gem_fullpath_install}/lib/pkgconfig:${PKG_CONFIG_LIBDIR}"
 			fi
 
-		elif [[ ${gem_host} == *"android_"* ]]; then	# Android on Linux
+		elif [[ ${gem_triple} == *"android"* ]]; then	# Android on Linux
 			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=/usr/include
 			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=/usr/lib
 		fi
 	elif  [[ ${gem_os} == "MINGW64"* ]]; then
-		if [[ ${gem_host} == "mingw" ]]; then	# MinGW native on Windows.
+		if [[ ${gem_triple} == "x86_64-w64-mingw32" ]]; then	# MinGW native on Windows.
 			export PKG_CONFIG_SYSROOT_DIR=
 			export PKG_CONFIG_SYSTEM_INCLUDE_PATH="${PKG_CONFIG_SYSTEM_INCLUDE_PATH}\
 /mingw64/x86_64-w64-mingw32/include:\
@@ -471,7 +433,7 @@ ${gem_fullpath_install}/lib/pkgconfig:\
 		fi
 
 	elif  [[ ${gem_os} == "CYGWIN"* ]]; then
-		if [[ ${gem_host} == "cygwin" ]]; then	# Cygwin native on Windows
+		if [[ ${gem_triple} == "cygwin" ]]; then	# Cygwin native on Windows
 			export PKG_CONFIG_SYSROOT_DIR=
 			export TEMP_SYSROOT_DIR=/usr
 			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=${TEMP_SYSROOT_DIR}/include
@@ -480,7 +442,7 @@ ${gem_fullpath_install}/lib/pkgconfig:\
 ${gem_fullpath_install}/lib/pkgconfig:\
 ${TEMP_SYSROOT_DIR}/share/pkgconfig"
 
-		elif [[ ${gem_host} == "mingw" ]]; then		# MinGW on Cygwin(Windows)
+		elif [[ ${gem_triple} == "x86_64-w64-mingw32" ]]; then		# MinGW on Cygwin(Windows)
 			export PKG_CONFIG_SYSROOT_DIR=
 			export TEMP_SYSROOT_DIR=/usr/x86_64-w64-mingw32/sys-root
 			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=${TEMP_SYSROOT_DIR}/mingw/include
@@ -495,6 +457,14 @@ ${TEMP_SYSROOT_DIR}/mingw/lib/pkgconfig"
 	# These must be reset to stay away from system libraries while cross compiling.
 	export PKG_CONFIG_PATH=
 	export PKG_CONFIG_DIR=
+
+	# Find the gem include file and libraries.
+	PKG_CONFIG_SYSTEM_INCLUDE_PATH=${PKG_CONFIG_SYSTEM_INCLUDE_PATH}:${gem_fullpath_install}/include
+	PKG_CONFIG_SYSTEM_LIBRARY_PATH=${PKG_CONFIG_SYSTEM_LIBRARY_PATH}:${gem_fullpath_install}/lib
+	PKG_CONFIG_LIBDIR="${PKG_CONFIG_LIBDIR}\
+${PKG_CONFIG_SYSTEM_INCLUDE_PATH}:${gem_fullpath_install}/share/pkgconfig:\
+${PKG_CONFIG_SYSTEM_INCLUDE_PATH}:${gem_fullpath_install}/lib/pkgconfig"
+
 
 #	echo $(pkg-config --cflags-only-I sdl2) ; echo
 #	echo $(pkg-config --libs-only-L sdl2) ; echo
@@ -570,7 +540,7 @@ function gem_build_v_UpdateWinePath { gem_build_UpdateWinePath ;}
 function gem_build_UpdateWinePath
 {
 	# For running mingw apps on linux, add the location of our dlls to wine's path.
-	if [[ ${gem_os} == "Linux" && ${gem_host} == "mingw" ]]; then
+	if [[ ${gem_os} == "Linux" && ${gem_triple} == "x86_64-w64-mingw32" ]]; then
 
 		if [[ ! -d ~/.wine ]]; then
 			gem_script_v_Error "Wine directory (~/.wine) does not exist.  Install and run wine once to create it.  Then try again."
@@ -611,48 +581,49 @@ function gem_build_UpdateWinePath
 function gem_build_v_SetFlags { gem_build_SetFlags ;}
 function gem_build_SetFlags
 {
-	gem_flags_configure="${gem_flags_configure}"
 	gem_flags_c="${gem_flags_c}"
 	gem_flags_cpp="${gem_flags_cpp}"
 	gem_flags_cxx="${gem_flags_cxx}"
 	gem_flags_ld="${gem_flags_ld}"
 }
 
-function gem_v_ValidateFilePaths { gem_script_v_Error "gem_v_ValidateFilePaths() has been renamed." ;}
 function gem_build_v_ValidateFilePaths { gem_build_ValidateFilePaths ;}
 function gem_build_ValidateFilePaths
 {
-	if [[ ${gem_build_script} == "cmake" && ! -f ${gem_filename_cmake_toolchain} ]]; then
-		gem_script_v_Error "gem_build_ValidateFilePaths: CMake toolchain file not found at: ${gem_filename_cmake_toolchain}"
+	if [[ ${gem_build_script} == "cmake" ]]; then
+		if [[ ! -f ${gem_fullpath_toolchain_cmake} ]]; then
+			gem_script_v_Error "gem_build_ValidateFilePaths: CMake toolchain file not found at: ${gem_fullpath_toolchain_cmake}"
+		fi
+	elif [[ ${gem_build_script} == "autotools" ]]; then
+		if [[ ! -d ${gem_fullpath_toolchain_autotools} ]]; then
+			gem_script_v_Error "gem_build_ValidateFilePaths: Autotools toolchain directory not found at: ${gem_fullpath_toolchain_autotools}"
+		fi
 	fi
-	if [[ ${gem_host} == *"android"* && 
-		  ! -d ${gem_fullpath_android_standalone_toolchain}/sysroot ]]; then
-		gem_script_v_Error "gem_build_ValidateFilePaths: Android standalone toolchain sysroot directory not found at:$'\n'${gem_fullpath_android_standalone_toolchain}/sysroot"
+	if [[ ! -d ${gem_fullpath_sysroot} ]]; then
+		gem_script_v_Error "gem_build_ValidateFilePaths: gem_fullpath_sysroot  directory not found at: ${gem_fullpath_sysroot}"
 	fi
 }
 
-function gem_v_ValidateCompatibility { gem_script_v_Error "gem_v_ValidateCompatibility() has been renamed." ;}
 function gem_build_v_ValidateCompatibility { gem_build_ValidateCompatibility ;}
 function gem_build_ValidateCompatibility
 {
 	if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW shell on Windows.
-		if [[ ${gem_host} != "mingw" && ${gem_host} != "msvc" ]]; then
-			gem_script_v_Error "gem_build_ValidateCompatibility: Can't build executables for host '${gem_host}' under Mingw on Windows."
+		if [[ ${gem_triple} != "x86_64-w64-mingw32" && ${gem_triple} != "x86_64-pc-windows-msvc" ]]; then
+			gem_script_v_Error "gem_build_ValidateCompatibility: Can't build executables for host '${gem_triple}' under Mingw on Windows."
 		fi
 	elif [[ ${gem_os} == "CYGWIN"* ]]; then	# Cygwin shell on Windows.
-		if [[ ${gem_host} != "cygwin" && ${gem_host} != "mingw" ]]; then
-			gem_script_v_Error "gem_build_ValidateCompatibility: Can't build executables for host '${gem_host}' under Cygwin on Windows."
+		if [[ ${gem_triple} != "x86_64-pc-cygwin" && ${gem_triple} != "x86_64-w64-mingw32" ]]; then
+			gem_script_v_Error "gem_build_ValidateCompatibility: Can't build executables for host '${gem_triple}' under Cygwin on Windows."
 		fi
 	elif [[ ${gem_os} == "Linux" ]]; then	# Linux shell.
-		if [[ ${gem_host} != "linux" && ${gem_host} != "mingw" && ${gem_host} == *"android"* ]]; then
-			gem_script_v_Error "gem_build_ValidateCompatibility: Can't build executables for host '${gem_host}' on Linux."
+		if [[ ${gem_triple} != "x86_64-pc-linux-gnu" && ${gem_triple} != "x86_64-w64-mingw32" && ${gem_triple} != *"android"* ]]; then
+			gem_script_v_Error "gem_build_ValidateCompatibility: Can't build executables for host '${gem_triple}' on Linux."
 		fi
 	fi
 }
 
-function gem_v_ValidateBuildTools { gem_script_v_Error "gem_v_ValidateBuildTools() has been renamed." ;}
-function gem_build_v_ValidateBuildTools { gem_build_ValidateBuildTools ;}
-function gem_build_ValidateBuildTools
+function gem_build_v_ValidateToolchain { gem_build_ValidateToolchain ;}
+function gem_build_ValidateToolchain
 {
 	gem_script_ValidateFiles "${CC} ${CXX} ${LD} ${AR} ${AS} ${NM} ${STRIP} ${RANLIB} ${OBJDUMP}"
 	if [[ ${gem_os} == "MINGW64"* || ${gem_os} == "CYGWIN"* ]]; then
@@ -660,22 +631,21 @@ function gem_build_ValidateBuildTools
 	fi
 }
 
-function gem_v_SelectCMakeGenerator { gem_script_v_Error "gem_v_SelectCMakeGenerator() has been renamed." ;}
 function gem_build_v_SelectCMakeGenerator { gem_build_SelectCMakeGenerator ;}
 function gem_build_SelectCMakeGenerator
 {
-	# Select the correct generator based upon gem_host.
-	case ${gem_host} in
-		linux|cygwin|mingw|android_x86_64|android_v7vfpv3|android_arm_v7_plus_neon|android_arm64_v8a)
+	# Select the correct generator based upon gem_triple.
+	case ${gem_triple} in
+		x86_64-pc-linux-gnu|x86_64-pc-cygwin|x86_64-w64-mingw32|x86_64-linux-android|armv7a-linux-androideabi|aarch64-linux-android)
 			gem_cmake_generator="-G\"Unix Makefiles\"" ;;
-		msvc)
+		x86_64-pc-windows-msvc)
 			gem_script_v_Error "We may need to pass --msvc-syntax to pkg-config."
 			# Good sources: https://cognitivewaves.wordpress.com/cmake-and-visual-studio/
 			# https://gitlab.kitware.com/cmake/community/wikis/FAQ
 			# https://devblogs.microsoft.com/cppblog/cmake-support-in-visual-studio/
 			# https://docs.microsoft.com/en-us/cpp/build/get-started-linux-cmake?view=vs-2019
 			gem_cmake_generator="-G\"Visual Studio 15 2017 Win64\"" ;;
-		*)	gem_script_v_Error "gem_build_SelectCMakeGenerator: Invalid build host: ${gem_host}"
+		*)	gem_script_v_Error "gem_build_SelectCMakeGenerator: Invalid build host: ${gem_triple}"
 	esac
 	if [[ ${gem_cmake_generator} == "<undefined>" ]]; then
 		gem_script_v_Error "gem_build_SelectCMakeGenerator: -host must be specified for cmake builds."
@@ -683,7 +653,6 @@ function gem_build_SelectCMakeGenerator
 }
 
 
-function gem_v_DebugDumpVars { gem_script_v_Error "gem_v_DebugDumpVars() has been renamed." ;}
 function gem_build_v_DebugDumpVars { gem_build_DebugDumpVars ;}
 function gem_build_DebugDumpVars
 {
@@ -693,35 +662,35 @@ function gem_build_DebugDumpVars
 
 	gem_script_v_Msg "----------------------------- gem_script_v_DebugDumpVars() ----------------------------"
 	gem_script_v_Msg "gem_os =               ${gem_os}"
-	gem_script_v_Msg "gem_host =             ${gem_host}"
+	gem_script_v_Msg "gem_triple =           ${gem_triple}"
+	gem_script_v_Msg "gem_triple_details_suffix ="
+	gem_script_v_Msg "                       ${gem_triple_details_suffix}"
 	gem_script_v_Msg "gem_build_type =       ${gem_build_type}"
 	gem_script_v_Msg "gem_build_script =     ${gem_build_script}"
 	gem_script_v_Msg "gem_lib_type =         ${gem_lib_type}"
 	gem_script_v_Msg "gem_path_suffix =      ${gem_path_suffix}"
-	gem_script_v_Msg "gem_platform_host =    ${gem_platform_host}"
-	gem_script_v_Msg "gem_platform_host_details_suffix"
-	gem_script_v_Msg "                       ${gem_platform_host_details_suffix}"
 	gem_script_v_Msg "gem_fullpath_src =     ${gem_fullpath_src}"
 	gem_script_v_Msg "gem_fullpath_build =   ${gem_fullpath_build}"
 	gem_script_v_Msg "gem_fullpath_install = ${gem_fullpath_install}"
-	gem_script_v_Msg "gem_fullpath_toolchain=${gem_fullpath_toolchain}"
+	gem_script_v_Msg "gem_isCrossCompiling = ${gem_isCrossCompiling}"
+	gem_script_v_Msg "gem_fullpath_toolchain_autotools ="
+	gem_script_v_Msg "                       ${gem_fullpath_toolchain_autotools}"
 	gem_script_v_Msg "gem_fullpath_sysroot=  ${gem_fullpath_sysroot}"
-	if [[ ${gem_host} == *"android"* ]]; then
-		gem_script_v_Msg "gem_android_ndk_version =  ${gem_android_ndk_version}"
-		gem_script_v_Msg "gem_android_api_level =	 ${gem_android_api_level}"
-		gem_script_v_Msg "gem_platform_arch =	     ${gem_platform_arch}"
-		gem_script_v_Msg "gem_android_standalone_toolchain_stl =     ${gem_android_standalone_toolchain_stl}"
-		gem_script_v_Msg "gem_fullpath_android_standalone_toolchain= ${gem_fullpath_android_standalone_toolchain}"
-	fi
-	gem_script_v_Msg "gem_flags_c =    ${gem_flags_c}"
-	gem_script_v_Msg "gem_flags_cpp =  ${gem_flags_cpp}"
-	gem_script_v_Msg "gem_flags_cxx =  ${gem_flags_cxx}"
-	gem_script_v_Msg "gem_flags_ld =   ${gem_flags_ld}"
-	gem_script_v_Msg "gem_flags_host = ${gem_flags_host}"
 	if [[ ${gem_build_script} == "cmake" ]]; then
-		gem_script_v_Msg "gem_filename_cmake_toolchain=${gem_filename_cmake_toolchain}"
-		gem_script_v_Msg "gem_cmake_generator =        ${gem_cmake_generator}"
+		gem_script_v_Msg "gem_fullpath_toolchain_cmake ="
+		gem_script_v_Msg "                       ${gem_fullpath_toolchain_cmake}"
+		gem_script_v_Msg "gem_cmake_generator =  ${gem_cmake_generator}"
 	fi
+	if [[ ${gem_triple} == *"android"* ]]; then
+		gem_script_v_Msg "gem_android_ndk_version =  ${gem_android_ndk_version}"
+		gem_script_v_Msg "gem_android_api_level =    ${gem_android_api_level}"
+		gem_script_v_Msg "gem_arch =                 ${gem_arch}"
+	fi
+	gem_script_v_Msg "gem_flags_c =         ${gem_flags_c}"
+	gem_script_v_Msg "gem_flags_cpp =       ${gem_flags_cpp}"
+	gem_script_v_Msg "gem_flags_cxx =       ${gem_flags_cxx}"
+	gem_script_v_Msg "gem_flags_ld =        ${gem_flags_ld}"
+	gem_script_v_Msg "gem_flags_configure = ${gem_flags_configure}"
 	gem_script_v_Msg "PKG_CONFIG =                     ${PKG_CONFIG}"
 	gem_script_v_Msg "PKG_CONFIG_PATH =                ${PKG_CONFIG_PATH}"
 	gem_script_v_Msg "PKG_CONFIG_DIR =                 ${PKG_CONFIG_DIR}"
@@ -732,7 +701,6 @@ function gem_build_DebugDumpVars
 	gem_script_v_Msg "--------------------------------------------------------------------------------"
 }
 
-function gem_v_CheckLogForErrors { gem_script_v_Error "gem_v_CheckLogForErrors() has been renamed." ;}
 function gem_build_v_CheckLogForErrors { gem_build_v_CheckLogForErrors $@;}
 function gem_build_v_CheckLogForErrors
 {
@@ -741,7 +709,7 @@ function gem_build_v_CheckLogForErrors
 	fi
 
 	local gem_filename_log=${1}
-	if [[ ${gem_option_redirect_output} == 1 ]]; then
+	if [[ ${gem_option_redirect_output} -ne 0 ]]; then
 
 		gem_errors="$(grep -i -s -n -e error -e fail ${gem_filename_log})"
 		local gem_result=$?
@@ -778,16 +746,16 @@ function gem_build_FlagsToMesonArray
 
 # Append the values of gem_flags_c, gem_flags_cpp, gem_flags_cxx, and
 # gem_flags_ld to the string whose name is specified by $1.
-function gem_build_String_AppendFlagsTo
+function gem_build_String_AddFlags
 {
 	if [[ ${CFLAGS}x != "x" || ${CPPFLAGS}x != "x" || ${CXXFLAGS}x != "x" || ${LDFLAGS}x != "x" ]]; then
-		gem_script_v_Error "gem_build_String_AppendFlagsTo(): Don't set CFLAGS, CPPFLAGS, CXXFLAGS, or LDFLAGS directly.  Instead, use gem_flags_c, gem_flags_cpp, gem_flags_cxx, and gem_flags_ld."
+		gem_script_v_Error "gem_build_String_AddFlags(): Don't set CFLAGS, CPPFLAGS, CXXFLAGS, or LDFLAGS directly.  Instead, use gem_flags_c, gem_flags_cpp, gem_flags_cxx, and gem_flags_ld."
 	fi
 	if [[ ${gem_flags_c} == *\"* || ${gem_flags_cpp} == *\"* || ${gem_flags_cxx} == *\"* || ${gem_flags_ld} == *\"* ]]; then
-		gem_script_v_Error "gem_build_String_AppendFlagsTo(): Warning: A flag contained a double quote.  We may need to escape it!"
+		gem_script_v_Error "gem_build_String_AddFlags(): Warning: A flag contained a double quote.  We may need to escape it!"
 	fi
 	if [[ $# -ne 1 ]]; then
-		gem_script_v_Error "gem_build_String_AppendFlagsTo() not called with one parameter, a variable name."
+		gem_script_v_Error "gem_build_String_AddFlags() not called with one parameter, a variable name."
 	fi
 
 	if [[ ${gem_build_script} == "cmake" ]]; then
@@ -809,22 +777,25 @@ function gem_build_String_AppendFlagsTo
 		gem_script_v_Error "gem_build_AddFlagsToString() not implemented for meson.  They are placed in an array in the meson cross file.  See gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common()."
 	fi
 
-	if [[ ${gem_flags_c}x != "x" ]]; then
-		local temp_c="${lvalue_flags_c}=\"${gem_flags_c}\""
-	fi
+	local temp
 	if [[ ${gem_flags_cpp}x != "x" ]]; then
-		local temp_cpp="${lvalue_flags_cpp}=\"${gem_flags_cpp}\""
+		temp="${temp} ${lvalue_flags_cpp}=\"${gem_flags_cpp}\""
 	fi
-	if [[ ${gem_flags_cxx}x != "x" ]]; then
-		local temp_cxx="${lvalue_flags_cxx}=\"${gem_flags_cxx}\""
+	if [[ ${gem_flags_c}x != "x" && ${gem_is_cplusplus} -eq 0 ]]; then
+		temp="${temp} ${lvalue_flags_c}=\"${gem_flags_c}\""
+	fi
+	if [[ ${gem_flags_cxx}x != "x" && ${gem_is_cplusplus} -ne 0 ]]; then
+		temp="${temp} ${lvalue_flags_cxx}=\"${gem_flags_cxx}\""
 	fi
 	if [[ ${gem_flags_ld}x != "x" ]]; then
-		local temp_ld="${lvalue_flags_ld}=\"${gem_flags_ld}\""
+		temp="${temp} ${lvalue_flags_ld}=\"${gem_flags_ld}\""
 	fi
 
-	local temp="${temp_c} ${temp_cpp} ${temp_cxx} ${temp_ld}"
-
-	printf -v ${1} "${!1} %s" "${temp}"
+	if [[ ${gem_build_script} == "autotools" ]]; then
+		printf -v ${1} "%s ${!1}" "${temp}"
+	else
+		printf -v ${1} "${!1} %s" "${temp}"
+	fi
 
 #echo "${1}" ; exit
 #echo "$temp" ; exit
@@ -839,127 +810,137 @@ function gem_build_PkgConfig
 	echo ${gem_output}
 }
 
+function gem_build_android_ValidateToolchain
+{
+	local noop=0
+}
+
 
 # =============================================================================
 #                          Configure Build Platform
 # =============================================================================
-function gem_v_SetHost_common { gem_script_v_Error "gem_v_SetHost_common() has been renamed." ;}
-function gem_build_v_SetHost_common { gem_build_SetHost_common ;}
-function gem_build_SetHost_common
+function gem_build_v_InitToolchain_common { gem_build_InitToolchain_common ;}
+function gem_build_InitToolchain_common
 {
-	if [[ ${gem_host} != *"android"* ]]; then
-		gem_flags_common="-march=x86-64 -msse4.2 -mpopcnt -m64 -mtune=intel ${gem_flags_common}"
-	fi
-	gem_flags_cpp="${gem_flags_cpp} ${gem_flags_common}"
-	gem_flags_c="-fPIE -fPIC ${gem_flags_c} ${gem_flags_common}"	# -D__ANDROID_API__=${gem_android_api_level}
-	gem_flags_cxx="-fPIE -fPIC ${gem_flags_cxx} ${gem_flags_common}"
+	gem_flags_c="-fPIE -fPIC ${gem_flags_c}"
+	gem_flags_cpp="-fPIE -fPIC ${gem_flags_cpp}"
+	gem_flags_cxx="-fPIE -fPIC ${gem_flags_cxx}"
 
-	# This is causing mingw under windows to hang during configure at "checking
-	# whether we are cross compiling..."
-	if [[ ${gem_os} == "MINGW64"* ]]; then
-		gem_flags_ld="${gem_flags_ld} ${gem_flags_common}"
-	else
-		gem_flags_ld="-pie ${gem_flags_ld} ${gem_flags_common}"
+	if [[ ${gem_os} == "MINGW64"* ]]; then	# -pie is causing mingw under
+		gem_flags_ld="${gem_flags_ld}"		# windows to hang during configure
+	else									# at "checking whether we are
+		gem_flags_ld="-pie ${gem_flags_ld}"	# cross compiling..."
 	fi
-
 #	gem_flags_ld="-nostdlib -lc -lm -ldl -llog ${gem_flags_ld}"
 }
 
-function gem_v_SetHost_linux { gem_script_v_Error "gem_v_SetHost_linux() has been renamed." ;}
-function gem_build_v_SetHost_linux { gem_build_SetHost_linux ;}
-function gem_build_SetHost_linux
+function gem_build_v_InitToolchain_x86_64_common { gem_build_InitToolchain_x86_64_common ;}
+function gem_build_InitToolchain_x86_64_common
 {
-#	gem_platform_host=x86_64-linux-gnu
-	gem_platform_host=x86_64-pc-linux-gnu
-	gem_platform_arch=x86-64
+	# For performance hints see: https://software.intel.com/blogs/2012/09/26/gcc-x86-performance-hints
+	# x86_64 compiler options: https://gcc.gnu.org/onlinedocs/gcc-9.2.0/gcc/x86-Options.html#x86-Options
+	# To see which options are set for native builds run: gcc -march=native -Q --help=target
+
+#	gem_arch=x86-64
+	gem_arch=skylake
+#	gem_arch=k8
+
+	local gem_flags_common="-mcpu=${gem_arch} -march=${gem_arch} -mtune=${gem_arch}"
+#	gem_flags_common="${gem_flags_common} -msse4.2"
+	gem_flags_c="${gem_flags_c} ${gem_flags_common}"
+	gem_flags_cpp="${gem_flags_cpp} ${gem_flags_common}"
+	gem_flags_cxx="${gem_flags_cxx} ${gem_flags_common}"
+	gem_flags_ld="${gem_flags_ld}"
+	gem_flags_configure="${gem_flags_configure}"
+
+	gem_build_v_InitToolchain_common
+}
+
+function gem_build_v_InitToolchain_x86_64-pc-linux-gnu { gem_build_InitToolchain_x86_64-pc-linux-gnu ;}
+function gem_build_InitToolchain_x86_64-pc-linux-gnu
+{
+	gem_fullpath_sysroot=/
+	gem_fullpath_toolchain_autotools=/usr
 
 	if [[ ${gem_build_script} == "cmake" ]]; then
-		gem_filename_cmake_toolchain=${gem_fullpath_local}/toolchains/linux.toolchain.cmake
+		gem_fullpath_toolchain_cmake=${gem_fullpath_local}/toolchains/linux.toolchain.cmake
 
 	elif [[ ${gem_build_script} == "autotools" ]]; then
-		gem_fullpath_toolchain=/usr
-		gem_fullpath_sysroot=/
 
 		if [[ ${gem_use_clang} == 0 ]]; then
-			CC=${gem_fullpath_toolchain}/bin/gcc
-			CXX=${gem_fullpath_toolchain}/bin/g++
+			CC=${gem_fullpath_toolchain_autotools}/bin/gcc
+			CXX=${gem_fullpath_toolchain_autotools}/bin/g++
 		else	# clang
-			CC=${gem_fullpath_toolchain}/bin/clang
-			CXX=${gem_fullpath_toolchain}/bin/clang++
+			CC=${gem_fullpath_toolchain_autotools}/bin/clang
+			CXX=${gem_fullpath_toolchain_autotools}/bin/clang++
 		fi
-		LD=${gem_fullpath_toolchain}/bin/ld
-		AR=${gem_fullpath_toolchain}/bin/ar
-		AS=${gem_fullpath_toolchain}/bin/as
-		NM=${gem_fullpath_toolchain}/bin/nm
-		STRIP=${gem_fullpath_toolchain}/bin/strip
-		RANLIB=${gem_fullpath_toolchain}/bin/ranlib
-		OBJDUMP=${gem_fullpath_toolchain}/bin/objdump
+		LD=${gem_fullpath_toolchain_autotools}/bin/ld
+		AR=${gem_fullpath_toolchain_autotools}/bin/ar
+		AS=${gem_fullpath_toolchain_autotools}/bin/as
+		NM=${gem_fullpath_toolchain_autotools}/bin/nm
+		STRIP=${gem_fullpath_toolchain_autotools}/bin/strip
+		RANLIB=${gem_fullpath_toolchain_autotools}/bin/ranlib
+		OBJDUMP=${gem_fullpath_toolchain_autotools}/bin/objdump
 
 	elif [[ ${gem_build_script} == "meson" ]]; then
 		noop=0
 	fi
-	gem_build_v_SetHost_common
+	gem_build_v_InitToolchain_x86_64_common
 }
 
-function gem_v_SetHost_cygwin { gem_script_v_Error "gem_v_SetHost_cygwin() has been renamed." ;}
-function gem_build_v_SetHost_cygwin { gem_build_SetHost_cygwin ;}
-function gem_build_SetHost_cygwin
+function gem_build_v_InitToolchain_x86_64-pc-cygwin { gem_build_InitToolchain_x86_64-pc-cygwin ;}
+function gem_build_InitToolchain_x86_64-pc-cygwin
 {
-	gem_platform_host=x86_64-pc-cygwin
-	gem_platform_arch=x86-64
+	gem_fullpath_sysroot=/usr
 
 	if [[ ${gem_build_script} == "cmake" ]]; then
-		gem_filename_cmake_toolchain=${gem_fullpath_local}/toolchains/cygwin.toolchain.cmake
+		gem_fullpath_toolchain_cmake=${gem_fullpath_local}/toolchains/cygwin.toolchain.cmake
 
 	elif [[ ${gem_build_script} == "autotools" ]]; then
-		gem_fullpath_toolchain=/usr
-		gem_fullpath_sysroot=/usr
+		gem_fullpath_toolchain_autotools=/usr
 
 		if [[ ${gem_use_clang} == 0 ]]; then
-			CC=${gem_fullpath_toolchain}/bin/x86_64-pc-cygwin-gcc
-			CXX=${gem_fullpath_toolchain}/bin/x86_64-pc-cygwin-g++
+			CC=${gem_fullpath_toolchain_autotools}/bin/x86_64-pc-cygwin-gcc
+			CXX=${gem_fullpath_toolchain_autotools}/bin/x86_64-pc-cygwin-g++
 		else	# clang
-			CC=${gem_fullpath_toolchain}/bin/clang
-			CXX=${gem_fullpath_toolchain}/bin/clang++
+			CC=${gem_fullpath_toolchain_autotools}/bin/clang
+			CXX=${gem_fullpath_toolchain_autotools}/bin/clang++
 		fi
-		LD=${gem_fullpath_toolchain}/bin/ld
-		AR=${gem_fullpath_toolchain}/bin/x86_64-pc-cygwin-gcc-ar
-		AS=${gem_fullpath_toolchain}/bin/as
-		NM=${gem_fullpath_toolchain}/bin/x86_64-pc-cygwin-gcc-nm
-		STRIP=${gem_fullpath_toolchain}/bin/strip
-		RANLIB=${gem_fullpath_toolchain}/bin/x86_64-pc-cygwin-gcc-ranlib
-		OBJDUMP=${gem_fullpath_toolchain}/bin/objdump
-		DLLTOOL=${gem_fullpath_toolchain}/bin/dlltool
-		RESCOMP=${gem_fullpath_toolchain}/bin/windres
+		LD=${gem_fullpath_toolchain_autotools}/bin/ld
+		AR=${gem_fullpath_toolchain_autotools}/bin/x86_64-pc-cygwin-gcc-ar
+		AS=${gem_fullpath_toolchain_autotools}/bin/as
+		NM=${gem_fullpath_toolchain_autotools}/bin/x86_64-pc-cygwin-gcc-nm
+		STRIP=${gem_fullpath_toolchain_autotools}/bin/strip
+		RANLIB=${gem_fullpath_toolchain_autotools}/bin/x86_64-pc-cygwin-gcc-ranlib
+		OBJDUMP=${gem_fullpath_toolchain_autotools}/bin/objdump
+		DLLTOOL=${gem_fullpath_toolchain_autotools}/bin/dlltool
+		RESCOMP=${gem_fullpath_toolchain_autotools}/bin/windres
 
 	elif [[ ${gem_build_script} == "meson" ]]; then
 		noop=0
 	fi
-	gem_build_v_SetHost_common
+
+	gem_build_v_InitToolchain_x86_64_common
 }
 
-function gem_v_SetHost_mingw { gem_script_v_Error "gem_v_SetHost_mingw() has been renamed." ;}
-function gem_build_v_SetHost_mingw { gem_build_SetHost_mingw ;}
-function gem_build_SetHost_mingw
+function gem_build_v_InitToolchain_x86_64-w64-mingw32 { gem_build_InitToolchain_x86_64-w64-mingw32 ;}
+function gem_build_InitToolchain_x86_64-w64-mingw32
 {
-	gem_platform_host=x86_64-w64-mingw32
-	gem_platform_arch=x86-64
-
 	gem_prefix_tools=
 	if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW on Windows
-		gem_fullpath_toolchain=/mingw64
+		gem_fullpath_toolchain_autotools=/mingw64
 		gem_fullpath_sysroot=/mingw64
 	elif [[ ${gem_os} == "CYGWIN"* ]]; then	# MinGW under Cygwin on Windows.
 		gem_prefix_tools=x86_64-w64-mingw32-
-		gem_fullpath_toolchain=
+		gem_fullpath_toolchain_autotools=
 		gem_fullpath_sysroot=/usr/x86_64-w64-mingw32/sys-root
-#		gem_script_v_Error "gem_build_SetHost_mingw: Need to implement building mingw under cygwin."
+#		gem_script_v_Error "gem_build_InitToolchain_x86_64-w64-mingw32: Need to implement building mingw under cygwin."
 	elif [[ ${gem_os} == "Linux" ]]; then		# MinGW on Linux
 		gem_prefix_tools=x86_64-w64-mingw32-
-		gem_fullpath_toolchain=/usr
+		gem_fullpath_toolchain_autotools=/usr
 		gem_fullpath_sysroot=/usr/x86_64-w64-mingw32/sys-root
 	else
-		gem_script_v_Error "gem_build_SetHost_mingw: Unrecognized shell: ${gem_os}."
+		gem_script_v_Error "gem_build_InitToolchain_x86_64-w64-mingw32: Unrecognized shell: ${gem_os}."
 	fi
 
 	# Find the compiler's library directory.  The gcc library directory
@@ -973,213 +954,236 @@ function gem_build_SetHost_mingw
 		pushd /mingw64/lib/gcc/x86_64-w64-mingw32 &>/dev/null
 		gem_fullpath_gcc_libs=${gem_fullpath_sysroot}/mingw/lib
 	else
-		gem_script_v_Error "gem_build_SetHost_mingw: Unrecognized shell: ${gem_os}."
+		gem_script_v_Error "gem_build_InitToolchain_x86_64-w64-mingw32: Unrecognized shell: ${gem_os}."
 	fi
 	gem_path_found=$(find -name libgcc.a)
 	if [[ ${gem_path_found}x == "x" ]]; then
-		gem_script_v_Error "gem_build_SetHost_mingw(): Failed to determine library directory."
+		gem_script_v_Error "gem_build_InitToolchain_x86_64-w64-mingw32(): Failed to determine library directory."
 	fi
 	gem_fullpath_gcc_libs=$(pwd)/$(dirname ${gem_path_found})
 	popd &>/dev/null
 
 
 	if [[ ${gem_build_script} == "cmake" ]]; then
-		gem_filename_cmake_toolchain=${gem_fullpath_local}/toolchains/mingw.toolchain.cmake
+		gem_fullpath_toolchain_cmake=${gem_fullpath_local}/toolchains/mingw.toolchain.cmake
 
 	elif [[ ${gem_build_script} == "autotools" ]]; then
 
 		if [[ ${gem_os} != "MINGW64"* ]]; then	# Building for mingw on cygwin or linux.
 			if [[ ! -d ${gem_fullpath_gcc_libs} ]]; then
-				gem_script_v_Error "gem_build_SetHost_mingw(): Library path does not exist: ${gem_fullpath_gcc_libs}.  Did the version number change?"
+				gem_script_v_Error "gem_build_InitToolchain_x86_64-w64-mingw32(): Library path does not exist: ${gem_fullpath_gcc_libs}.  Did the version number change?"
 			fi
 			# *FIX: Is this still required now that we have pkg-config working properly?
 			gem_flags_ld="${gem_flags_ld} -L${gem_fullpath_gcc_libs}"
 		fi
-echo "gem_use_clang=$gem_use_clang" ; exit
-		if [[ ${gem_use_clang} == 0 ]]; then
+
+		if [[ ${gem_use_clang} -ne 0 ]]; then	# clang
 			if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW on Windows
-				CC=${gem_fullpath_toolchain}/bin/x86_64-w64-mingw32-gcc
-				CXX=${gem_fullpath_toolchain}/bin/x86_64-w64-mingw32-g++
+				CC=${gem_fullpath_toolchain_autotools}/bin/clang
+				CXX=${gem_fullpath_toolchain_autotools}/bin/clang++
 			elif [[ ${gem_os} == "CYGWIN"* ]]; then	# MinGW under Cygwin on Windows.
-				CC=${gem_fullpath_toolchain}/bin/x86_64-w64-mingw32-gcc
-				CXX=${gem_fullpath_toolchain}/bin/x86_64-w64-mingw32-g++
-			elif [[ ${gem_os} == "Linux" ]]; then		# MinGW on Linux
-				CC=/bin/x86_64-w64-mingw32-gcc
-				CXX=/bin/x86_64-w64-mingw32-g++
-			else
-				gem_script_v_Error "gem_build_SetHost_mingw: Unrecognized shell: ${gem_os}."
-			fi
-		else	# clang
-			if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW on Windows
-				CC=${gem_fullpath_toolchain}/bin/clang
-				CXX=${gem_fullpath_toolchain}/bin/clang++
-			elif [[ ${gem_os} == "CYGWIN"* ]]; then	# MinGW under Cygwin on Windows.
-				CC=${gem_fullpath_toolchain}/bin/x86_64-w64-mingw32-gcc
-				CXX=${gem_fullpath_toolchain}/bin/x86_64-w64-mingw32-g++
+				CC=${gem_fullpath_toolchain_autotools}/bin/x86_64-w64-mingw32-clang
+				CXX=${gem_fullpath_toolchain_autotools}/bin/x86_64-w64-mingw32-clang++
 			elif [[ ${gem_os} == "Linux" ]]; then		# MinGW on Linux
 				CC=/bin/x86_64-w64-mingw32-clang
 				CXX=/bin/x86_64-w64-mingw32-clang++
 			else
-				gem_script_v_Error "gem_build_SetHost_mingw: Unrecognized shell: ${gem_os}."
+				gem_script_v_Error "gem_build_InitToolchain_x86_64-w64-mingw32: Unrecognized shell: ${gem_os}."
+			fi
+		else	# clang
+			if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW on Windows
+				CC=${gem_fullpath_toolchain_autotools}/bin/x86_64-w64-mingw32-gcc
+				CXX=${gem_fullpath_toolchain_autotools}/bin/x86_64-w64-mingw32-g++
+			elif [[ ${gem_os} == "CYGWIN"* ]]; then	# MinGW under Cygwin on Windows.
+				CC=${gem_fullpath_toolchain_autotools}/bin/x86_64-w64-mingw32-gcc
+				CXX=${gem_fullpath_toolchain_autotools}/bin/x86_64-w64-mingw32-g++
+			elif [[ ${gem_os} == "Linux" ]]; then		# MinGW on Linux
+				CC=/bin/x86_64-w64-mingw32-gcc
+				CXX=/bin/x86_64-w64-mingw32-g++
+			else
+				gem_script_v_Error "gem_build_InitToolchain_x86_64-w64-mingw32: Unrecognized shell: ${gem_os}."
 			fi
 		fi
 
-		LD=${gem_fullpath_toolchain}/bin/${gem_prefix_tools}ld
-		AR=${gem_fullpath_toolchain}/bin/${gem_prefix_tools}ar
-		AS=${gem_fullpath_toolchain}/bin/${gem_prefix_tools}as
-		NM=${gem_fullpath_toolchain}/bin/${gem_prefix_tools}nm
-		STRIP=${gem_fullpath_toolchain}/bin/${gem_prefix_tools}strip
-		RANLIB=${gem_fullpath_toolchain}/bin/${gem_prefix_tools}ranlib
-		OBJDUMP=${gem_fullpath_toolchain}/bin/${gem_prefix_tools}objdump
-		DLLTOOL=${gem_fullpath_toolchain}/bin/${gem_prefix_tools}dlltool
+		LD=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_tools}ld
+		AR=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_tools}ar
+		AS=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_tools}as
+		NM=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_tools}nm
+		STRIP=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_tools}strip
+		RANLIB=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_tools}ranlib
+		OBJDUMP=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_tools}objdump
+		DLLTOOL=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_tools}dlltool
 		if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW on Windows
-			RESCOMP=${gem_fullpath_toolchain}/bin/windres
+			RESCOMP=${gem_fullpath_toolchain_autotools}/bin/windres
 		elif [[ ${gem_os} == "CYGWIN"* ]]; then	# MinGW under Cygwin on Windows.
-			RESCOMP=${gem_fullpath_toolchain}/bin/x86_64-w64-mingw32-windres
+			RESCOMP=${gem_fullpath_toolchain_autotools}/bin/x86_64-w64-mingw32-windres
 		elif [[ ${gem_os} == "Linux" ]]; then		# MinGW on Linux
-			RESCOMP=${gem_fullpath_toolchain}/bin/x86_64-w64-mingw32-windres
+			RESCOMP=${gem_fullpath_toolchain_autotools}/bin/x86_64-w64-mingw32-windres
 		else
-			gem_script_v_Error "gem_build_SetHost_mingw: Unrecognized shell: ${gem_os}."
+			gem_script_v_Error "gem_build_InitToolchain_x86_64-w64-mingw32: Unrecognized shell: ${gem_os}."
 		fi
 	elif [[ ${gem_build_script} == "meson" ]]; then
 		local noop=0
 	fi
 
-	gem_build_v_SetHost_common
+	gem_build_v_InitToolchain_x86_64_common
 }
 
-function gem_v_SetHost_msvc { gem_script_v_Error "gem_v_SetHost_msvc() has been renamed." ;}
-function gem_build_v_SetHost_msvc { gem_build_SetHost_msvc ;}
-function gem_build_SetHost_msvc
+function gem_build_v_InitToolchain_x86_64-pc-windows-msvc { gem_build_InitToolchain_x86_64-pc-windows-msvc ;}
+function gem_build_InitToolchain_x86_64-pc-windows-msvc
 {
 	if [[ ${gem_build_script} == "cmake" ]]; then
-		gem_script_v_Error "NOT REALLY AN ERROR: In gem_build_SetHost_msvc(), did we mean to reference the mingw toolchain file?  Look into this."
-		gem_filename_cmake_toolchain=${gem_fullpath_local}/toolchains/mingw.toolchain.cmake
+		gem_script_v_Error "NOT REALLY AN ERROR: In gem_build_InitToolchain_x86_64-pc-windows-msvc(), did we mean to reference the mingw toolchain file?  Look into this."
+		gem_fullpath_toolchain_cmake=${gem_fullpath_local}/toolchains/mingw.toolchain.cmake
 	elif [[ ${gem_build_script} == "autotools" ]]; then
 		noop=0
 	elif [[ ${gem_build_script} == "meson" ]]; then
 		noop=0
 	fi
-	gem_platform_host=x86_64-pc-windows-msvc
-	gem_platform_arch=x86-64
 
-	gem_build_v_SetHost_common
+	gem_build_v_InitToolchain_x86_64_common
 }
 
-function gem_v_SetHost_common_android { gem_script_v_Error "gem_v_SetHost_common_android() has been renamed." ;}
-function gem_build_SetHost_common_android { gem_script_v_Error "gem_build_SetHost_common_android() has been renamed." ;}
-function gem_build_v_SetHost_android_common { gem_build_SetHost_android_common ;}
-function gem_build_SetHost_android_common
+function gem_build_v_InitToolchain_android_common { gem_build_InitToolchain_android_common ;}
+function gem_build_InitToolchain_android_common
 {
-	gem_platform_host_details_suffix=ndk_${gem_android_ndk_version}_api_${gem_android_api_level}_stl_${gem_android_standalone_toolchain_stl}_arch_${gem_platform_arch}
-	gem_fullpath_android_standalone_toolchain=${gem_fullpath_android_standalone_toolchain_root}/${gem_platform_host_details_suffix}
+	# Using the NDK with other build systems.
+	# Source: https://developer.android.com/ndk/guides/other_build_systems
 
-	if [[ ! -d ${gem_fullpath_android_standalone_toolchain} ]]; then
-		gem_script_v_Error "gem_build_SetHost_common_android: Android standalone toolchain does not exist: ${gem_fullpath_android_standalone_toolchain}"
+    # Validate android sdk directory.
+    if [[ ! -d ${gem_fullpath_android_sdk} ]]; then
+        gem_script_v_Error "Android SDK directory does not exist: gem_fullpath_android_sdk=${gem_fullpath_android_sdk}"
+    fi
+
+	# Android only supports clang compiler.
+	if [[ ${gem_use_clang} -eq 0 ]]; then
+		gem_script_v_Error "Android toolchain only supports the clang compiler.  Set gem_use_clang=1."
 	fi
+	gem_triple_details_suffix=ndk_${gem_android_ndk_version}_api_${gem_android_api_level}_arch_${gem_arch}
+
+	gem_fullpath_toolchain_autotools=${gem_fullpath_android_ndk}/toolchains/llvm/prebuilt/linux-x86_64
+	gem_fullpath_sysroot=${gem_fullpath_toolchain_autotools}/sysroot
 
 	if [[ ${gem_build_script} == "cmake" ]]; then
-		#	gem_filename_cmake_toolchain=${gem_fullpath_local}/toolchains/android.toolchain.cmake
-		gem_filename_cmake_toolchain=${gem_fullpath_android}/android-ndk-r${gem_android_ndk_version}/build/cmake/android.toolchain.cmake
+		#	gem_fullpath_toolchain_cmake=${gem_fullpath_local}/toolchains/android.toolchain.cmake
+		gem_fullpath_toolchain_cmake=${gem_fullpath_android_ndk}/build/cmake/android.toolchain.cmake
 
 	elif [[ ${gem_build_script} == "autotools" || ${gem_build_script} == "meson" ]]; then
-		gem_fullpath_toolchain=${gem_fullpath_android_standalone_toolchain_root}/${gem_platform_host_details_suffix}
-		if [[ ! -d ${gem_fullpath_toolchain} ]]; then
-			gem_script_v_Error "gem_build_SetHost_common_android: Toolchain does not exist at:$'\n'${gem_fullpath_toolchain}"
-		fi
-		gem_fullpath_sysroot=${gem_fullpath_toolchain}/sysroot
 
-		if [ ${gem_use_clang} -eq 0 ]; then
-			CC=${gem_fullpath_toolchain}/bin/${gem_platform_host}-gcc
-			CXX=${gem_fullpath_toolchain}/bin/${gem_platform_host}-g++
-		else
-			CC=${gem_fullpath_toolchain}/bin/${gem_platform_host}-clang
-			CXX=${gem_fullpath_toolchain}/bin/${gem_platform_host}-clang++
-		fi
-		AR=${gem_fullpath_toolchain}/bin/${gem_platform_host}-ar
-		AS=${gem_fullpath_toolchain}/bin/${gem_platform_host}-as
-		LD=${gem_fullpath_toolchain}/bin/${gem_platform_host}-ld
-		NM=${gem_fullpath_toolchain}/bin/${gem_platform_host}-nm
-		STRIP=${gem_fullpath_toolchain}/bin/${gem_platform_host}-strip
-		RANLIB=${gem_fullpath_toolchain}/bin/${gem_platform_host}-ranlib
-		OBJDUMP=${gem_fullpath_toolchain}/bin/${gem_platform_host}-objdump
+		# https://android.googlesource.com/platform/ndk/+/master/docs/BuildSystemMaintainers.md
+
+		# *FIX: How to pass the -target param instead of calling the clang
+		# script.  See the above link for details.
+
+		# x86_64-linux-android
+		# armv7a-linux-androideabi
+		# aarch64-linux-android
+		CC=${gem_fullpath_toolchain_autotools}/bin/${gem_triple}${gem_android_api_level}-clang
+		CXX=${gem_fullpath_toolchain_autotools}/bin/${gem_triple}${gem_android_api_level}-clang++
+
+		AR=${gem_fullpath_toolchain_autotools}/bin/${gem_triple}-ar
+		AS=${gem_fullpath_toolchain_autotools}/bin/${gem_triple}-as
+		LD=${gem_fullpath_toolchain_autotools}/bin/${gem_triple}-ld
+		NM=${gem_fullpath_toolchain_autotools}/bin/${gem_triple}-nm
+		STRIP=${gem_fullpath_toolchain_autotools}/bin/${gem_triple}-strip
+		RANLIB=${gem_fullpath_toolchain_autotools}/bin/${gem_triple}-ranlib
+		OBJDUMP=${gem_fullpath_toolchain_autotools}/bin/${gem_triple}-objdump
 	fi
 
-	gem_build_v_SetHost_common
+	gem_build_v_InitToolchain_common
 }
 
-function gem_v_SetHost_android_x86_64 { gem_script_v_Error "gem_v_SetHost_android_x86_64() has been renamed." ;}
-function gem_build_v_SetHost_android_x86_64 { gem_build_SetHost_android_x86_64 ;}
-function gem_build_SetHost_android_x86_64
-{
-	# For performance hints see:
-	# https://software.intel.com/blogs/2012/09/26/gcc-x86-performance-hints
-	gem_platform_host=x86_64-linux-android
-	gem_android_abi=x86_64
-	gem_platform_arch=x86_64
-	gem_android_standalone_toolchain_arch=x86_64
+# Name	        arch	ABI             triple
+# -----------------------------------------------------------
+# 32-bit ARMv7	arm     armeabi-v7a     armv7a-linux-androideabi
+# 64-bit ARMv8	aarch64	aarch64-v8a     aarch64-linux-android
+# 32-bit Intel	x86     x86 	        i686-linux-android
+# 64-bit Intel	x86_64	x86_64      	x86_64-linux-android
 
-	gem_flags_host="--disable-asm ${gem_flags_host}"
-	gem_flags_cpp="${gem_flags_cpp}"
-	gem_flags_c="-march=x86-64 -msse4.2 -mpopcnt -m64 -mtune=intel ${gem_flags_c}"
-	gem_flags_cxx="-march=x86-64 -msse4.2 -mpopcnt -m64 -mtune=intel ${gem_flags_cxx}"
+function gem_build_v_InitToolchain_x86_64-linux-android { gem_build_InitToolchain_x86_64-linux-android ;}
+function gem_build_InitToolchain_x86_64-linux-android
+{
+	# Overview: https://android.googlesource.com/platform/ndk/+/master/docs/BuildSystemMaintainers.md
+	# For performance hints see: https://software.intel.com/blogs/2012/09/26/gcc-x86-performance-hints
+	# x86_64 compiler options: https://gcc.gnu.org/onlinedocs/gcc-9.2.0/gcc/x86-Options.html#x86-Options
+	gem_android_abi=x86_64
+	gem_arch=x86_64	# gcc
+#	gem_arch=x86-64	# clang?	Use llc --help and llc --version
+
+	gem_flags_configure="--disable-asm ${gem_flags_configure}"
+	local gem_flags_common="-march=${gem_arch}"
+	if [[ ${gem_use_clang} -ne 0 ]]; then	# clang
+		# clang: error: the clang compiler does not support '-mtune=generic-armv8-a'
+		# clang: error: the clang compiler does not support '-mcpu=armv8-a'
+		gem_flags_common="${gem_flags_common}"
+	else	# gcc
+		gem_flags_common="${gem_flags_common} -mcpu=${gem_arch} -march=${gem_arch} -mtune=generic-${gem_arch}"
+	fi
+#	gem_flags_common="${gem_flags_common} -msse4.2"
+	gem_flags_c="${gem_flags_c} ${gem_flags_common}"
+	gem_flags_cpp="${gem_flags_cpp} ${gem_flags_common}"
+	gem_flags_cxx="${gem_flags_cxx} ${gem_flags_common}"
 	gem_flags_ld="${gem_flags_ld}"
 
-	gem_build_v_SetHost_common_android
+	gem_build_v_InitToolchain_android_common
 }
 
-function gem_v_SetHost_android_v7vfpv3 { gem_script_v_Error "gem_v_SetHost_android_v7vfpv3() has been renamed." ;}
-function gem_build_v_SetHost_android_v7vfpv3 { gem_build_SetHost_android_v7vfpv3 ;}
-function gem_build_SetHost_android_v7vfpv3
+function gem_build_v_InitToolchain_armv7a-linux-androideabi { gem_build_InitToolchain_armv7a-linux-androideabi ;}
+function gem_build_InitToolchain_armv7a-linux-androideabi
 {
-	gem_platform_host=arm-linux-androideabi
+	# Overview: https://android.googlesource.com/platform/ndk/+/master/docs/BuildSystemMaintainers.md
+	# ARM compiler options: https://gcc.gnu.org/onlinedocs/gcc-9.2.0/gcc/ARM-Options.html#ARM-Options
 	gem_android_abi=armeabi-v7a
-	gem_platform_arch=arm
-	gem_android_standalone_toolchain_arch=arm
+#	gem_arch=arm		# clang?	Use llc --help and llc --version
 
-	gem_flags_host="${gem_flags_host}"
-	gem_flags_cpp="${gem_flags_cpp}"
-	gem_flags_c="-march=armv7-a -mfpu=vfpv3-d16 -mfloat-abi=softfp -mthumb ${gem_flags_c}"
-	gem_flags_cxx="-march=armv7-a -mfpu=vfpv3-d16 -mfloat-abi=softfp -mthumb ${gem_flags_cxx}"
-	gem_flags_ld="-march=armv7-a -Wl,--fix-cortex-a8 ${gem_flags_ld}"
+	gem_flags_configure="${gem_flags_configure}"
+	local gem_flags_common="-march=${gem_arch}"
+	if [[ ${gem_use_clang} -ne 0 ]]; then	# clang
+		# clang: error: the clang compiler does not support '-mtune=generic-armv8-a'
+		# clang: error: the clang compiler does not support '-mcpu=armv8-a'
+		gem_flags_common="${gem_flags_common}"
+	else	# gcc
+		gem_flags_common="${gem_flags_common} -mcpu=${gem_arch} -march=${gem_arch} -mtune=generic-${gem_arch}"
+	fi
+	# We used to force soft floating point.  Removing this under the assumption
+	# that the bug has been fixed, or was it a hardware bug?
+	# gem_flags_cpp_common="-mfpu=-mfloat-abi=softfp ${gem_flags_c}"
+	gem_flags_c="${gem_flags_c} ${gem_flags_common}"
+	gem_flags_cpp="${gem_flags_cpp} ${gem_flags_common}"
+	gem_flags_cxx="${gem_flags_cxx} ${gem_flags_common}"
+	gem_flags_ld="${gem_flags_ld}"
 
-	gem_script_v_SetHost_common_android
+	gem_build_v_InitToolchain_android_common
 }
 
-function gem_v_SetHost_android_arm_v7_plus_neon { gem_script_v_Error "gem_v_SetHost_android_arm_v7_plus_neon() has been renamed." ;}
-function gem_build_v_SetHost_android_arm_v7_plus_neon { gem_build_SetHost_android_arm_v7_plus_neon ;}
-function gem_build_SetHost_android_arm_v7_plus_neon
+function gem_build_v_InitToolchain_aarch64-linux-android { gem_build_InitToolchain_aarch64-linux-android ;}
+function gem_build_InitToolchain_aarch64-linux-android
 {
-	gem_platform_host=arm-linux-androideabi
-	gem_android_abi="armeabi-v7a with NEON"
-	gem_platform_arch=arm
-	gem_android_standalone_toolchain_arch=arm
+	# Overview: https://android.googlesource.com/platform/ndk/+/master/docs/BuildSystemMaintainers.md
+	# AArch64 compiler options: https://gcc.gnu.org/onlinedocs/gcc-9.2.0/gcc/AArch64-Options.html#AArch64-Options
+	gem_android_abi=arm64-v8a	# aarch64-v8a
+	gem_arch=armv8-a	# gcc: armv8.1-a, armv8.2-a, armv8.3-a, armv8.4-a, armv8.5-a
 
-	gem_flags_host="--enable-neon ${gem_flags_host}"
-	gem_flags_cpp="${gem_flags_cpp}"
-	gem_flags_c="-march=armv7-a -mfpu=neon -mfloat-abi=softfp -mtune=cortex-a8 -mthumb ${gem_flags_c}"
-	gem_flags_cxx="-march=armv7-a -mfpu=neon -mfloat-abi=softfp -mtune=cortex-a8 -mthumb ${gem_flags_cxx}"
-	gem_flags_ld="-march=armv7-a -Wl,--fix-cortex-a8 ${gem_flags_ld}"
+# For clang :
+# llc --help
+# --march=<string>                                   - Architecture to generate code for (see --version)
+# --mcpu=<cpu-name>                                  - Target a specific cpu type (-mcpu=help for details)
 
-	gem_build_v_SetHost_common_android
-}
+	gem_flags_configure="${gem_flags_configure}"
+	local gem_flags_common="-march=${gem_arch}"
+	if [[ ${gem_use_clang} -ne 0 ]]; then	# clang
+		# clang: error: the clang compiler does not support '-mtune=generic-armv8-a'
+		# clang: error: the clang compiler does not support '-mcpu=armv8-a'
+		gem_flags_common="${gem_flags_common}"
+	else	# gcc
+		gem_flags_common="${gem_flags_common} -mcpu=${gem_arch} -march=${gem_arch} -mtune=generic-${gem_arch}"
+	fi
+	gem_flags_c="${gem_flags_c} ${gem_flags_common}"
+	gem_flags_cpp="${gem_flags_cpp} ${gem_flags_common}"
+	gem_flags_cxx="${gem_flags_cxx} ${gem_flags_common}"
+	gem_flags_ld="${gem_flags_ld}"
 
-function gem_v_SetHost_android_arm64_v8a { gem_script_v_Error "gem_v_SetHost_android_arm64_v8a() has been renamed." ;}
-function gem_build_v_SetHost_android_arm64_v8a { gem_build_SetHost_android_arm64_v8a ;}
-function gem_build_SetHost_android_arm64_v8a
-{
-	gem_platform_host=aarch64-linux-android
-	gem_android_abi=arm64-v8a
-	gem_platform_arch=arm64
-	gem_android_standalone_toolchain_arch=arm64
-
-	gem_flags_host="${gem_flags_host}"
-	gem_flags_cpp="${gem_flags_cpp}"
-	gem_flags_c="-march=armv8-a ${gem_flags_c}"
-	gem_flags_cxx="-march=armv8-a ${gem_flags_cxx}"
-	gem_flags_ld="-march=armv8-a ${gem_flags_ld}"
-
-	gem_build_v_SetHost_common_android
+	gem_build_v_InitToolchain_android_common
 }
 
 
@@ -1187,7 +1191,6 @@ function gem_build_SetHost_android_arm64_v8a
 #                            Configure Build Type
 # =============================================================================
 
-function gem_v_SetBuildType_common { gem_script_v_Error "gem_v_SetBuildType_common() has been renamed." ;}
 function gem_build_v_SetBuildType_common { gem_build_SetBuildType_common ;}
 function gem_build_SetBuildType_common
 {
@@ -1195,7 +1198,7 @@ function gem_build_SetBuildType_common
 	if [[ ${gem_build_script} == "cmake" ]]; then
 		noop=0
 	elif [[ ${gem_build_script} == "autotools" ]]; then
-		if [[ ${gem_is_cplusplus} == 1 ]]; then
+		if [[ ${gem_is_cplusplus} -ne 0 ]]; then
 			gem_flags_cxx="${gem_cxx_standard} -fexceptions -frtti ${gem_flags_cxx}"
 			gem_flags_ld="-lc++_shared ${gem_flags_ld}"
 		else
@@ -1205,7 +1208,7 @@ function gem_build_SetBuildType_common
 #			gem_flags_c="-Wall -Wextra -Wpedantic -Wconversion ${gem_flags_c}"
 		fi
 	elif [[ ${gem_build_script} == "meson" ]]; then
-		if [[ ${gem_is_cplusplus} == 1 ]]; then
+		if [[ ${gem_is_cplusplus} -ne 0 ]]; then
 			gem_flags_cxx="${gem_cxx_standard} -fexceptions -frtti ${gem_flags_cxx}"
 			gem_flags_ld="-lc++_shared ${gem_flags_ld}"
 		else
@@ -1217,7 +1220,6 @@ function gem_build_SetBuildType_common
 	fi
 }
 
-function gem_v_SetBuildType_debug { gem_script_v_Error "gem_v_SetBuildType_debug() has been renamed." ;}
 function gem_build_v_SetBuildType_debug { gem_build_SetBuildType_debug ;}
 function gem_build_SetBuildType_debug
 {
@@ -1234,7 +1236,6 @@ function gem_build_SetBuildType_debug
 	gem_build_v_SetBuildType_common
 }
 
-function gem_v_SetBuildType_release { gem_script_v_Error "gem_v_SetBuildType_release() has been renamed." ;}
 function gem_build_v_SetBuildType_release { gem_build_SetBuildType_release ;}
 function gem_build_SetBuildType_release
 {
@@ -1251,7 +1252,6 @@ function gem_build_SetBuildType_release
 	gem_build_v_SetBuildType_common
 }
 
-function gem_v_SetBuildType_relwithdebinfo { gem_script_v_Error "gem_v_SetBuildType_relwithdebinfo() has been renamed." ;}
 function gem_build_v_SetBuildType_relwithdebinfo { gem_build_SetBuildType_relwithdebinfo ;}
 function gem_build_SetBuildType_relwithdebinfo
 {
@@ -1271,7 +1271,6 @@ function gem_build_SetBuildType_relwithdebinfo
 # =============================================================================
 #                                   Configure
 # =============================================================================
-function gem_v_Cmd_Configure { gem_script_v_Error "gem_v_Cmd_Configure() has been renamed." ;}
 function gem_build_v_Cmd_Configure { gem_build_Cmd_Configure ;}
 function gem_build_Cmd_Configure
 {
@@ -1293,16 +1292,17 @@ function gem_build_Cmd_Configure
 	gem_build_v_CheckLogForErrors ${gem_filename_log_configure}
 }
 
-function gem_v_OnConfigure { gem_script_v_Error "gem_v_OnConfigure() has been renamed." ;}
 function gem_build_v_OnConfigure { gem_build_OnConfigure ;}
 function gem_build_OnConfigure
 {
 	gem_build_OnCommandLine_Configure
 
-	if [[ ${gem_option_cmdline_only} -eq 0 ]]; then
-		eval "${gem_cmd_line_configure} ${gem_redirect_suffix_configure}"
-	else
+	if [[ ${gem_option_cmdline_only} -eq 1 ]]; then
 		gem_script_v_Msg_NotQuiet "${gem_cmd_line_configure}"
+	else
+		if [[ ${gem_cmd_line_configure}x != "x" ]]; then
+			eval "${gem_cmd_line_configure} ${gem_redirect_suffix_configure}"
+		fi
 	fi
 }
 
@@ -1322,7 +1322,6 @@ function gem_build_OnCommandLine_Configure
 	fi
 }
 
-function gem_v_OnCommandLine_Configure_CMake { gem_script_v_Error "gem_v_OnCommandLine_Configure_CMake() has been renamed." ;}
 function gem_build_v_OnCommandLine_Configure_CMake { gem_build_OnCommandLine_Configure_CMake ;}
 function gem_build_OnCommandLine_Configure_CMake
 {
@@ -1330,17 +1329,17 @@ function gem_build_OnCommandLine_Configure_CMake
 ${gem_fullpath_src} \
 ${gem_cmake_generator} \
 -DCMAKE_BUILD_TYPE=${gem_build_type} \
--DCMAKE_INSTALL_PREFIX=${gem_fullpath_install}"
+-DCMAKE_INSTALL_PREFIX=${gem_fullpath_install} \
+${gem_cmake_params}"
 
-	if [[ ${gem_host} == *"android"* ]]; then
+	if [[ ${gem_triple} == *"android"* ]]; then
 		gem_cmd_line_configure="${gem_cmd_line_configure} \
 -DANDROID_ABI=${gem_android_abi} \
 -DANDROID_NATIVE_API_LEVEL=${gem_android_api_level} \
--DCMAKE_ANDROID_STANDALONE_TOOLCHAIN=${gem_fullpath_android_standalone_toolchain} \
--DANDROID_NDK=${gem_fullpath_android}/android-ndk-r${gem_android_ndk_version} \
+-DANDROID_NDK=${gem_fullpath_android_ndk} \
 -DCMAKE_SYSROOT=${gem_fullpath_android_standalone_toolchain}/sysroot"
 
-	elif [[ ${gem_host} == *"msvc"* ]]; then
+	elif [[ ${gem_triple} == "x86_64-pc-windows-msvc" ]]; then
 		# Source: https://cmake.org/cmake/help/latest/generator/Visual%20Studio%2015%202017.html
 #			-T host=x64 # Use 64-bit tools.
 #			-A x64 \	# Generates an error: Generator Visual Studio 15 2017
@@ -1353,12 +1352,11 @@ ${gem_cmake_generator} \
 	export CMAKE_BUILD_PARALLEL_LEVEL=${gem_num_jobs}
 
 #	gem_cmd_line_configure="cmake ${gem_fullpath_src} ${gem_cmake_generator} \
-#-DCMAKE_TOOLCHAIN_FILE=${gem_filename_cmake_toolchain} \
+#-DCMAKE_TOOLCHAIN_FILE=${gem_fullpath_toolchain_cmake} \
 #-DCMAKE_BUILD_TYPE=${gem_build_type} \
 #-DCMAKE_INSTALL_PREFIX=${gem_fullpath_install} \
-#-Dgem_host=${gem_host} \
 #-DPKG_CONFIG_EXECUTABLE=${gem_fullpath_pkg_config} \
-#${gem_cmake_params_extra}"
+#${gem_cmake_params}"
 
 	# Only use the toolchain file if we're cross compiling, because it
 	# prohibits use of system libraries.  However, since we're specifying
@@ -1367,36 +1365,33 @@ ${gem_cmake_generator} \
 	# of resource files.
 	if  [[ ${gem_isCrossCompiling} -ne 0 ]]; then
 		gem_cmd_line_configure="${gem_cmd_line_configure} \
--DCMAKE_TOOLCHAIN_FILE=${gem_filename_cmake_toolchain}"
+-DCMAKE_TOOLCHAIN_FILE=${gem_fullpath_toolchain_cmake}"
 	fi
 
 	# Append CMAKE_C_FLAGS, CMAKE_CPP_FLAGS, CMAKE_CXX_FLAGS, and CMAKE_LD_FLAGS
 	# or CFLAGS, CPPFLAGS, CXXFLAGS and LDFLAGS.
-	gem_build_String_AppendFlagsTo gem_cmd_line_configure
+	gem_build_String_AddFlags gem_cmd_line_configure
 
 #	echo ${gem_cmd_line_configure} ; exit
 }
 
-function gem_v_OnCommandLine_Configure_Autotools { gem_script_v_Error "gem_v_OnCommandLine_Configure_Autotools() has been renamed." ;}
 function gem_build_v_OnCommandLine_Configure_Autotools { gem_build_OnCommandLine_Configure_Autotools ;}
 function gem_build_OnCommandLine_Configure_Autotools
 {
-# Temporarily removing to see if this is comflicting with pkc-config....
-#--with-sysroot=\"${gem_fullpath_sysroot}\" \
+	if [[ -f ${gem_fullpath_src}/configure ]]; then
+		gem_cmd_line_configure="${gem_fullpath_src}/configure \
+	--prefix=${gem_fullpath_install} \
+	--host=${gem_triple} \
+	--build=${gem_platform_build} \
+	--target=${gem_triple} \
+	${gem_flags_configure}"
 
-	gem_cmd_line_configure="${gem_fullpath_src}/configure \
---prefix=${gem_fullpath_install} \
---host=${gem_platform_host} \
---build=${gem_platform_build} \
---target=${gem_platform_host} \
-${gem_flags_host}"
-
-	# Append CMAKE_C_FLAGS, CMAKE_CPP_FLAGS, CMAKE_CXX_FLAGS, and CMAKE_LD_FLAGS
-	# or CFLAGS, CPPFLAGS, CXXFLAGS and LDFLAGS.
-	gem_build_String_AppendFlagsTo gem_cmd_line_configure
+		# Append CMAKE_C_FLAGS, CMAKE_CPP_FLAGS, CMAKE_CXX_FLAGS, and CMAKE_LD_FLAGS
+		# or CFLAGS, CPPFLAGS, CXXFLAGS and LDFLAGS.
+		gem_build_String_AddFlags gem_cmd_line_configure
+	fi
 }
 
-function gem_v_OnCommandLine_Configure_Meson { gem_script_v_Error "gem_v_OnCommandLine_Configure_Meson() has been renamed." ;}
 function gem_build_v_OnCommandLine_Configure_Meson { gem_build_OnCommandLine_Configure_Meson ;}
 function gem_build_OnCommandLine_Configure_Meson
 {
@@ -1479,36 +1474,36 @@ function gem_build_OnCommandLine_Configure_Meson
 
 	gem_meson_crossfile="<undefined>"
 	if [[ ${gem_os} == "Linux" ]]; then
-		if [[ ${gem_host} == "linux" ]]; then
+		if [[ ${gem_triple} == "x86_64-pc-linux-gnu" ]]; then
 			gem_meson_crossfile_source=${gem_fullpath_local}/toolchains/linux.toolchain.meson
 			gem_meson_crossfile=${gem_fullpath_build}/linux.toolchain.meson
 			gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_linux
-		elif [[ ${gem_host} == "mingw" ]]; then
+		elif [[ ${gem_triple} == "x86_64-w64-mingw32" ]]; then
 			gem_meson_crossfile_source=${gem_fullpath_local}/toolchains/mingw_on_linux.toolchain.meson
 			gem_meson_crossfile=${gem_fullpath_build}/mingw_on_linux.toolchain.meson
 			gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_mingw
-		elif [[ ${gem_host} == *"android_"* ]]; then
+		elif [[ ${gem_triple} == *"android"* ]]; then
 			gem_meson_crossfile_source=${gem_fullpath_local}/toolchains/android.toolchain.meson
 			gem_meson_crossfile=${gem_fullpath_build}/android.toolchain.meson
 			gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_android
 		fi
 	elif  [[ ${gem_os} == "MINGW64"* ]]; then	# Running in MinGW Windows
-		if [[ ${gem_host} == "mingw" ]]; then	# MinGW on Windows
+		if [[ ${gem_triple} == "x86_64-w64-mingw32" ]]; then	# MinGW on Windows
 			gem_meson_crossfile_source=${gem_fullpath_local}/toolchains/mingw_on_windows.toolchain.meson
 			gem_meson_crossfile=${gem_fullpath_build}/mingw_on_windows.toolchain.meson
 			gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_mingw
-		elif [[ ${gem_host} == "msvc" ]]; then
+		elif [[ ${gem_triple} == "x86_64-pc-windows-msvc" ]]; then
 			gem_script_v_Error "Do we need to set these for msvc?"
 		fi
 	elif  [[ ${gem_os} == "CYGWIN"* ]]; then	# Running in Cygwin Windows
-		if [[ ${gem_host} == "cygwin" ]]; then	# Build for cygwin.
+		if [[ ${gem_triple} == "x86_64-pc-cygwin" ]]; then	# Build for cygwin.
 			gem_meson_crossfile_source=${gem_fullpath_local}/toolchains/cygwin.toolchain.meson
 			gem_meson_crossfile=${gem_fullpath_build}/cygwin.toolchain.meson
 			gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_cygwin
 		fi
 	fi
 	if [[ ${gem_meson_crossfile} == "<undefined>" ]]; then
-		gem_script_v_Error "gem_build_OnCommandLine_Configure_Meson: gem_build_SetHost_common_android: Build for host \"${gem_host}\" on OS \"${gem_os}\" is not supported."
+		gem_script_v_Error "gem_build_OnCommandLine_Configure_Meson: gem_build_InitToolchain_common_android: Build for host \"${gem_triple}\" on OS \"${gem_os}\" is not supported."
 	fi
 
 	# Map our build type to meson's build type.
@@ -1529,7 +1524,7 @@ function gem_build_OnCommandLine_Configure_Meson
 --strip \
 --default-library=both \
 --backend=ninja \
-${gem_flags_host}"
+${gem_flags_configure}"
 
 #meson --prefix=/usr      \
 #	-Dman=true         \
@@ -1542,8 +1537,8 @@ ${gem_flags_host}"
 
 
 
-	#--target=${gem_platform_host} \
-	#--host=${gem_platform_host} \
+	#--target=${gem_triple} \
+	#--host=${gem_triple} \
 	#--build=${gem_platform_build} \
 	#--with-sysroot=\"${gem_fullpath_sysroot}\" \
 	#--backend=\"ninja\" \
@@ -1625,11 +1620,13 @@ function gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_android
 {
 	gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common
 
+	gem_script_v_Error "We're no longer using the tool chains.  See https://developer.android.com/ndk/guides/standalone_toolchain"
+
 	sed -i "s|GEM_DIR_STANDALONE_TOOLCHAIN|${gem_fullpath_android_standalone_toolchain}|g" ${gem_meson_crossfile}
 	if [[ $? -ne 0 ]]; then
 		gem_script_v_Error "gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_android: Sed failed to modify meson crossfile '${gem_fullpath_build}'"
 	fi
-	sed -i "s|GEM_PLATFORM_HOST|${gem_platform_host}|g" ${gem_meson_crossfile}
+	sed -i "s|GEM_TRIPLE|${gem_triple}|g" ${gem_meson_crossfile}
 	if [[ $? -ne 0 ]]; then
 		gem_script_v_Error "gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_android: Sed failed to modify meson crossfile '${gem_fullpath_build}'"
 	fi
@@ -1639,7 +1636,6 @@ function gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_android
 # =============================================================================
 #                                Configure Help
 # =============================================================================
-function gem_v_Cmd_ConfigureHelp { gem_script_v_Error "gem_v_Cmd_ConfigureHelp() has been renamed." ;}
 function gem_build_v_Cmd_ConfigureHelp { gem_build_Cmd_ConfigureHelp ;}
 function gem_build_Cmd_ConfigureHelp
 {
@@ -1673,7 +1669,6 @@ function gem_build_Cmd_ConfigureHelp
 #                                     Build
 # =============================================================================
 
-function gem_v_Cmd_Build { gem_script_v_Error "gem_v_Cmd_Build() has been renamed." ;}
 function gem_build_v_Cmd_Build { gem_build_Cmd_Build ;}
 function gem_build_Cmd_Build
 {
@@ -1687,11 +1682,29 @@ function gem_build_Cmd_Build
 	gem_build_v_CheckLogForErrors ${gem_filename_log_build}
 }
 
-function gem_v_OnBuild { gem_script_v_Error "gem_v_OnBuild() has been renamed." ;}
 function gem_build_v_OnBuild { gem_build_OnBuild ;}
 function gem_build_OnBuild
 {
 	gem_build_v_OnCommandLine_Build
+
+
+# Doesn't work (Original):
+#make -j1  CPPFLAGS=" -march=x86-64 -msse4.2 -mpopcnt -m64 -mtune=intel  -O2" CFLAGS="-std=gnu11 -fPIE -fPIC  -march=x86-64 -msse4.2 -mpopcnt -m64 -mtune=intel  -O2" LDFLAGS="-pie  -march=x86-64 -msse4.2 -mpopcnt -m64 -mtune=intel "
+
+# Works
+#make -j1 CPPFLAGS=" -march=x86-64 -msse4.2 -mpopcnt -m64 -mtune=intel  -O2"
+
+# Works
+#make -j1  LDFLAGS="-pie  -march=x86-64 -msse4.2 -mpopcnt -m64 -mtune=intel "
+
+# Broken
+#make -j1  CFLAGS="-std=gnu11 -fPIE -fPIC  -march=x86-64 -msse4.2 -mpopcnt -m64 -mtune=intel  -O2"
+
+
+# Works
+#make CFLAGS='-I/home/mhodges/gem/local/src/freeimage-3.18.0/build/x86_64-pc-linux-gnu/release/src/Source'
+#exit
+
 
 	if [[ ${gem_option_cmdline_only} -eq 0 ]]; then
 		eval "${gem_cmd_line_build} ${gem_redirect_suffix_build}"
@@ -1700,7 +1713,6 @@ function gem_build_OnBuild
 	fi
 }
 
-function gem_v_build_OnCommandLine_Build { gem_script_v_Error "gem_v_build_OnCommandLine_Build() has been renamed." ;}
 function gem_build_v_OnCommandLine_Build { gem_build_OnCommandLine_Build ;}
 function gem_build_OnCommandLine_Build
 {
@@ -1723,7 +1735,7 @@ ${gem_fullpath_autotools_makefile}"
 
 		# Append CMAKE_C_FLAGS, CMAKE_CPP_FLAGS, CMAKE_CXX_FLAGS, and
 		# CMAKE_LD_FLAGS or CFLAGS, CPPFLAGS, CXXFLAGS and LDFLAGS.
-		gem_build_String_AppendFlagsTo gem_cmd_line_build
+		gem_build_String_AddFlags gem_cmd_line_build
 
 #echo "gem_cmd_line_build=${gem_cmd_line_build}" ; exit
 
@@ -1739,7 +1751,6 @@ ${gem_fullpath_autotools_makefile}"
 # =============================================================================
 #                                      Install
 # =============================================================================
-function gem_v_Cmd_Install { gem_script_v_Error "gem_v_Cmd_Install() has been renamed." ;}
 function gem_build_v_Cmd_Install { gem_build_Cmd_Install ;}
 function gem_build_Cmd_Install
 {
@@ -1753,7 +1764,6 @@ function gem_build_Cmd_Install
 	gem_build_v_CheckLogForErrors ${gem_filename_log_install}
 }
 
-function gem_v_OnInstall { gem_script_v_Error "gem_v_OnInstall() has been renamed." ;}
 function gem_build_v_OnInstall { gem_build_OnInstall ;}
 function gem_build_OnInstall
 {
@@ -1791,7 +1801,6 @@ function gem_build_OnCommandLine_Install
 # =============================================================================
 #                                     Uninstall
 # =============================================================================
-function gem_v_Cmd_Uninstall { gem_script_v_Error "gem_v_Cmd_Uninstall() has been renamed." ;}
 function gem_build_v_Cmd_Uninstall { gem_build_Cmd_Uninstall ;}
 function gem_build_Cmd_Uninstall
 {
@@ -1805,7 +1814,6 @@ function gem_build_Cmd_Uninstall
 	gem_build_v_CheckLogForErrors ${gem_filename_log_uninstall}
 }
 
-function gem_v_OnUninstall { gem_script_v_Error "gem_v_OnUninstall() has been renamed." ;}
 function gem_build_v_OnUninstall { gem_build_OnUninstall ;}
 function gem_build_OnUninstall
 {
@@ -1835,7 +1843,6 @@ function gem_build_OnCommandLine_Uninstall
 # =============================================================================
 #                                      Clean
 # =============================================================================
-function gem_v_Cmd_Clean { gem_script_v_Error "gem_v_Cmd_Clean() has been renamed." ;}
 function gem_build_v_Cmd_Clean { gem_build_Cmd_Clean ;}
 function gem_build_Cmd_Clean
 {
@@ -1849,7 +1856,6 @@ function gem_build_Cmd_Clean
 	gem_build_v_CheckLogForErrors ${gem_filename_log_clean}
 }
 
-function gem_v_OnClean { gem_script_v_Error "gem_v_OnClean() has been renamed." ;}
 function gem_build_v_OnClean { gem_build_OnClean ;}
 function gem_build_OnClean
 {
@@ -1879,7 +1885,6 @@ function gem_build_OnCommandLine_Clean
 # =============================================================================
 #                                      Scrub
 # =============================================================================
-function gem_v_Cmd_Scrub { gem_script_v_Error "gem_v_Cmd_Scrub() has been renamed." ;}
 function gem_build_v_Cmd_Scrub { gem_build_Cmd_Scrub ;}
 function gem_build_Cmd_Scrub
 {
@@ -1892,7 +1897,6 @@ function gem_build_Cmd_Scrub
 	gem_build_v_CheckLogForErrors ${gem_filename_log_scrub}
 }
 
-function gem_v_OnScrub { gem_script_v_Error "gem_v_OnScrub() has been renamed." ;}
 function gem_build_v_OnScrub { gem_build_OnScrub ;}
 function gem_build_OnScrub
 {
@@ -1918,7 +1922,6 @@ function gem_build_OnCommandLine_Scrub
 # =============================================================================
 #                                      CPack
 # =============================================================================
-function gem_v_Cmd_CPack { gem_script_v_Error "gem_v_Cmd_CPack() has been renamed." ;}
 function gem_build_v_Cmd_CPack { gem_build_Cmd_CPack ;}
 function gem_build_Cmd_CPack
 {
@@ -1938,9 +1941,8 @@ function gem_build_Cmd_CPack
 #                                     Run
 # =============================================================================
 
-function gem_v_Cmd_RunLinuxAndMinGW { gem_script_v_Error "gem_v_Cmd_RunLinuxAndMinGW() has been renamed." ;}
-function gem_build_v_Cmd_RunLinuxAndMinGW { gem_build_Cmd_RunLinuxAndMinGW ;}
-function gem_build_Cmd_RunLinuxAndMinGW
+function gem_build_v_Cmd_Run_local { gem_build_Cmd_Run_local ;}
+function gem_build_Cmd_Run_local
 {
 	if [[ ! -d ${gem_fullpath_build} ]]; then
 		gem_script_v_Error "Cannot run the executable.  Build directory does not exist."
@@ -1950,24 +1952,24 @@ function gem_build_Cmd_RunLinuxAndMinGW
 
 	# Build path to the executable.
 	gem_fullpath_exe=${gem_fullpath_build}/bin
-	if [[ ${gem_host} == *"msvc"* ]]; then
+	if [[ ${gem_triple} == "x86_64-pc-windows-msvc" ]]; then
 		gem_fullpath_exe=${gem_fullpath_exe}/${gem_build_type}
 	fi
-	gem_fullpath_exe=${gem_fullpath_exe}/${gem_filename_project_exe}
-	if [[ ${gem_host} == *"mingw"* || ${gem_host} == *"msvc"* ]]; then
+	gem_fullpath_exe=${gem_fullpath_exe}/${gem_project_name}
+
+	if [[ ${gem_triple} == "x86_64-w64-mingw32" || ${gem_triple} == "x86_64-pc-windows-msvc" || ${gem_triple} == "x86_64-pc-cygwin" ]]; then
 		gem_fullpath_exe=${gem_fullpath_exe}.exe
 	fi
 	if [[ ! -f ${gem_fullpath_exe} ]]; then
-		gem_script_v_Error "gem_build_Cmd_RunLinuxAndMinGW: Can't find built executable: ${gem_fullpath_exe}"
+		gem_script_v_Error "gem_build_Cmd_Run_local: Can't find built executable: ${gem_fullpath_exe}"
 	fi
 	gem_script_v_Msg "--------------------------------------------------------------------------------"
 	${gem_fullpath_exe}
 	gem_script_v_Msg "--------------------------------------------------------------------------------"
 }
 
-function gem_v_Cmd_RunAndroid { gem_script_v_Error "gem_v_Cmd_RunAndroid() has been renamed." ;}
-function gem_build_v_Cmd_RunAndroid { gem_build_Cmd_RunAndroid ;}
-function gem_build_Cmd_RunAndroid
+function gem_build_v_Cmd_Run_android { gem_build_Cmd_Run_android ;}
+function gem_build_Cmd_Run_android
 {
 	if [[ ! -d ${gem_fullpath_build} ]]; then
 		gem_script_v_Error "Cannot run the executable.  Build directory does not exist."
@@ -1975,9 +1977,9 @@ function gem_build_Cmd_RunAndroid
 	fi
 	gem_script_cd ${gem_fullpath_build}
 
-	gem_fullpath_exe=${gem_fullpath_build}/bin/${gem_filename_project_exe}
+	gem_fullpath_exe=${gem_fullpath_build}/bin/${gem_project_name}
 	if [[ ! -f ${gem_fullpath_exe} ]]; then
-		gem_script_v_Error "gem_build_Cmd_RunAndroid: Can't find built executable: ${gem_fullpath_exe}"
+		gem_script_v_Error "gem_build_Cmd_Run_android: Can't find built executable: ${gem_fullpath_exe}"
 	fi
 
 #	${gem_adb_exe} kill-server
@@ -1989,17 +1991,17 @@ function gem_build_Cmd_RunAndroid
 	${gem_device_shell_cmd} 1>/dev/null
 	gem_result=$?
 	if [[ ${gem_result} -ne 0 ]]; then
-		gem_script_v_Error "gem_build_Cmd_RunAndroid: adb push failed.  Returned: ${gem_result}"
+		gem_script_v_Error "gem_build_Cmd_Run_android: adb push failed.  Returned: ${gem_result}"
 	fi
 	
-	gem_device_fullpath_exe=${gem_device_path_dest_tmp}/${gem_filename_project_exe}
+	gem_device_fullpath_exe=${gem_device_path_dest_tmp}/${gem_project_name}
 	gem_device_shell_cmd="${gem_adb_exe} shell ${gem_device_fullpath_exe}"
 	gem_script_v_Msg "--------------------------------------------------------------------------------"
 	${gem_device_shell_cmd}
 	gem_result=$?
 	gem_script_v_Msg "--------------------------------------------------------------------------------"
 	if [[ ${gem_result} -ne 0 ]]; then
-		gem_script_v_Msg "gem_build_Cmd_RunAndroid: Device shell command failed.  Command was:\n${gem_device_shell_cmd}"
+		gem_script_v_Msg "gem_build_Cmd_Run_android: Device shell command failed.  Command was:\n${gem_device_shell_cmd}"
 	fi
 }
 
@@ -2008,7 +2010,6 @@ function gem_build_Cmd_RunAndroid
 # =============================================================================
 
 # gem_build_v_OnArg()- Returns the number of arguments processed.
-function gem_v_OnArg { gem_script_v_Error "gem_v_OnArg() has been renamed." ;}
 function gem_script_v_OnArg { gem_build_OnArg "$@";}
 function gem_build_OnArg
 {
@@ -2017,27 +2018,29 @@ function gem_build_OnArg
 		-android-api)
 			gem_android_api_level=${2}
 			return 2 ;;
-		-android-standalone)
-			gem_fullpath_android_standalone_toolchain=${2}
-			return 2 ;;
 		-b)			gem_option_build=1 ;;
 		-c)			gem_option_clean=1 ;;
 		-ch)		gem_option_configure_help=1 ;;
 		-cmdline)	gem_option_cmdline_only=1 ; gem_script_option_quiet_mode=1 ;;
 		-d)			gem_option_download=1 ;;
-		-help)		gem_build_v_ExitHelp ;;
+		-help)		gem_script_v_ExitHelp ;;
 		-host)
 			case ${2} in
-				linux|cygwin|mingw|android_x86_64|android_v7vfpv3|android_arm_v7_plus_neon|android_arm64_v8a)
-					gem_host=${2}
-					gem_cmake_generator="-G\"Unix Makefiles\"" ;;
+				linux)
+					gem_triple=x86_64-pc-linux-gnu ;;
+				mingw)
+					gem_triple=x86_64-w64-mingw32 ;;
 				msvc)
-					gem_host=${2}
-					gem_cmake_generator="-G\"Visual Studio 15 2017 Win64\"" ;;
+					x86_64-pc-windows-msvc ;;
+				android)
+					gem_triple=aarch64-linux-android ;;
+#					gem_triple=armv7a-linux-androideabi ;;
+				x86_64-pc-linux-gnu|x86_64-pc-cygwin|x86_64-w64-mingw32|x86_64-pc-windows-msvc|x86_64-linux-android|armv7a-linux-androideabi|aarch64-linux-android)
+					gem_triple=${2} ;;
 				*)	gem_script_v_Error "Invalid build host: ${2}"
 			esac
 			return 2 ;;
-		-i)	gem_option_install=1   ;;
+		-i)	gem_option_install=1 ;;
 		-install)
 			gem_fullpath_install=${2}
 			return 2 ;;
@@ -2068,13 +2071,85 @@ function gem_build_OnArg
 	*)	gem_script_OnArg "$@" ;	return $?
 	esac
 	return 1	# We handle 1 argument by default.  Other cases will return
-}
+}				# the number of arguments handled.
 
-function gem_v_Main { gem_script_v_Error "gem_v_Main() has been renamed." ;}
 function gem_script_v_Main { gem_build_Main "$@";}
 function gem_build_Main
 {
 	gem_time_start=$(( 10#$(date +%s) ))
+
+    # Validate environment variables are set.
+    if [[ ${gem_fullpath_gem}x == "x" ]]; then
+        gem_script_Error "gem_fullpath_gem, the location of the gem directory is not defined."
+    fi
+
+	gem_use_clang=0			# Else gcc.
+	gem_is_cplusplus=0
+	gem_c_standard="-std=c11"		# c90, c99, c11, c17, c2x, gnu90, gnu99, gnu11
+	gem_cxx_standard="-std=c++11"	# c++98, c++03, c++14, c++17, gnu++98, gnu++11, gnu++14, gnu++17
+
+#	gem_build_script="autotools"
+#	gem_build_script="meson"
+#	gem_build_script="cmake"
+	gem_build_script="<undefined>"
+
+	# Directories
+	gem_fullpath_local=${HOME}/gem/local
+	# gem_fullpath_install is set further below in function gem_build_v_BuildFilePaths().
+
+	gem_os=$(uname -s)
+
+	# Common Defaults
+	if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW shell on Windows.
+		gem_triple=x86_64-w64-mingw32
+#		gem_triple=x86_64-pc-windows-msvc
+	elif [[ ${gem_os} == "CYGWIN"* ]]; then	# MinGW shell on Windows.
+		gem_triple=x86_64-pc-cygwin
+#		gem_triple=x86_64-w64-mingw32
+	elif [[ ${gem_os} == "Linux"* ]]; then	# Linux shell.
+		gem_triple=x86_64-pc-linux-gnu
+#		gem_triple=x86_64-w64-mingw32
+#		gem_triple=aarch64-linux-android
+	fi
+
+	gem_flags_c="${CFLAGS}"
+	gem_flags_cpp="${CPPFLAGS}"
+	gem_flags_cxx="${CXXFLAGS}"
+	gem_flags_ld="${LDFLAGS}"
+
+	# NOTE: ${gem_build_type} is passed to CMake. If you want to change these,
+	# you'll have to map your new values to these expected values when you run
+	# CMake.
+	gem_build_type=release
+#	gem_build_type=debug
+#	gem_build_type=relwithdebinfo
+
+	gem_lib_type=shared
+#	gem_lib_type=static
+
+	# gem_fullpath_makefile allows the make file to be specified.  This is
+	# handy when building a Windows package (zlib) that provides a Windows-
+	# specific make file, instead of producing one via a configure script.
+	gem_fullpath_autotools_makefile=
+
+	gem_num_jobs=4
+
+	# Android Defaults
+	# *FIX: The ndk version needs to be passed to cmake.  We're currently
+	# parsing it from ANDROID_NDK, which I'm not even sure if we're using,
+	# otherwise.
+	gem_android_ndk_version=21
+	gem_android_api_level=28
+
+	gem_adb_exe=${gem_fullpath_android_sdk}/platform-tools/adb
+
+	# Application Defaults
+	gem_project_name="<undefined>"
+
+	# Initialize variables
+	gem_str_not_implemented="Operation for host \"${gem_triple}\" on OS \"${gem_os}\" is not yet implemented."
+
+	gem_cmake_params=
 
 	gem_option_build=0
 	gem_option_clean=0
@@ -2091,10 +2166,6 @@ function gem_build_Main
 
 	gem_cmake_generator="<undefined>"
 
-	gem_build_v_SetDefaults
-
-	gem_script_Main "$@"	# Process all the arguments
-
 	# Set gem_platform_build.  *FIX: Move this!
 	if [[ ${gem_os} == "Linux" ]]; then
 		# $(uname -m)-redhat-linux	# Fedora uses this prefix in /usr/bin/.
@@ -2107,22 +2178,27 @@ function gem_build_Main
 		gem_script_v_Error ${gem_str_not_implemented}
 	fi
 
+	gem_script_Main "$@"	# Process all the arguments
+
 	# Determine if we're cross compiling.
 	gem_isCrossCompiling=0
-	if  [[ ( ${gem_os} == "MINGW64"* && ${gem_host} != "mingw") || (${gem_os} == "Linux" && ${gem_host} != "linux") || (${gem_host} == "CYGWIN"* && ${gem_host} != "cygwin") ]]; then
+	if  [[ (${gem_os} == "MINGW64"* && ${gem_triple} != "x86_64-w64-mingw32") || (${gem_os} == "Linux" && ${gem_triple} != "x86_64-pc-linux-gnu") || (${gem_os} == "CYGWIN"* && ${gem_triple} != "x86_64-pc-cygwin") ]]; then
 		gem_isCrossCompiling=1
 	fi
-	
-	gem_build_v_SetHost_${gem_host}
-	gem_build_v_ValidateBuildTools
+
+	gem_build_v_SetDefaults
+
+	gem_build_ValidateNDKDir
+	gem_build_v_InitToolchain_${gem_triple}
+	gem_build_v_ValidateToolchain
 	gem_build_v_SetBuildType_${gem_build_type}
 	gem_build_v_SelectCMakeGenerator
 	gem_build_v_ValidateCompatibility
 	gem_build_v_BuildFilePaths
 	gem_build_v_SetFlags
-	gem_build_v_UpdateWinePath
+	gem_build_v_UpdateWinePath	# for running Windows executables on Linux.
 
-	if [[ ${gem_option_redirect_output} == 1 ]]; then
+	if [[ ${gem_option_redirect_output} -ne 0 ]]; then
 		gem_filename_log_build=${gem_fullpath_build}/gem_log_build.txt
 		gem_filename_log_clean=${gem_fullpath_build}/gem_log_clean.txt
 		gem_filename_log_configure=${gem_fullpath_build}/gem_log_configure.txt
@@ -2138,38 +2214,38 @@ function gem_build_Main
 	fi
 
 	# Execute the commands.
-	if [[ ${gem_option_download} == 1 ]]; then
+	if [[ ${gem_option_download} -ne 0 ]]; then
 		gem_build_v_DownloadSource
 	fi
-	if [[ ${gem_option_clean} == 1 ]]; then
+	if [[ ${gem_option_clean} -ne 0 ]]; then
 		gem_build_v_Cmd_Clean
 	fi
-	if [[ ${gem_option_scrub} == 1 ]]; then
+	if [[ ${gem_option_scrub} -ne 0 ]]; then
 		gem_build_v_Cmd_Scrub
 	fi
-	if [[ ${gem_option_configure} == 1 ]]; then
+	if [[ ${gem_option_configure} -ne 0 ]]; then
 		gem_build_v_Cmd_Configure
 	fi
-	if [[ ${gem_option_configure_help} == 1 ]]; then
+	if [[ ${gem_option_configure_help} -ne 0 ]]; then
 		gem_build_v_Cmd_ConfigureHelp
 	fi
-	if [[ ${gem_option_build} == 1 ]]; then
+	if [[ ${gem_option_build} -ne 0 ]]; then
 		gem_build_v_Cmd_Build
 	fi
-	if [[ ${gem_option_run} == 1 ]]; then
-		if [[ ${gem_host} == *"android"* ]]; then
-			gem_build_v_Cmd_RunAndroid
+	if [[ ${gem_option_run} -ne 0 ]]; then
+		if [[ ${gem_triple} == *"android"* ]]; then
+			gem_build_v_Cmd_Run_android
 		else
-			gem_build_v_Cmd_RunLinuxAndMinGW
+			gem_build_v_Cmd_Run_local
 		fi
 	fi
-	if [[ ${gem_option_install} == 1 ]]; then
+	if [[ ${gem_option_install} -ne 0 ]]; then
 		gem_build_v_Cmd_Install
 	fi
-	if [[ ${gem_option_uninstall} == 1 ]]; then
+	if [[ ${gem_option_uninstall} -ne 0 ]]; then
 		gem_build_v_Cmd_Uninstall
 	fi
-	if [[ ${gem_option_pack} == 1 ]]; then
+	if [[ ${gem_option_pack} -ne 0 ]]; then
 		gem_build_v_Cmd_CPack
 	fi
 
