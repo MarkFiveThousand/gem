@@ -723,6 +723,9 @@ exit
 # Open Edit->Preferences. In the left pane, click Behavior.  In the right pane,
 # change "Default view mode:" from "Icon View" to "Detailed List View."
 #
+# To change the path shown at the top from buttons to the location (like
+# Windows) select View->Path Bar->Location
+#
 # In the left pane, click Advanced.  In the right pane, set Terminal emulator:
 # urxvt 
 #
@@ -837,7 +840,8 @@ cat /etc/hostname
 # NOTE: To resize any window you can alt-right-click and drag.
 # 
 # I chose Theme->Clearlooks-3.4.  Change gem_name_theme, below, if you chose a
-# different theme.
+# different theme.  I suggest not making any changes if this is your first time
+# through.
 #
 # Open a terminal window:
 #
@@ -862,7 +866,9 @@ cp themerc themerc.bak
 
 gem_name_theme=Clearlooks-3.4
 cd ~/.themes/${gem_name_theme}/openbox-3
-cp themerc.bak themerc
+y | cp themerc.bak themerc
+
+
 
 # Border Widths
 sed -i "s|border.width: 1|border.width: 6|g" themerc
@@ -916,6 +922,7 @@ sed -i "s|window.inactive.title.separator.color: #9a8e7c|window.inactive.title.s
 # Option 1: Download some forest backgrounds.
 #
 # I'm going to use these to cycle the background, so you may want to try this.
+# Download some forest images to use for desktop wallpaper.
 # -----------------------------------------------------------------------------
 
 su
@@ -939,6 +946,8 @@ done
 
 
 # Option 2: Use an image file in /home/${USER}/Downloads
+#
+# I'M NOT USING THIS, BUT IT SHOULD WORK...?
 # -----------------------------------------------------------------------------
 #
 # You should be running as root:
@@ -962,7 +971,9 @@ pcmanfm-qt --set-wallpaper=${gem_fullpath_image} --wallpaper-mode=stretch
 
 
 
-# Optionally cycle the desktop images:
+
+
+# Cycle the Desktop Images:
 # ------------------------------------
 # Right click on the desktop.
 #
@@ -982,6 +993,24 @@ su
 
 rm -f /usr/share/backgrounds/default.png
 
+
+# =============================================================================
+# ALERT!  If You're Installing as Root ...
+# =============================================================================
+# 
+# If you are setting up your user account, then skip this section. HOWEVER ...
+#
+# If you're setting up the root account, you still need to set up the rxvt
+# termial.  Find the section of this document:
+
+#     =========================================================
+#     Configure RXVT Terminal
+#     =========================================================
+
+#
+# Run the commands there to complete root's configuration.
+#
+# Then logout from the root account, and log back in as yourself, ${USER}.
 
 
 
@@ -1097,7 +1126,7 @@ cat /etc/sudoers
 # =============================================================================
 
 # FIX: Holding off on these for now:
-sudo dnf -y install policycoreutils-gui and system-* xarchiver wine
+sudo dnf -y install policycoreutils-gui and system-*
 
 
 # System Utilities
@@ -1105,9 +1134,35 @@ sudo dnf -y install policycoreutils-gui and system-* xarchiver wine
 # rxvt-unicode is a nicer terminal.
 # samba allows us to share files with other computers on our local network.
 
-sudo dnf -y install rxvt-unicode samba xclip
+sudo dnf -y install rxvt-unicode samba xclip xarchiver wine
 sudo dnf -y groupinstall "Administration Tools"
 
+
+
+# Wine creates an "Open With" association between its own version of MS Windows
+# Notepad.exe and .txt files.  This needs to be removed.  We don't want to use
+# to use wine's notepade for editing .txt files, so we will remove the filename
+# associations.
+# Source: https://askubuntu.com/questions/186494/remove-wines-notepad-from-open-with-options
+
+# Back up wine's mimeinfo.cache before modifying it.
+gem_fullpath_winemimeinfo=${HOME}/.local/share/applications/mimeinfo.cache
+if [[ ! -f ${gem_fullpath_winemimeinfo}.bak ]]; then
+    cp ${gem_fullpath_winemimeinfo} ${gem_fullpath_winemimeinfo}.bak
+fi
+
+# Remove unwanted file associations.
+sed -i "s|text/plain=wine-extension-ini.desktop;wine-extension-txt.desktop;||g" ${gem_fullpath_winemimeinfo}
+gem_result=$?
+if [[ ${gem_result} -ne 0 ]]; then
+    echo "Failed to remove file association."
+fi
+
+sed -i "s|text/html=wine-extension-htm.desktop;||g" ${gem_fullpath_winemimeinfo}
+gem_result=$?
+if [[ ${gem_result} -ne 0 ]]; then
+    echo "Failed to remove file association."
+fi
 
 
 
@@ -1190,6 +1245,44 @@ sudo sh -c 'echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.m
 sudo dnf -y check-update
 sudo dnf -y install code
 
+
+# Stop Code From Opening Directories
+# ----------------------------------
+# Why on Earth does VS Code want to open directories when, in Google Chrome we
+# right-click on a downloaded file and select Show in Folder?  We want to
+# remove this.
+
+su
+
+# Back up code.desktop
+gem_fullpath_code_desktop=/usr/share/applications/code.desktop
+if [[ ! -f ${gem_fullpath_code_desktop}.bak ]]; then
+    cp ${gem_fullpath_code_desktop} ${gem_fullpath_code_desktop}.bak
+fi
+
+# Remove VS Code association with mime type inode/directory.
+sed -i "s|MimeType=text/plain;inode/directory;|MimeType=text/plain;|g" ${gem_fullpath_code_desktop}
+gem_result=$?
+if [[ ${gem_result} -ne 0 ]]; then
+    echo "Sed failed."
+fi
+
+# Back up mimeinfo.cache
+gem_fullpath_mimeinfo_cache=/usr/share/applications/mimeinfo.cache
+if [[ ! -f ${gem_fullpath_mimeinfo_cache}.bak ]]; then
+    cp ${gem_fullpath_mimeinfo_cache} ${gem_fullpath_mimeinfo_cache}.bak
+fi
+
+# Remove VS Code association with mime type inode/directory.
+sed -i "s|inode/directory=code.desktop;pcmanfm-qt.desktop;|inode/directory=pcmanfm-qt.desktop;|g" ${gem_fullpath_mimeinfo_cache}
+gem_result=$?
+if [[ ${gem_result} -ne 0 ]]; then
+    echo "Sed failed."
+fi
+
+# These changes will take effect the next time you log in.
+
+
 # Choose a color theme
 # --------------------
 # We're going to install the Andromeda color theme, or whatever your favorite
@@ -1211,6 +1304,8 @@ sudo dnf -y install code
 # Close the extension sidebar by clicking the Extensions icon on the left.
 
 
+# Running VS Code as root
+# -----------------------
 # When running the VSCode as root we specify --user-data-dir.  Earlier in this
 # install procedure we appended settings to ${USER} and root's .bashrc file that
 # specify to use a separate user data directory for root and ${USER}.  This is
@@ -1241,6 +1336,41 @@ sudo dnf -y install mariadb mariadb-server php php-common php-pecl-apc php-cli p
 # VNC, remote desktop service (optional)
 # --------------------------------------
 sudo dnf -y install tigervnc-server x11vnc 
+
+
+
+# wclang for cross compiling for Windows (optional)
+# -------------------------------------------------
+# clang is a tool to cross compile source code easily with clang on Linux/Unix
+# for Windows.  Wclang is basically a wrapper for clang, which allows you to
+# directly target Windows.  Wclang detects the target and headers automatically
+# and adds them to the clang invocation command.  After the installation you
+# will have "<mingw-triplet>-clang", "<mingw-triplet>-clang++" available as
+# "compiler".
+
+# Enable the repository.
+sudo dnf -y copr enable mati865/wclang
+
+# Install wclang.
+sudo dnf -y install wclang
+
+
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Alternatively, you can build WCLang:
+#
+# Source:  https://github.com/tpoechtrager/wclang
+#
+# Download from repository.
+mkdir -p /home/${USER}/gem/local/src
+cd /home/${USER}/gem/local/src
+git clone https://github.com/tpoechtrager/wclang.git
+
+# Build it.
+cd /home/${USER}/gem/local/src/wclang
+cmake -DCMAKE_INSTALL_PREFIX=~/gem/local
+make
+make install
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
 
@@ -1347,43 +1477,6 @@ ESLint was installed locally. We recommend using this local copy instead of your
 #
 # 0- disable, 1- warn, 2- error
 
-
-
-
-
-# wclang for cross compiling for Windows.
-# ---------------------------------------
-# *FIX: Skipping wclang, for now.
-
-# clang is a tool to cross compile source code easily with
-# clang on Linux/Unix for Windows.  Wclang is basically a wrapper for clang,
-# which allows you to directly target Windows.  Wclang detects the target and
-# headers automatically and adds them to the clang invocation command.  After
-# the installation you will have "<mingw-triplet>-clang",
-# "<mingw-triplet>-clang++" available as "compiler".
-
-sudo dnf -y copr enable mati865/wclang
-
-# IMPORTANT: The below line is not working as of Fedora 29. Building has
-# worked in the past.  Okay! We're all good now.  Installing using dnf works
-# fine.
-#
-# sudo dnf -y install wclang
-#
-#
-# Alternatively, you can build WCLang:
-# Source:  https://github.com/tpoechtrager/wclang
-#
-# Download from repository.
-mkdir -p /home/${USER}/gem/local/src
-cd /home/${USER}/gem/local/src
-git clone https://github.com/tpoechtrager/wclang.git
-
-# Build it.
-cd /home/${USER}/gem/local/src/wclang
-cmake -DCMAKE_INSTALL_PREFIX=~/gem/local
-make
-make install
 
 
 
@@ -1970,17 +2063,24 @@ cd zlib-1.2.11
 cd ..
 
 
-# Build 
-# ----------
+# Build ZZipLib
+# -------------
 cd zziplib-0.1.3
 ./gem_build_zziplib -d -m -b -i
 cd ..
 
 
-# Build 
+# Build SDL
+# ---------
+cd 
+./gem_build_sdl2 -d -m -b -i
+cd ..
+
+
+# Build Ogre
 # ----------
 cd 
-./ -d -m -b -i
+./gem_build_ogre -d -m -b -i
 cd ..
 
 
