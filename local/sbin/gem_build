@@ -1347,6 +1347,9 @@ ${gem_cmake_params}"
 						# platform x64 was specified.
 		gem_cmd_line_configure="${gem_cmd_line_configure} \
 -T host=x64"
+	else
+		gem_cmd_line_configure="${gem_cmd_line_configure} \
+-DCMAKE_SYSROOT=${gem_fullpath_sysroot}"
 	fi
 
 	export CMAKE_BUILD_PARALLEL_LEVEL=${gem_num_jobs}
