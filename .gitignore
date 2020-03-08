@@ -2,12 +2,12 @@
 
 .gitconfig
 
-#local/src/temp/
-#local/src/tmp/
-#local/temp/
-#local/tmp/
-#temp/
-#tmp/
+local/src/temp
+local/src/tmp
+local/temp
+local/tmp
+temp
+tmp
 
 
 
