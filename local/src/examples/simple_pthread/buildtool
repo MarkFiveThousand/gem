@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# REQUIREMENTS:
+#
+# 1.) Source files must be built with -DPTW32_STATIC_LIB.  Note this is a
+#     compile flag, not a linker flag.
+# 
+# 2.) -lpthread linker flag must follow source files that depend on pthreads.
+# 
+# 3.) Supposedly linker flags: -static-libgcc -static-libstdc++ are required 
+#    to statically link to the C++ runtime libraries, but they don't seem to
+#    be required for this simple program.
+# 
+# 4.) Documentation indicates that -static must also be provided to the linker,
+#     however, it seems to be working without it.
+
+# COMPILE:
+g++ -DPTW32_STATIC_LIB -Wall -c -g main.cpp -o main.o
+
+# LINK:
+g++ -o main.exe main.o -lpthread
+
+

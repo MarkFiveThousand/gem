@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# Platform
+CROSS_COMPILE_MINGW_ON_LINUX=0
+
+if [[ $(uname -s) == "MINGW64_NT-10.0" ]] || [[ $CROSS_COMPILE_MINGW_ON_LINUX == 1 ]]; then
+	printf "Building for MinGW...\n"
+	GNU_COMPILER=x86_64-w64-mingw32-g++
+	EXECUTABLE_FILE_EXT=.exe
+else
+	printf "Building for Linux...\n"
+	GNU_COMPILER=g++
+fi
+
+# Clean
+rm -f main main.exe
+
+# Build
+$GNU_COMPILER main.c -o main${EXECUTABLE_FILE_EXT} -Wall

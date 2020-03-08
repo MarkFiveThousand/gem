@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# Compiler Options:
+#
+# This must be defined while compiling the .cpp files into the. o files.
+HIDE_ALL_SYMBOLS="-fvisibility=hidden -fvisibility-inlines-hidden"
+
+# Linker Options:
+FIND_SO_IN_THIS_DIR=-Wl,-rpath=./		# Linker option embeds .so location in the
+										# executable.  The .so will be in the same
+										# directory as the executable.
+# Platform
+CROSS_COMPILE_MINGW_ON_LINUX=0
+
+if [[ $(uname -s) == "MINGW64_NT-10.0" ]] || [[ $CROSS_COMPILE_MINGW_ON_LINUX == 1 ]]; then
+	printf "Building for MinGW...\n"
+	GNU_COMPILER=x86_64-w64-mingw32-g++
+	EXECUTABLE_FILE_EXT=.exe
+else
+	printf "Building for Linux...\n"
+	GNU_COMPILER=g++
+fi
+
+# Clean
+rm -f main main.exe sharedlib.so sharedlib.o
+
+
+# Compile sharedlib.cpp into sharedlib.o.  Hide symbols here.  fPIC means build
+# position independent code.  It's required for shared libraries.
+$GNU_COMPILER -fPIC -c -g -Wall -Werror -DSO_BUILDING sharedlib.cpp $HIDE_ALL_SYMBOLS
+
+# Create a shared library named sharedlib.so.  Too late to hide symbols here.
+$GNU_COMPILER -fPIC -shared -o sharedlib.so sharedlib.o -DSO_BUILDING
+
+# Compile main.cpp into main executable.  Tell linker where to find the .so.
+# Do include "lib" prefix. Do *not* use -l option because you are using -rpath,
+# so no need to search standard library directories.
+$GNU_COMPILER -g -Wall -Werror main.cpp -o main${EXECUTABLE_FILE_EXT} sharedlib.so $FIND_SO_IN_THIS_DIR
+
+
+
+
+

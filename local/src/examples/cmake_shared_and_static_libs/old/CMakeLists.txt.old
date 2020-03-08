@@ -1,0 +1,256 @@
+cmake_minimum_required(VERSION 2.8)
+
+# See ReadMe.txt
+
+# ============================================================================
+# Useful Links:
+# ============================================================================
+# Commonly used cmake variables:
+# http://www.cmake.org/Wiki/CMake_Useful_Variables/Logging_Useful_Variables
+
+
+
+# =============================================================================
+# Debug
+# =============================================================================
+SET(DEBUG_BUILD_SCRIPTS 0)
+
+
+
+# =============================================================================
+# Operating system specific settings.
+# =============================================================================
+# NOTE:  It's too late to set some build variables here.  For example, if you
+# want to change the value of CMAKE_MAKE_PROGRAM, you must do that in the call
+# to cmake using -DCMAKE_MAKE_PROGRAM=whatever.
+# ---------------------------------- MINGW -----------------------------------
+if ("${GEM_OS_HOST_BUILD}" STREQUAL "GEM_OS_HOST_BUILD_MINGW")
+
+
+# ---------------------------------- LINUX ---------------------------------
+elseif ("${GEM_OS_HOST_BUILD}" STREQUAL "GEM_OS_HOST_BUILD_LINUX")
+
+
+else() # Client didn't properly set GEM_OS_HOST_BUILD on the command line.
+	MESSAGE(FATAL_ERROR "GEM_OS_HOST_BUILD=${GEM_OS_HOST_BUILD} not recognized.")
+endif()
+
+
+
+
+
+
+if (DEBUG_BUILD_SCRIPTS)
+	# Output summary of our settings.
+	MESSAGE(STATUS "================================================================================")
+	MESSAGE(STATUS "CMAKE_C_FLAGS= ${CMAKE_C_FLAGS}")
+	MESSAGE(STATUS "CMAKE_CXX_FLAGS = ${CMAKE_CXX_FLAGS}")
+	MESSAGE(STATUS "CMAKE_CPP_FLAGS = ${CMAKE_CPP_FLAGS}")
+	MESSAGE(STATUS "CMAKE_EXE_LINKER_FLAGS = ${CMAKE_EXE_LINKER_FLAGS}")
+	MESSAGE(STATUS "CMAKE_INSTALL_PREFIX = ${CMAKE_INSTALL_PREFIX}")
+	MESSAGE(STATUS "CMAKE_MAKE_PROGRAM = ${CMAKE_MAKE_PROGRAM}")
+
+	MESSAGE(STATUS "GEM_OS_HOST_BUILD = ${GEM_OS_HOST_BUILD}")
+
+	MESSAGE(STATUS "PROJ_BIN_DIR = ${PROJ_BIN_DIR}")
+	MESSAGE(STATUS "PROJ_BIN_FULLPATH = ${PROJ_BIN_FULLPATH}")
+	MESSAGE(STATUS "PROJ_BUILD_CONFIG = ${PROJ_BUILD_CONFIG}")
+	MESSAGE(STATUS "PROJ_BUILD_DIR = ${PROJ_BUILD_DIR}")
+	MESSAGE(STATUS "PROJ_BUILD_FULLPATH = ${PROJ_BUILD_FULLPATH}")
+	MESSAGE(STATUS "PROJ_BUILD_LEVEL = ${PROJ_BUILD_LEVEL}")
+	MESSAGE(STATUS "PROJ_DIR = ${PROJ_DIR}")
+	MESSAGE(STATUS "PROJ_EXE_NAME = ${PROJ_EXE_NAME}")
+	MESSAGE(STATUS "PROJ_INSTALL_DIR = ${PROJ_INSTALL_DIR}")
+	MESSAGE(STATUS "PROJ_INSTALL_FULLPATH = ${PROJ_INSTALL_FULLPATH}")
+	MESSAGE(STATUS "PROJ_LIB_DIR = ${PROJ_LIB_DIR}")
+	MESSAGE(STATUS "PROJ_LIB_FULLPATH = ${PROJ_LIB_FULLPATH}")
+	MESSAGE(STATUS "PROJ_NAME = ${PROJ_NAME}")
+	MESSAGE(STATUS "PROJ_SRC_DIR = ${PROJ_SRC_DIR}")
+	MESSAGE(STATUS "PROJ_TARGET_PLATFORM = ${PROJ_TARGET_PLATFORM}")
+	MESSAGE(STATUS "================================================================================")
+endif()
+
+
+
+
+
+# ============================================================================
+# Build the File Tree
+# ============================================================================
+# All the runtime artifacts (.exe and .dll) go to the runtime output directory.
+SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJ_BIN_FULLPATH})
+
+# .a files go here.
+SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJ_LIB_FULLPATH})
+
+# .so files go here.
+SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJ_BIN_FULLPATH})
+
+
+
+
+
+
+
+# ============================================================================
+# Project
+# ============================================================================
+# IMPORTANT!  To debug in Eclipse "your project name should be different from
+# your executable name and different from your build folder name.
+# http://www.cmake.org/Wiki/Eclipse_CDT4_Generator
+
+PROJECT("${PROJ_EXE_NAME}" CXX)
+#PROJECT("Project_${PROJ_EXE_NAME}" CXX)
+# The above PROJECT() call will set the ${PROJECT_NAME} variable.
+
+
+
+# ============================================================================
+# Preprocessor, Compiler, and Linker Options
+# ============================================================================
+#
+# NOTES:
+# ------
+# CFLAGS: C flags, passed during compile AND link (e.g., -O2 -std=c99)
+# CXXFLAGS: C++ flags, passed during compile AND link (e.g., -O2 -std=c++98)
+# CPPFLAGS: pre-processor flags, passed ONLY during compile (e.g., -DNDEBUG=1
+#                                                            -Iadditional/include)
+# LDFLAGS: linker flags, passed ONLY during link (e.g., -export_dynamic
+#                                                 -Ladditional/libdir -llib)
+#
+# -Wall								Turn on many reasonable kinds of warnings. 
+#                                   For further details see:
+#									https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html
+# -Wextra							Enables some extra warning flags that are 
+#									not enabled by -Wall.
+# -Wfatal-errors					This option causes the compiler to abort
+#									compilation on the first error occurred.
+# -g								Produce debugging information.
+# -fvisibility=hidden				Hide all dll symbols by default.
+
+# ---------------------------------- COMMON ----------------------------------
+ADD_DEFINITIONS(-D${PROJ_BUILD_LEVEL})
+
+# INCLUDE_DIRECTORIES ("${PROJECT_SOURCE_DIR}/includes")
+# INCLUDE_DIRECTORIES ("${CMAKE_CURRENT_SOURCE_DIR}/includes")
+
+ADD_COMPILE_OPTIONS(-Wall -Wextra -Wfatal-errors)
+
+# ---------------------------------- DEBUG -----------------------------------
+if ("${PROJ_BUILD_LEVEL}" STREQUAL "GEM_BUILD_LEVEL_DEBUG")
+
+	ADD_COMPILE_OPTIONS(-g)
+	SET(CMAKE_BUILD_TYPE Debug)
+
+# ---------------------------------- RELEASE ---------------------------------
+elseif ("${PROJ_BUILD_LEVEL}" STREQUAL "GEM_BUILD_LEVEL_RELEASE")
+
+	SET(CMAKE_BUILD_TYPE RelWithDebInfo)
+
+# ---------------------------------- MASTER ----------------------------------
+elseif ("${PROJ_BUILD_LEVEL}" STREQUAL "GEM_BUILD_LEVEL_MASTER")
+
+	SET(CMAKE_BUILD_TYPE MinSizeRel)
+
+# --------------------------------- GOLDMASTER -------------------------------
+elseif ("${PROJ_BUILD_LEVEL}" STREQUAL "GEM_BUILD_LEVEL_GOLDMASTER")
+
+	SET(CMAKE_BUILD_TYPE MinSizeRel)
+
+else() # Client didn't properly set PROJ_BUILD_LEVEL on the command line.
+	MESSAGE(FATAL_ERROR "PROJ_BUILD_LEVEL is not valid")
+endif()
+
+
+
+
+
+
+# ============================================================================
+# Shared Library
+# ============================================================================
+ADD_LIBRARY(SharedLib SHARED
+	SharedLib.cpp)
+
+# Preprocessor Options
+TARGET_COMPILE_DEFINITIONS(SharedLib PUBLIC SO_BUILDING)
+
+# Compiler Options
+TARGET_COMPILE_OPTIONS(SharedLib PUBLIC -fvisibility=hidden)
+
+
+
+
+
+
+# ============================================================================
+# Static Library
+# ============================================================================
+ADD_LIBRARY(StaticLib STATIC
+	StaticLib.cpp)
+
+# Preprocessor Options
+#TARGET_COMPILE_DEFINITIONS(StaticLib PUBLIC ${CPP_FLAGS})
+# Compiler Options
+#TARGET_COMPILE_OPTIONS(StaticLib PUBLIC ${CXX_FLAGS})
+
+
+
+
+
+# ============================================================================
+# Executable
+# ============================================================================
+ADD_EXECUTABLE(${PROJECT_NAME}
+	main.cpp)
+
+# Compiler Settings
+
+# Linker Settings
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} SharedLib)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} StaticLib)
+
+
+if (DEBUG_BUILD_SCRIPTS)
+	MESSAGE(STATUS "================================================================================")
+	MESSAGE(STATUS "PROJ_BUILD_LEVEL = ${PROJ_BUILD_LEVEL}")
+	MESSAGE(STATUS "CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
+
+	# These below are completely empty.
+	#MESSAGE(STATUS "EXECUTABLE_OUTPUT_PATH= ${EXECUTABLE_OUTPUT_PATH}")
+	#MESSAGE(STATUS "LIBRARY_OUTPUT_PATH= ${LIBRARY_OUTPUT_PATH}")
+	#MESSAGE(STATUS "ARCHIVE_OUTPUT_DIRECTORY= ${ARCHIVE_OUTPUT_DIRECTORY}")
+	#MESSAGE(STATUS "LIBRARY_OUTPUT_DIRECTORY= ${LIBRARY_OUTPUT_DIRECTORY}")
+	#MESSAGE(STATUS "RUNTIME_OUTPUT_DIRECTORY= ${RUNTIME_OUTPUT_DIRECTORY}")
+	MESSAGE(STATUS "================================================================================")
+endif()
+
+
+
+
+
+# ============================================================================
+# Post-build Steps
+# ============================================================================
+
+if ("${GEM_OS_HOST_BUILD}" STREQUAL "GEM_OS_HOST_BUILD_MINGW")
+
+	# Copy the required system libraries to our bin/ directory.
+	# Source:
+	#  http://stackoverflow.com/questions/10671916/how-to-copy-dll-files-into-the-same-folder-as-the-executable-using-cmake
+	GET_FILENAME_COMPONENT( Mingw_Path ${CMAKE_CXX_COMPILER} PATH )
+	ADD_CUSTOM_COMMAND(TARGET ${PROJ_NAME} POST_BUILD	# Adds a post-build event to MyTest
+		COMMAND ${CMAKE_COMMAND} -E copy_if_different	# which executes "cmake - E
+														# copy_if_different..."
+			"${Mingw_Path}/libstdc++-6.dll"             # Source file(s)
+			"${Mingw_Path}/libwinpthread-1.dll"
+			"${Mingw_Path}/libgcc_s_seh-1.dll"
+			${PROJ_BIN_FULLPATH})                       # Dest file path
+endif()
+
+
+
+
+
+
+
