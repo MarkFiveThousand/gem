@@ -1940,6 +1940,21 @@ EOF
 su
 
 
+
+# =============================================================================
+# Did You Remember to Do This?
+# =============================================================================
+# After receiving confirmation that the Gem github administrator has provided
+# you with write access to the Gem repository, you must execute the
+# "git push ..." command described earlier, or you won't be able to write to
+# the github repository.
+#
+# Did you login as root and set your theme settings?  This is not critical but
+# if you run applications after su-ing as root without doing this you'll be
+# back to the default LXQT themes and icons.
+
+
+
 # =============================================================================
 # Building the Gem Libraries
 # =============================================================================
