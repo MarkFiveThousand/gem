@@ -12,7 +12,7 @@ local_aarch64-linux-android_*
 
 local/sbin/.vscode/
 
-local/src/examples/cmake_executable/build
+local/src/examples/cmake_hello/build
 
 local/src/libffi-*/build
 local/src/libffi-*/src
