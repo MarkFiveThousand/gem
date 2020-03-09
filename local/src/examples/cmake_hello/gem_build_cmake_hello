@@ -51,6 +51,7 @@ function gem_build_v_SetDefaults
 
 	gem_cmake_params=" \
 -Dgem_triple=${gem_triple} \
+-Dgem_use_clang=${gem_use_clang} \
 -Dgem_project_name=${gem_project_name}"
 }
 

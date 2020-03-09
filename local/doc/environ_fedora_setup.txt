@@ -1245,8 +1245,18 @@ sudo sh -c 'echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.m
 sudo dnf -y check-update
 sudo dnf -y install code
 
-# Run VSCode and install the entension: CMake For VisualStudio Code, CMake
+# Run VSCode and install the extension: CMake For VisualStudio Code, CMake
 # langage support for Visual Studio Code (the one made by twxs.)
+
+
+# VSCode settings can be change via 2 methods:
+# --------------------------------------------
+# 1.) ctrl+, or File->preferences->Settings to open the settings menu.
+# 2.) Edit the text file.  This is convenient for automating changes.
+#
+#     On Linux: $HOME/.config/Code/User/settings.json
+#     On Windows: %APPDATA%\Code\User\settings.json
+
 
 
 # Stop Code From Opening Directories
@@ -1291,6 +1301,8 @@ fi
 # We're going to install the Andromeda color theme, or whatever your favorite
 # theme is. I like the Andromeda theme (colorizer variation.)
 #
+# Open VSCode:
+#
 # Fedora->Programming->Visual Studio Code
 #
 # From the button bar on the left side, click the bottom Extensions icon. search
@@ -1321,6 +1333,44 @@ alias code='/usr/bin/code --user-data-dir=/root/.config/Code/'
 # For our user, we have set the following alias, using ${USER}=mhodges:
 
 alias code='/usr/bin/code --user-data-dir=/home/mhodges/.config/Code/'
+
+
+# Fix the "Running out of update handle" problem by increasing the limit.
+#------------------------------------------------------------------------
+# Source: https://code.visualstudio.com/docs/setup/linux#_visual-studio-code-is-unable-to-watch-for-file-changes-in-this-large-workspace-error-enospc
+
+su
+
+printf "\nfs.inotify.max_user_watches=524288\n" >> /etc/sysctl.conf
+
+# Watching files takes up ~1K bytes per file.  A maximum of 524288 bytes will
+# consume 512MB.  You can ignore entire directories that you don't need to be
+# notified of changes.  To do so add paths to the files.watcherExclude setting:
+#
+# Press ctrl+, or File->preferences->Settings to open the settings menu.
+#
+# Search for:
+#
+# files.watcherExclude
+#
+# Then click Add Pattern.  You probably want to add your build directories here.
+#
+# Below are the ones I'm excluding.  Substitute your user name for <your user
+# name>.   You'll need to update these as project directories change over time.
+
+
+**/home/<your user name>/mnt/**     # Mine: **/home/mhodges/mnt/**
+
+**/local/media/**
+**/local/src/freeimage-3.18.0/build/**
+**/local/src/freetype-2.10.1/build/**
+**/local/src/ogre-1.12.4/build/**
+**/local/src/pkgconf-1.6.3/build/**
+**/local/src/pugixml-1.10/build/**
+**/local/src/sdl2-2.0.11/build/**
+**/local/src/zlib-1.2.11/build/**
+**/local/src/zziplib-0.1.3/build/**
+
 
 
 

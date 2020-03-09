@@ -89,7 +89,7 @@ if(ANDROID_NDK_BETA STREQUAL "")
 endif()
 set(ANDROID_NDK_REVISION
   "${ANDROID_NDK_MAJOR}.${ANDROID_NDK_MINOR}.${ANDROID_NDK_BUILD}${CMAKE_MATCH_4}")
-
+  
 # Touch toolchain variable to suppress "unused variable" warning.
 # This happens if CMake is invoked with the same command line the second time.
 if(CMAKE_TOOLCHAIN_FILE)
