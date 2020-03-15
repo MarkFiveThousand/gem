@@ -1,3 +1,32 @@
+
+
+
+# Linux Commands:
+# ---------------
+# It is expected readers of this document will take it upon themselves to learn
+# linux commands on their own, as instruction of such is beyond the scope of
+# this document.  It is recommended that readers new to Linux keep a
+# reference handy for looking up commands as needed:
+#
+# Bash Resources:
+#
+# Introduction to bash basics:
+# https://learnxinyminutes.com/docs/bash/
+#
+# Here's a great bash cheat sheet: https://devhints.io/bash
+#
+# https://www.google.com/search?q=linux+beginner+command+reference
+#
+# http://wiki.bash-hackers.org/
+#
+# http://wiki.bash-hackers.org/syntax/shellvars
+#
+# http://mywiki.wooledge.org/BashGuide
+#
+# https://www.shellcheck.net/
+
+
+
 ==========================================================
 Archives
 ==========================================================
@@ -394,6 +423,11 @@ sed
 Search and replace.
 
 sed 's|find this text|replace with this text|g' input.txt > output.txt
+
+# Use the -i option to make the changes "in place."  That way you don't have
+# to write the file out again.
+
+sed -i 's|find this text|replace with this text|g' input.txt
 
 
 ==========================================================

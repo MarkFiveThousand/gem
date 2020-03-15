@@ -5,7 +5,6 @@ SET(CMAKE_SYSTEM_NAME Cygwin)
 SET(CMAKE_C_COMPILER gcc)
 SET(CMAKE_CXX_COMPILER g++)
 
-
 # Where the target environment located.
 list(APPEND CMAKE_FIND_ROOT_PATH /usr/bin)
 list(REMOVE_DUPLICATES CMAKE_FIND_ROOT_PATH)

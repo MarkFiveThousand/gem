@@ -1,0 +1,61 @@
+#!/bin/sh
+exec pkgconf --personality=x86_64-w64-mingw32 $@
+
+
+Example
+-------------------------------------------------------------------------------
+An example .personality file:
+# This is a comment
+Triplet: x86_64-pc-linux-gnu
+SysrootDir: /home/kaniini/sysroot/x86_64-pc-linux-gnu
+DefaultSearchPaths: /home/kaniini/sysroot/x86_64-pc-linux-gnu/lib/pkgconfig
+  /home/kaniini/sysroot/x86_64-pc-linux-gnu/share/pkgconfig
+SystemIncludePaths: /home/kaniini/sysroot/x86_64-pc-linux-gnu/include
+SystemLibraryPaths: /home/kaniini/sysroot/x86_64-pc-linux-gnu/lib
+
+
+Mingw Native
+-------------------------------------------------------------------------------
+Triplet: x86_64-w64-mingw32
+SysrootDir: /mingw64/x86_64-w64-mingw32
+DefaultSearchPaths: /mingw64/lib/pkgconfig:/mingw64/share/pkgconfig:/usr/lib/pkgconfig:/usr/share/pkgconfig
+SystemIncludePaths: /mingw64/x86_64-w64-mingw32/include
+SystemLibraryPaths: /mingw64/x86_64-w64-mingw32/lib
+
+
+Mingw on Cygwin
+# Source: c:\cygwin64\etc\pkgconfig\personality.d
+# Filename: x86_64-w64-mingw32.personality
+-------------------------------------------------------------------------------
+Triplet: x86_64-w64-mingw32
+SysrootDir: /usr/x86_64-w64-mingw32/sys-root
+DefaultSearchPaths: /usr/x86_64-w64-mingw32/sys-root/mingw/lib/pkgconfig:/usr/x86_64-w64-mingw32/sys-root/mingw/share/pkgconfig
+SystemIncludePaths: /usr/x86_64-w64-mingw32/sys-root/mingw/include
+SystemLibraryPaths: /usr/x86_64-w64-mingw32/sys-root/mingw/lib
+
+Mingw on Linux
+-------------------------------------------------------------------------------
+Triplet: x86_64-w64-mingw32
+SysrootDir: /usr/x86_64-w64-mingw32/sys-root
+DefaultSearchPaths: /usr/x86_64-w64-mingw32/sys-root/mingw/lib/pkgconfig:/usr/x86_64-w64-mingw32/sys-root/mingw/share/pkgconfig
+SystemIncludePaths: /usr/x86_64-w64-mingw32/sys-root/mingw/include
+SystemLibraryPaths: /usr/x86_64-w64-mingw32/sys-root/mingw/lib
+
+
+Cygwin Native
+-------------------------------------------------------------------------------
+Triplet: x86_64-pc-cygwin
+SysrootDir: /usr
+DefaultSearchPaths: /usr/lib/pkgconfig:/usr/share/pkgconfig
+SystemIncludePaths: /usr/include
+SystemLibraryPaths: /usr/lib
+
+
+Linux Native
+-------------------------------------------------------------------------------
+Triplet: x86_64-pc-linux-gnu
+SysrootDir: /usr
+DefaultSearchPaths: /usr/lib64/pkgconfig:/usr/share/pkgconfig
+SystemIncludePaths: /usr/include
+SystemLibraryPaths: /usr/lib64
+
