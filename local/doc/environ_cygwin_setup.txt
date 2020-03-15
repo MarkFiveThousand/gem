@@ -64,11 +64,9 @@ curl -o %gem_fullpath_cygwin_install%\setup-x86_64.exe https://www.cygwin.com/se
 #
 # Mirrors in California:
 #
-#    ftp://mirrors.sonic.net/cygwin
-#    http://mirrors.kernel.org/sourceware/cygwin
-#    http://mirrors.sonic.net/cygwin
+#    http://mirrors.kernel.org/
 
-set gem_url_site=ftp://mirrors.sonic.net/cygwin
+set gem_url_site=http://mirrors.kernel.org
 
 %gem_fullpath_cygwin_install%\setup-x86_64.exe --local-install --quiet-mode --no-desktop --download --site %gem_url_site% --local-package-dir %gem_fullpath_cygwin_install_local_packages%
 
@@ -104,9 +102,7 @@ EOF
 # NOTE: More packages may or may not be required.  See the section of this
 # document titles "Concerns"
 
-time
 %gem_fullpath_cygwin_install%\setup-x86_64.exe --quiet-mode --packages xorg-server,xinit,xlaunch,rxvt-unicode,wget,mercurial,yad,xarchiver,swig,llvm,mingw64-x86_64-llvm,mingw64-x86_64-llvm-static,clang,mingw64-x86_64-clang,git,perl,meson,curl,cmake,cmake-gui,gettext,diffstat,patch,doxygen,patchutils,subversion,cvs,mercurial,autoconf,automake,binutils,bison,flex,gdb,libtool,make,pkgconfig,byacc,ccache,cscope,ctags,mingw64-x86_64-binutils,mingw64-x86_64-gcc-core,mingw64-x86_64-headers,mingw64-x86_64-runtime,mingw64-x86_64-gdbm,gperf
-time
 
 # IGNORE this.  It's just for my testing.
 #%gem_fullpath_cygwin_install%\setup-x86_64.exe --quiet-mode --packages mingw64-x86_64-headers,mingw64-x86_64-runtime

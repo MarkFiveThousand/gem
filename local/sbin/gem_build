@@ -1402,8 +1402,11 @@ function gem_build_OnCommandLine_Configure_CMake
 # SET (CMAKE_CXX_FLAGS_RELEASE_INIT        "-O3 -DNDEBUG")
 # SET (CMAKE_CXX_FLAGS_RELWITHDEBINFO_INIT "-O2 -g")
 
-	# The following link describes every CMAKE_ variable:
-	# https://cmake.org/cmake/help/latest/manual/cmake-variables.7.html
+
+# The following link describes every CMAKE_ variable:
+# https://cmake.org/cmake/help/latest/manual/cmake-variables.7.html
+
+
 	gem_cmd_line_configure="cmake \
 ${gem_fullpath_src} \
 ${gem_cmake_generator} \
@@ -1438,6 +1441,8 @@ ${gem_cmake_params}"
 	# I'm not sure how to set AS for cmake.  CMAKE_ASM_COMPILER may, or may
 	# not, be what we want.
 
+if [[ 0 == 0 ]];then
+
 	gem_cmd_line_configure="${gem_cmd_line_configure} \
 -DCMAKE_ADDR2LINE=${ADDR2LINE} \
 -DCMAKE_AR=${AR} \
@@ -1452,6 +1457,7 @@ ${gem_cmake_params}"
 -DCMAKE_READELF=${READELF} \
 -DCMAKE_RC_COMPILER=${RESCOMP} \
 -DCMAKE_STRIP=${STRIP}"
+fi
 
 	export CMAKE_BUILD_PARALLEL_LEVEL=${gem_num_jobs}
 
