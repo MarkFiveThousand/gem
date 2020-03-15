@@ -868,7 +868,7 @@ function gem_build_FindTool
 function gem_build_v_InitToolchain_x86_64-pc-cygwin { gem_build_InitToolchain_x86_64-pc-cygwin ;}
 function gem_build_InitToolchain_x86_64-pc-cygwin
 {
-	gem_fullpath_sysroot=/usr
+	gem_fullpath_sysroot=/
 
 	if [[ ${gem_build_script_type} == "cmake" ]]; then
 		gem_fullpath_toolchain_cmake=${gem_fullpath_local}/src/toolchains/cygwin.toolchain.cmake
@@ -1403,9 +1403,11 @@ function gem_build_OnCommandLine_Configure_CMake
 # SET (CMAKE_CXX_FLAGS_RELWITHDEBINFO_INIT "-O2 -g")
 
 
+	export CMAKE_BUILD_PARALLEL_LEVEL=${gem_num_jobs}
+
+
 # The following link describes every CMAKE_ variable:
 # https://cmake.org/cmake/help/latest/manual/cmake-variables.7.html
-
 
 	gem_cmd_line_configure="cmake \
 ${gem_fullpath_src} \
@@ -1419,31 +1421,33 @@ ${gem_cmake_generator} \
 ${gem_cmake_params}"
 
 	if [[ ${gem_triple} == *"android"* ]]; then
+
 		gem_cmd_line_configure="${gem_cmd_line_configure} \
 -DANDROID_ABI=${gem_android_abi} \
 -DANDROID_NATIVE_API_LEVEL=${gem_android_api_level} \
 -DANDROID_NDK=${gem_fullpath_android_ndk} \
 -DCMAKE_SYSROOT=${gem_fullpath_android_standalone_toolchain}/sysroot"
+
 	elif [[ ${gem_triple} == "x86_64-pc-windows-msvc" ]]; then
+
 		# Source: https://cmake.org/cmake/help/latest/generator/Visual%20Studio%2015%202017.html
 #			-T host=x64 # Use 64-bit tools.
 #			-A x64 \	# Generates an error: Generator Visual Studio 15 2017
 						# Win64 does not support platform specification, but
 						# platform x64 was specified.
-		gem_cmd_line_configure="${gem_cmd_line_configure} \
--T host=x64"
+		gem_cmd_line_configure="${gem_cmd_line_configure} -T host=x64"
 	else
+		local noop=0
 		gem_cmd_line_configure="${gem_cmd_line_configure} \
 -DCMAKE_SYSROOT=${gem_fullpath_sysroot}"
 	fi
 
 
-	# I'm not sure how to set AS for cmake.  CMAKE_ASM_COMPILER may, or may
-	# not, be what we want.
+	if [[ 0 == 0 ]]; then
+		# I'm not sure how to set AS for cmake.  CMAKE_ASM_COMPILER may, or may
+		# not, be what we want.
 
-if [[ 0 == 0 ]];then
-
-	gem_cmd_line_configure="${gem_cmd_line_configure} \
+		gem_cmd_line_configure="${gem_cmd_line_configure} \
 -DCMAKE_ADDR2LINE=${ADDR2LINE} \
 -DCMAKE_AR=${AR} \
 -DCMAKE_C_COMPILER=${CC} \
@@ -1457,9 +1461,7 @@ if [[ 0 == 0 ]];then
 -DCMAKE_READELF=${READELF} \
 -DCMAKE_RC_COMPILER=${RESCOMP} \
 -DCMAKE_STRIP=${STRIP}"
-fi
-
-	export CMAKE_BUILD_PARALLEL_LEVEL=${gem_num_jobs}
+	fi
 
 #	gem_cmd_line_configure="cmake ${gem_fullpath_src} ${gem_cmake_generator} \
 #-DCMAKE_TOOLCHAIN_FILE=${gem_fullpath_toolchain_cmake} \
@@ -1472,11 +1474,15 @@ fi
 	# prohibits use of system libraries.  However, since we're specifying
 	# sysroot, shouldn't it work?  I think we need to modify the toolchain file
 	# to be aware if we're crosscompiling and modulate the prohibited sources
-	# of resource files.
-	if  [[ ${gem_isCrossCompiling} -ne 0 ]]; then
+	# of resource files.  *UPDATE!  It seems to be working now.
+
+#	if  [[ ${gem_isCrossCompiling} -ne 0 ]]; then
 		gem_cmd_line_configure="${gem_cmd_line_configure} \
 -DCMAKE_TOOLCHAIN_FILE=${gem_fullpath_toolchain_cmake}"
-	fi
+#	fi
+
+
+
 
 	# Append CMAKE_C_FLAGS, CMAKE_CPP_FLAGS, CMAKE_CXX_FLAGS, and CMAKE_LD_FLAGS
 	# or CFLAGS, CPPFLAGS, CXXFLAGS and LDFLAGS.
@@ -2199,7 +2205,7 @@ function gem_build_Main
 #	gem_build_script_type="autotools"
 #	gem_build_script_type="meson"
 #	gem_build_script_type="cmake"
-#	gem_build_script_type="<undefined>"
+	gem_build_script_type="<undefined>"
 
 	# Directories
 	gem_fullpath_local=${gem_fullpath_gem}/local
