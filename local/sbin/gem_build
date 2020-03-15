@@ -579,8 +579,7 @@ function gem_build_DebugDumpVars
 	gem_script_v_Msg "gem_fullpath_build =    ${gem_fullpath_build}"
 	gem_script_v_Msg "gem_fullpath_install =  ${gem_fullpath_install}"
 	gem_script_v_Msg "gem_isCrossCompiling =  ${gem_isCrossCompiling}"
-	gem_script_v_Msg "gem_fullpath_toolchain_autotools ="
-	gem_script_v_Msg "                        ${gem_fullpath_toolchain_autotools}"
+	gem_script_v_Msg "gem_fullpath_findtools =    ${gem_fullpath_findtools}"
 	gem_script_v_Msg "gem_fullpath_sysroot=   ${gem_fullpath_sysroot}"
 	if [[ ${gem_build_script_type} == "cmake" ]]; then
 		gem_script_v_Msg "gem_fullpath_toolchain_cmake ="
@@ -744,7 +743,6 @@ function gem_build_FindTool
 		gem_script_v_Error "gem_build_FindTool(): A tool executable must be specified as a parameter."
 	fi
 
-	dirList="${gem_fullpath_toolchain_autotools}/bin:"
 	fileList="llvm-${tool}:${gem_triple}-${tool}:${gem_triple}-gcc-${tool}:${tool}"
 	local extension=
 	if  [[ ${gem_os} == "MINGW64"* || ${gem_os} == "CYGWIN"*  ]]; then
@@ -754,31 +752,30 @@ function gem_build_FindTool
 	local fullpath
 	local gem_ifs_saved=IFS
 	IFS=":"
-	echo "" > ${gem_fullpath_gem}/gem_build_FindTool.txt
-	for dir in ${dirList}; do
-		echo "dir=$dir" >> ${gem_fullpath_gem}/gem_build_FindTool.txt
+#	echo "" > ${gem_fullpath_gem}/gem_build_FindTool.txt
+	for dir in ${gem_fullpath_findtools}; do
+#		echo "dir=$dir" >> ${gem_fullpath_gem}/gem_build_FindTool.txt
 		for file in ${fileList}; do
 			file=${file}${extension}
 			fullpath=${dir}/${file}
 
-			echo "    ${fullpath}" >> ${gem_fullpath_gem}/gem_build_FindTool.txt
+#			echo "    ${fullpath}" >> ${gem_fullpath_gem}/gem_build_FindTool.txt
 
 			if [[ (${gem_use_clang} -eq 0 && ${file} == "llvm"*) ||
 				  (${gem_use_clang} -ne 0 && ${file} == *"-gcc-"*) ]]; then
-				echo "        <skipped>" >> ${gem_fullpath_gem}/gem_build_FindTool.txt
+#				echo "        <skipped>" >> ${gem_fullpath_gem}/gem_build_FindTool.txt
 				continue
 			else
 				if [[ -f ${fullpath} ]]; then
 					gem_file_found=${fullpath}
-					echo "        Found!" >> ${gem_fullpath_gem}/gem_build_FindTool.txt
+#					echo "        Found!" >> ${gem_fullpath_gem}/gem_build_FindTool.txt
 					break
-				else
-					echo "        Doesn't exist." >> ${gem_fullpath_gem}/gem_build_FindTool.txt
+#				else
+#					echo "        Doesn't exist." >> ${gem_fullpath_gem}/gem_build_FindTool.txt
 				fi
 			fi
 		done
 	done
-	IFS=gem_ifs_saved
 	if [[ ${gem_file_found}x == "x" ]]; then
 		gem_script_v_Error "Failed to find tool ${tool}."
 	fi
@@ -828,26 +825,21 @@ function gem_build_v_InitToolchain_x86_64-pc-linux-gnu { gem_build_InitToolchain
 function gem_build_InitToolchain_x86_64-pc-linux-gnu
 {
 	gem_fullpath_sysroot=/
-	gem_fullpath_toolchain_autotools=/usr
-	# of Linux?  If setting this causes incompatibility issues, we can try
-	# leaving it blank.  I'm seeing some sources online setting it to 1.
-
+	gem_fullpath_findtools=/usr/bin
+	
 	if [[ ${gem_build_script_type} == "cmake" ]]; then
+
 		gem_fullpath_toolchain_cmake=${gem_fullpath_local}/src/toolchains/linux.toolchain.cmake
 		gem_cmake_system_name="Linux"
 		gem_cmake_system_version=$(uname -r)	# *FIX: What to set for all version
-	elif [[ ${gem_build_script_type} == "autotools" ]]; then
-		local noop=0
-	elif [[ ${gem_build_script_type} == "meson" ]]; then
-		noop=0
+		# of Linux?  If setting this causes incompatibility issues, we can try
+		# leaving it blank.  I'm seeing some sources online setting it to 1.
 	fi
 
 	if [[ ${gem_use_clang} -ne 0 ]]; then
-		gem_cmake_toolchain_prefix="llvm-"
 		export CC=$(gem_build_FindTool clang)
 		export CXX=$(gem_build_FindTool clang++)
 	else
-		gem_cmake_toolchain_prefix=
 		export CC=$(gem_build_FindTool gcc)
 		export CXX=$(gem_build_FindTool g++)
 	fi
@@ -870,16 +862,13 @@ function gem_build_v_InitToolchain_x86_64-pc-cygwin { gem_build_InitToolchain_x8
 function gem_build_InitToolchain_x86_64-pc-cygwin
 {
 	gem_fullpath_sysroot=/
+	gem_fullpath_findtools=/usr/bin
 
 	if [[ ${gem_build_script_type} == "cmake" ]]; then
+
 		gem_fullpath_toolchain_cmake=${gem_fullpath_local}/src/toolchains/cygwin.toolchain.cmake
 		gem_cmake_system_name="Windows"
 		gem_cmake_system_version="10.0"	# Windows 10
-	elif [[ ${gem_build_script_type} == "autotools" ]]; then
-		gem_fullpath_toolchain_autotools=/usr
-
-	elif [[ ${gem_build_script_type} == "meson" ]]; then
-		noop=0
 	fi
 
 	if [[ ${gem_use_clang} -ne 0 ]]; then
@@ -911,18 +900,22 @@ function gem_build_InitToolchain_x86_64-w64-mingw32
 {
 	gem_prefix_triple=
 	if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW on Windows
+
 		gem_prefix_triple=
-		gem_fullpath_toolchain_autotools=/mingw64
 		gem_fullpath_sysroot=/mingw64
+		gem_fullpath_findtools=/mingw64/bin
 	elif [[ ${gem_os} == "CYGWIN"* ]]; then	# MinGW under Cygwin on Windows.
+
 		gem_prefix_triple=${gem_triple}-
-		gem_fullpath_toolchain_autotools=
 		gem_fullpath_sysroot=/usr/x86_64-w64-mingw32/sys-root
-#		gem_script_v_Error "gem_build_InitToolchain_x86_64-w64-mingw32: Need to implement building mingw under cygwin."
+		gem_fullpath_findtools=/bin
+
 	elif [[ ${gem_os} == "Linux" ]]; then		# MinGW on Linux
+
 		gem_prefix_triple=${gem_triple}-
-		gem_fullpath_toolchain_autotools=/usr
 		gem_fullpath_sysroot=/usr/x86_64-w64-mingw32/sys-root
+		gem_fullpath_findtools=/usr/bin
+#		gem_fullpath_findtools=/usr/x86_64-w64-mingw32/bin
 	else
 		gem_script_v_Error "gem_build_InitToolchain_x86_64-w64-mingw32: Unrecognized shell: ${gem_os}."
 	fi
@@ -933,6 +926,8 @@ function gem_build_InitToolchain_x86_64-w64-mingw32
 		gem_cmake_system_version="10.0"	# Windows 10
 
 	elif [[ ${gem_build_script_type} == "autotools" ]]; then
+
+		gem_script_v_Error "How did this ever work?! gem_fullpath_gcc_libs is set *AFTER* we test if the directory exists.  Shouldn't this have been failing all along?!"
 
 		if [[ ${gem_os} != "MINGW64"* ]]; then	# Building for mingw on cygwin or linux.
 			if [[ ! -d ${gem_fullpath_gcc_libs} ]]; then
@@ -1023,11 +1018,11 @@ function gem_build_InitToolchain_android_common
 
 	gem_triple_details_suffix=ndk_${gem_android_ndk_version}_api_${gem_android_api_level}_arch_${gem_arch}
 
-	gem_fullpath_toolchain_autotools=${gem_fullpath_android_ndk}/toolchains/llvm/prebuilt/linux-x86_64
+	gem_fullpath_findtools=${gem_fullpath_android_ndk}/toolchains/llvm/prebuilt/linux-x86_64/bin
 	gem_cmake_system_name="Android"
 	gem_cmake_system_version=		# What to set this to?
 	gem_script_v_Error "What to set gem_cmake_system_version to?"
-	gem_fullpath_sysroot=${gem_fullpath_toolchain_autotools}/sysroot
+	gem_fullpath_sysroot=${gem_fullpath_android_ndk}/toolchains/llvm/prebuilt/linux-x86_64/sysroot
 
 	if [[ ${gem_build_script_type} == "cmake" ]]; then
 		#	gem_fullpath_toolchain_cmake=${gem_fullpath_local}/src/toolchains/android.toolchain.cmake
@@ -1043,18 +1038,37 @@ function gem_build_InitToolchain_android_common
 		# x86_64-linux-android
 		# armv7a-linux-androideabi
 		# aarch64-linux-android
-		export ADDR2LINE=${gem_fullpath_toolchain_autotools}/bin/${gem_triple}-addr2line
-		export AR=${gem_fullpath_toolchain_autotools}/bin/${gem_triple}-ar
-		export AS=${gem_fullpath_toolchain_autotools}/bin/${gem_triple}-as
-		export CC=${gem_fullpath_toolchain_autotools}/bin/${gem_triple}${gem_android_api_level}-clang
-		export CXX=${gem_fullpath_toolchain_autotools}/bin/${gem_triple}${gem_android_api_level}-clang++
-		export LD=${gem_fullpath_toolchain_autotools}/bin/${gem_triple}-ld
-		export NM=${gem_fullpath_toolchain_autotools}/bin/${gem_triple}-nm
-		export OBJCOPY=${gem_fullpath_toolchain_autotools}/bin/${gem_triple}-objcopy
-		export OBJDUMP=${gem_fullpath_toolchain_autotools}/bin/${gem_triple}-objdump
-		export RANLIB=${gem_fullpath_toolchain_autotools}/bin/${gem_triple}-ranlib
-		export READELF=${gem_fullpath_toolchain_autotools}/bin/${gem_triple}-readelf
-		export STRIP=${gem_fullpath_toolchain_autotools}/bin/${gem_triple}-strip
+#		export ADDR2LINE=${gem_fullpath_findtools}/${gem_triple}-addr2line
+#		export AR=${gem_fullpath_findtools}/${gem_triple}-ar
+#		export AS=${gem_fullpath_findtools}/${gem_triple}-as
+#		export CC=${gem_fullpath_findtools}/${gem_triple}${gem_android_api_level}-clang
+#		export CXX=${gem_fullpath_findtools}/${gem_triple}${gem_android_api_level}-clang++
+#		export LD=${gem_fullpath_findtools}/${gem_triple}-ld
+#		export NM=${gem_fullpath_findtools}/${gem_triple}-nm
+#		export OBJCOPY=${gem_fullpath_findtools}/${gem_triple}-objcopy
+#		export OBJDUMP=${gem_fullpath_findtools}/${gem_triple}-objdump
+#		export RANLIB=${gem_fullpath_findtools}/${gem_triple}-ranlib
+#		export READELF=${gem_fullpath_findtools}/${gem_triple}-readelf
+#		export STRIP=${gem_fullpath_findtools}/${gem_triple}-strip
+	
+		if [[ ${gem_use_clang} -ne 0 ]]; then
+			export CC=$(gem_build_FindTool clang)
+			export CXX=$(gem_build_FindTool clang++)
+		else
+			export CC=$(gem_build_FindTool gcc)
+			export CXX=$(gem_build_FindTool g++)
+		fi
+
+		export ADDR2LINE=$(gem_build_FindTool addr2line)
+		export AR=$(gem_build_FindTool ar)
+		export AS=$(gem_build_FindTool as)
+		export LD=$(gem_build_FindTool ld)
+		export NM=$(gem_build_FindTool nm)
+		export OBJCOPY=$(gem_build_FindTool objcopy)
+		export OBJDUMP=$(gem_build_FindTool objdump)
+		export RANLIB=$(gem_build_FindTool ranlib)
+		export READELF=$(gem_build_FindTool readelf)
+		export STRIP=$(gem_build_FindTool strip)
 	fi
 
 	gem_build_v_InitToolchain_common
