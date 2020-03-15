@@ -844,23 +844,24 @@ function gem_build_InitToolchain_x86_64-pc-linux-gnu
 
 	if [[ ${gem_use_clang} -ne 0 ]]; then
 		gem_cmake_toolchain_prefix="llvm-"
-		export CC=${gem_fullpath_toolchain_autotools}/bin/clang
-		export CXX=${gem_fullpath_toolchain_autotools}/bin/clang++
-	else	# clang
+		export CC=$(gem_build_FindTool clang)
+		export CXX=$(gem_build_FindTool clang++)
+	else
 		gem_cmake_toolchain_prefix=
-		export CC=${gem_fullpath_toolchain_autotools}/bin/gcc
-		export CXX=${gem_fullpath_toolchain_autotools}/bin/g++
+		export CC=$(gem_build_FindTool gcc)
+		export CXX=$(gem_build_FindTool g++)
 	fi
-	export ADDR2LINE=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}addr2line
-	export AR=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}ar
-	export AS=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}as
-	export LD=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}ld
-	export NM=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}nm
-	export OBJCOPY=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}objcopy
-	export OBJDUMP=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}objdump
-	export RANLIB=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}ranlib
-	export READELF=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}readelf
-	export STRIP=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}strip
+
+	export ADDR2LINE=$(gem_build_FindTool addr2line)
+	export AR=$(gem_build_FindTool ar)
+	export AS=$(gem_build_FindTool as)
+	export LD=$(gem_build_FindTool ld)
+	export NM=$(gem_build_FindTool nm)
+	export OBJCOPY=$(gem_build_FindTool objcopy)
+	export OBJDUMP=$(gem_build_FindTool objdump)
+	export RANLIB=$(gem_build_FindTool ranlib)
+	export READELF=$(gem_build_FindTool readelf)
+	export STRIP=$(gem_build_FindTool strip)
 
 	gem_build_v_InitToolchain_x86_64_common
 }
@@ -882,36 +883,12 @@ function gem_build_InitToolchain_x86_64-pc-cygwin
 	fi
 
 	if [[ ${gem_use_clang} -ne 0 ]]; then
-#		gem_cmake_toolchain_prefix="llvm-"
-#		export CC=${gem_fullpath_toolchain_autotools}/bin/clang
-#		export CXX=${gem_fullpath_toolchain_autotools}/bin/clang++
-
 		export CC=$(gem_build_FindTool clang)
 		export CXX=$(gem_build_FindTool clang++)
 	else
-#		gem_cmake_toolchain_prefix=
-#		export CC=${gem_fullpath_toolchain_autotools}/bin/x86_64-pc-cygwin-gcc
-#		export CXX=${gem_fullpath_toolchain_autotools}/bin/x86_64-pc-cygwin-g++
-
 		export CC=$(gem_build_FindTool gcc)
 		export CXX=$(gem_build_FindTool g++)
 	fi
-
-	if [[ ${gem_cmake_toolchain_prefix}x != "x" ]]; then
-		gem_script_v_Error "gem_build_InitToolchain_x86_64(): Need to find llvm- tools on cygwin."
-	fi
-#	export ADDR2LINE=${gem_fullpath_toolchain_autotools}/bin/x86_64-pc-cygwin-gcc-addr2line
-#	export AR=${gem_fullpath_toolchain_autotools}/bin/x86_64-pc-cygwin-gcc-ar
-#	export AS=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}as
-#	export DLLTOOL=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}dlltool
-#	export LD=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}ld
-#	export NM=${gem_fullpath_toolchain_autotools}/bin/x86_64-pc-cygwin-gcc-nm
-#	export OBJDUMP=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}objdump
-#	export OBJCOPY=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}objcopy
-#	export RANLIB=${gem_fullpath_toolchain_autotools}/bin/x86_64-pc-cygwin-gcc-ranlib
-#	export READELF=${gem_fullpath_toolchain_autotools}/bin/x86_64-pc-cygwin-gcc-readelf
-#	export RESCOMP=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}windres
-#	export STRIP=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}strip
 
 	export ADDR2LINE=$(gem_build_FindTool addr2line)
 	export AR=$(gem_build_FindTool ar)
@@ -1010,59 +987,6 @@ function gem_build_InitToolchain_x86_64-w64-mingw32
 	export READELF=$(gem_build_FindTool readelf)
 	export RESCOMP=$(gem_build_FindTool windres)
 	export STRIP=$(gem_build_FindTool strip)
-
-#	if [[ ${gem_use_clang} -ne 0 ]]; then	# clang
-#		gem_cmake_toolchain_prefix="llvm-"
-#		if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW on Windows
-#			export CC=${gem_fullpath_toolchain_autotools}/bin/clang
-#			export CXX=${gem_fullpath_toolchain_autotools}/bin/clang++
-#		elif [[ ${gem_os} == "CYGWIN"* ]]; then	# MinGW under Cygwin on Windows.
-#			export CC=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}clang
-#			export CXX=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}clang++
-#		elif [[ ${gem_os} == "Linux" ]]; then		# MinGW on Linux
-#			export CC=/bin/${gem_prefix_triple}clang
-#			export CXX=/bin/${gem_prefix_triple}clang++
-#		else
-#			gem_script_v_Error "gem_build_InitToolchain_x86_64-w64-mingw32: Unrecognized shell: ${gem_os}."
-#		fi
-#	else	# clang
-#		gem_cmake_toolchain_prefix=
-#		if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW on Windows
-#			export CC=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}gcc
-#			export CXX=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}g++
-#		elif [[ ${gem_os} == "CYGWIN"* ]]; then	# MinGW under Cygwin on Windows.
-#			export CC=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}gcc
-#			export CXX=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}g++
-#		elif [[ ${gem_os} == "Linux" ]]; then		# MinGW on Linux
-#			export CC=/bin/${gem_prefix_triple}gcc
-#			export CXX=/bin/${gem_prefix_triple}g++
-#		else
-#			gem_script_v_Error "gem_build_InitToolchain_x86_64-w64-mingw32: Unrecognized shell: ${gem_os}."
-#		fi
-#	fi
-#	if [[ ${gem_cmake_toolchain_prefix}x != "x" ]]; then
-#		gem_script_v_Error "gem_build_InitToolchain_x86_64(): Need to find \"llvm\"- tools on cygwin."
-#	fi
-#	export ADDR2LINE=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}addr2line
-#	export AR=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}ar
-#	export AS=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}as
-#	export DLLTOOL=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}dlltool
-#	export LD=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}ld
-#	export NM=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}nm
-#	export OBJCOPY=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}objcopy
-#	export OBJDUMP=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}objdump
-#	export RANLIB=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}ranlib
-#	export READELF=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}readelf
-#	if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW on Windows
-#		export RESCOMP=${gem_fullpath_toolchain_autotools}/bin/windres
-#	elif [[ ${gem_os} == "CYGWIN"* ]]; then	# MinGW under Cygwin on Windows.
-#		export RESCOMP=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}windres
-#	elif [[ ${gem_os} == "Linux" ]]; then		# MinGW on Linux
-#		export RESCOMP=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}windres
-#	else
-#		gem_script_v_Error "gem_build_InitToolchain_x86_64-w64-mingw32: Unrecognized shell: ${gem_os}."
-#	fi
-#	export STRIP=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}strip
 
 	gem_build_v_InitToolchain_x86_64_common
 }
@@ -1417,8 +1341,10 @@ ${gem_cmake_generator} \
 -DCMAKE_SYSTEM_PROCESSOR=${gem_processor} \
 -DCMAKE_SYSTEM_NAME=${gem_cmake_system_name} \
 -DCMAKE_SYSTEM_VERSION=${gem_cmake_system_version} \
--D_CMAKE_TOOLCHAIN_PREFIX=${gem_cmake_toolchain_prefix} \
 ${gem_cmake_params}"
+
+# Do we need this?
+#-D_CMAKE_TOOLCHAIN_PREFIX=${gem_cmake_toolchain_prefix} \
 
 	if [[ ${gem_triple} == *"android"* ]]; then
 
@@ -1452,15 +1378,19 @@ ${gem_cmake_params}"
 -DCMAKE_AR=${AR} \
 -DCMAKE_C_COMPILER=${CC} \
 -DCMAKE_CXX_COMPILER=${CXX} \
--DCMAKE_DLLTOOL=${DLLTOOL} \
 -DCMAKE_LINKER=${LD} \
 -DCMAKE_NM=${NM} \
 -DCMAKE_OBJCOPY=${OBJCOPY} \
 -DCMAKE_OBJDUMP=${OBJDUMP} \
 -DCMAKE_RANLIB=${RANLIB} \
 -DCMAKE_READELF=${READELF} \
--DCMAKE_RC_COMPILER=${RESCOMP} \
 -DCMAKE_STRIP=${STRIP}"
+	fi
+
+	if [[ ${gem_triple} == "x86_64-w64-mingw32" ]]; then
+		gem_cmd_line_configure="${gem_cmd_line_configure} \
+-DCMAKE_RC_COMPILER=${RESCOMP} \
+-DCMAKE_DLLTOOL=${DLLTOOL}"
 	fi
 
 #	gem_cmd_line_configure="cmake ${gem_fullpath_src} ${gem_cmake_generator} \
