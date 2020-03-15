@@ -1,0 +1,326 @@
+#!/bin/bash
+#  ___________                           __________
+# /\   _______\                         /\   ______\
+# \ \  \______/_     ___   ____ ____ ___\ \  \_____/_     ___   ___ ___  ______   ____    ___
+#  \ \  \ /\__  \  /'___`\/\   V    V   \\ \_______  \  /'   `\/\  \\  \/\   __\/' ._`\ /'___`\
+#   \ \  \\/__\  \/\  ___/\ \  \/\  \/\  \\/_______\  \/\  \\  \ \  \\  \ \  \ /\  \__//\  ___/
+#    \ \__________\ \____\ \ \__\ \__\ \__\ /\_________\ \_____/\ \______\ \__\\ \____/\ \____\
+#     \/__________/\/____/  \/__/\/__/\/__/ \/_________/\/____/  \/______/\/__/ \/___/  \/____/
+
+
+# The functions defined herein are factored out of gem_script, gem_build and 
+# dependent build scripts to simplify their implementations.  They are to be
+# considered private definitions for their implementations.  They provide
+# validation of those scripts' internal private variables and function
+# parameters.  These fucntions are not intended to be called directly by any
+# end user.
+#
+# Validation functions return 1 when the data is invalid, and 0 when it is
+# valid, unless documented otherwise.
+
+gem_build_validate_response="error"
+
+new Stack gem_build_validate_stack
+
+# Sets the global response variable, gem_build_validate_response, used by
+# gem_build_validate_Respond.  Allowable valuses for $1 are "warn", "error", or
+# "silent".  See gem_build_validate_Respond() for more details.
+function gem_build_validate_PushResponse
+{
+	if [[ $# != 1 ]]; then
+		gem_build_v_Error "gem_build_ValidateResponse(): 0 or 1 parameters were expected.  Valid parameters are warn, error, or silent."
+	fi
+
+    local arg=$(echo $1 | tr '[A-Z]' '[a-z]')	# Lowercase the argument.
+	case ${arg} in
+	warn | error | silent);;
+	*) gem_script_v_Error "Valid parameters are warn, error, or silent."
+	esac
+
+    local previous=${gem_build_validate_response}
+    gem_build_validate_response=$1
+}
+
+# Process a response by displaying a message, or not, depending on the value
+# indicated by the most recent call to gem_build_validate_PushResponse().  $1 is the
+# message to possibly be dislayed.
+#
+# "error" :  Displays "ERROR: your message", $1, and execution is halted.
+# "warn" :   Displays "WARNING: your message", $1, and returns 1.
+# "silent" : Displays your message, $1, and returns 0.
+
+function gem_build_validate_Respond
+{
+	if [[ $# != 1 ]]; then
+		gem_build_v_Error "gem_build_Response(): 0 or 1 parameters were expected."
+	fi
+
+    if [[ ${gem_build_validate_response} == "error" ]]; then
+        gem_script_v_Error "$1"
+    elif [[ ${gem_build_validate_response} == "warn" ]]; then
+        gem_script_v_Msg "WARNING: $1"
+    fi
+    return 0
+}
+
+
+# =============================================================================
+#                                  gem_script
+# =============================================================================
+
+# Verify that all the paths in a colon-separated list exist.
+function gem_build_validate_PathList
+{
+	local gem_colon_separated_list=${1}
+	local gem_ifs_saved=${IFS}
+
+    gem_build_validate_PushResponse "error"
+
+	IFS=":"
+	for gem_path in ${gem_colon_separated_list}
+	do
+		if [[ ! -d ${gem_path} ]]; then
+			gem_build_validate_Respond "gem_build_validate_PathList(): Directory does not exist: ${gem_path}"
+            return 1
+		fi
+	done
+	IFS=${gem_ifs_saved}
+    return 0
+}
+
+# Verify that all the files in a space-separated list exist.
+function gem_build_validate_FileList
+{
+    gem_build_validate_PushResponse "error"
+
+	local gem_space_separated_list=${1}
+	local gem_ifs_saved=${IFS}
+	IFS=" "
+	for gem_file in ${gem_space_separated_list}
+	do
+		if [[ ! -f ${gem_file} ]]; then
+			gem_build_validate_Respond "gem_build_validate_FileList(): File does not exist: ${gem_file}"
+            return 1
+		fi
+	done
+	IFS=${gem_ifs_saved}
+    return 0
+}
+
+
+
+
+
+
+
+
+
+# =============================================================================
+#                                  gem_build
+# =============================================================================
+
+# Sets and validates ${gem_fullpath_android_ndk}.
+function gem_build_validate_NDKDir
+{
+    gem_build_validate_PushResponse "error"
+
+    if [[ ${gem_fullpath_android_sdk}x == x ]]; then
+        gem_build_validate_Respond "gem_fullpath_android_sdk is not defined."
+        return 1
+    fi
+    gem_fullpath_ndk_parent=${gem_fullpath_android_sdk}/ndk
+    if [[ ! -d ${gem_fullpath_ndk_parent} ]]; then
+        gem_build_validate_Respond "Failed to find the android ndk directory at ${gem_fullpath_ndk_parent}.  This can happen if you're using an older version of the ndk.  The directory structures have been modified several times over several versions."
+        return 1
+    fi
+
+    local counter=0
+    for entry in ${gem_fullpath_ndk_parent}/${gem_android_ndk_version}*
+    do
+        entry=$(basename ${entry})
+        if [[ -d ${gem_fullpath_ndk_parent}/${entry} ]]; then
+            ((counter++))
+        fi
+    done
+
+    if [[ ${counter} -eq 0 ]]; then
+        gem_build_validate_Respond "Failed to find ndk version ${gem_android_ndk_version} in directory ${gem_fullpath_ndk_parent}"
+        return 1
+    fi
+    if [[ ${counter} -gt 1 ]]; then
+        gem_build_validate_Respond "Found multiple ndks of version ${gem_android_ndk_version} in directory ${gem_fullpath_ndk_parent}.  Specify the full version number (e.g. 21.0.1234)."
+        return 1
+    fi
+
+    gem_fullpath_android_ndk=${gem_fullpath_ndk_parent}/${entry}
+    if [[ ! -d ${gem_fullpath_android_ndk} ]]; then
+        gem_build_validate_Respond "Android ndk does not exist at: ${gem_fullpath_android_ndk}"
+        return 1
+    fi
+    return 0
+}
+
+function gem_build_validate_ProjectFilePaths
+{
+	# Don't validate gem_fullpath_src here.  It is expected to not exist if we
+	# are going to download the source.  gem_fullpath_src will be validated
+	# elsewhere before configuration and building.
+
+    gem_build_validate_PushResponse "error"
+
+	if [[ ${gem_build_script_type}x == "x" ]]; then
+		gem_build_validate_Respond "gem_build_validate_ProjectFilePaths(): gem_build_script_type not defined."
+        return 1
+	fi
+	if [[ ${gem_build_script_type} == "cmake" ]]; then
+		if [[ ${gem_fullpath_toolchain_cmake}x == x ]]; then
+			gem_build_validate_Respond "gem_build_validate_ProjectFilePaths(): gem_fullpath_toolchain_cmake is not defined."
+            return 1
+		fi
+		if [[ ! -f ${gem_fullpath_toolchain_cmake} ]]; then
+			gem_build_validate_Respond "gem_build_validate_ProjectFilePaths(): CMake toolchain file not found at: ${gem_fullpath_toolchain_cmake}"
+	        return 1
+    	fi
+	elif [[ ${gem_build_script_type} == "autotools" ]]; then
+		if [[ ${gem_fullpath_toolchain_autotools}x == x ]]; then
+			gem_build_validate_Respond "gem_build_validate_ProjectFilePaths(): gem_fullpath_toolchain_autotools is not defined."
+            return 1
+		fi
+		if [[ ! -f ${gem_fullpath_toolchain_autotools} ]]; then
+			gem_build_validate_Respond "gem_build_validate_ProjectFilePaths(): Autotools toolchain directory not found at: ${gem_fullpath_toolchain_autotools}"
+            return 1
+		fi
+	fi
+
+	if [[ ${gem_fullpath_sysroot}x == "x" ]]; then
+		gem_build_validate_Respond "gem_build_validate_ProjectFilePaths(): gem_fullpath_sysroot not defined."
+        return 1
+	fi
+	if [[ ! -d ${gem_fullpath_sysroot} ]]; then
+		gem_build_validate_Respond "gem_build_validate_ProjectFilePaths(): gem_fullpath_sysroot  directory not found at: ${gem_fullpath_sysroot}"
+        return 1
+	fi
+
+	if [[ ${gem_fullpath_tool_bin}x == "x" ]]; then
+		gem_build_validate_Respond "gem_build_validate_ProjectFilePaths(): gem_fullpath_tool_bin not defined."
+        return 1
+	fi
+	if [[ ! -d ${gem_fullpath_tool_bin} ]]; then
+		gem_build_validate_Respond "gem_build_validate_ProjectFilePaths(): gem_fullpath_tool_bin  directory not found at: ${gem_fullpath_tool_bin}"
+        return 1
+	fi
+
+	if [[ ${gem_fullpath_project}x == "x" ]]; then
+		gem_build_validate_Respond "gem_build_validate_ProjectFilePaths(): gem_fullpath_project not defined."
+        return 1
+	fi
+	if [[ ! -d ${gem_fullpath_project} ]]; then
+		gem_build_validate_Respond "gem_build_validate_ProjectFilePaths(): gem_fullpath_project  directory not found at: ${gem_fullpath_project}"
+        return 1
+	fi
+
+	if [[ ${gem_fullpath_src}x == "x" ]]; then
+		gem_build_validate_Respond "gem_build_validate_ProjectFilePaths(): gem_fullpath_src not defined."
+        return 1
+	fi
+	if [[ ${gem_fullpath_build}x == "x" ]]; then
+		gem_build_validate_Respond "gem_build_validate_ProjectFilePaths(): gem_fullpath_build not defined."
+        return 1
+	fi
+	if [[ ${gem_fullpath_install}x == "x" ]]; then
+		gem_build_validate_Respond "gem_build_validate_ProjectFilePaths(): gem_fullpath_install not defined."
+        return 1
+	fi
+    return 0
+}
+
+function gem_build_validate_SrcPath
+{
+    gem_build_validate_PushResponse "error"
+
+	if [[ ! -d ${gem_fullpath_src} ]]; then
+		gem_build_validate_Respond "gem_build_validate_SrcPath(): gem_fullpath_src  directory not found at: ${gem_fullpath_src}"
+        return 1
+	fi
+	gem_script_DirIsEmpty ${gem_fullpath_src}
+	gem_dirIsEmpty=$?
+	if [[ ${gem_dirIsEmpty} -ne 0 ]]; then
+		gem_build_validate_Respond "The source path exists, but is empty."
+        return 1
+	fi
+    return 0
+}
+
+function gem_build_validate_BuildPath
+{
+    gem_build_validate_PushResponse "error"
+
+	if [[ ! -d ${gem_fullpath_build} ]]; then
+		gem_build_validate_Respond "gem_build_validate_BuildPath(): gem_fullpath_build  directory not found at: ${gem_fullpath_build}.  Try configuring the project first using the -m option."
+        return 1
+	fi
+	gem_script_DirIsEmpty ${gem_fullpath_build}
+	gem_dirIsEmpty=$?
+	if [[ ${gem_dirIsEmpty} -ne 0 ]]; then
+		gem_build_validate_Respond "The build tree exists, but is empty."
+        return 1
+	fi
+    return 0
+}
+
+function gem_build_validate_BuildFile
+{
+    gem_build_validate_PushResponse "error"
+
+	gem_build_validate_SrcPath
+	if [[ ${gem_build_script_type} == "cmake" ]]; then
+		if [[ ! -f ${gem_fullpath_src}/CMakeLists.txt ]]; then
+			gem_build_validate_Respond "gem_build_validate_BuildFile(): CMakeLists.txt does not exist in source folder ${gem_fullpath_src}."
+            return 1
+		fi
+	elif [[ ${gem_build_script_type} == "autotools" ]]; then
+		if [[ ! -f ${gem_fullpath_src}/configure ]]; then
+			gem_build_validate_Respond "gem_build_validate_BuildFile(): configure file does not exist in source folder ${gem_fullpath_src}."
+            return 1
+		fi
+	elif [[ ${gem_build_script_type} == "meson" ]]; then
+		if [[ ! -f ${gem_fullpath_src}/meson.build ]]; then
+			gem_build_validate_Respond "gem_build_validate_BuildFile(): meson.build does not exist in source folder ${gem_fullpath_src}."
+            return 1
+		fi
+	fi
+    return 0
+}
+
+function gem_build_validate_Compatibility
+{
+    gem_build_validate_PushResponse "error"
+
+	if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW shell on Windows.
+		if [[ ${gem_triple} != "x86_64-w64-mingw32" && ${gem_triple} != "x86_64-pc-windows-msvc" ]]; then
+			gem_build_validate_Respond "gem_build_validate_Compatibility: Can't build executables for host '${gem_triple}' under Mingw on Windows."
+            return 1
+		fi
+	elif [[ ${gem_os} == "CYGWIN"* ]]; then	# Cygwin shell on Windows.
+		if [[ ${gem_triple} != "x86_64-pc-cygwin" && ${gem_triple} != "x86_64-w64-mingw32" ]]; then
+			gem_build_validate_Respond "gem_build_validate_Compatibility: Can't build executables for host '${gem_triple}' under Cygwin on Windows."
+            return 1
+		fi
+	elif [[ ${gem_os} == "Linux" ]]; then	# Linux shell.
+		if [[ ${gem_triple} != "x86_64-pc-linux-gnu" && ${gem_triple} != "x86_64-w64-mingw32" && ${gem_triple} != *"android"* ]]; then
+			gem_build_validate_Respond "gem_build_validate_Compatibility: Can't build executables for host '${gem_triple}' on Linux."
+            return 1
+		fi
+	fi
+    return 0
+}
+
+
+
+
+
+
+
+
+
+
