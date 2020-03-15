@@ -19,6 +19,156 @@ Uncategorized
 
 
 -------------------------------------------------------------------------------
+gem_build
+-------------------------------------------------------------------------------
+
+* Change the directory validation functions to accept a parameter "error",
+  "warn", or "silent".  Silent just returns a success result.
+
+* Does the install command create the install directory?  If so, we shouldn't
+  fail if it doesn't exist.
+
+* The gem_build _Cmd_Run family of functions must validate the build directory
+  and the existance of the executable.
+
+* Help Should not trip any errors.
+
+* Make gem_build_ValidateScriptType() and gem_build_ValidateBuildType().
+
+* Move all the validation functions into their own file, gem_build_validate(?)
+
+* Remove gem_platform_build, or similar function.  Search for "platform."
+
+* Rename gem_build_v_SetDefaults() to gem_build_v_Settings or
+  gem_build_v_InitProject().
+
+* Consolidate validation of the Android SDK & NDK directories.  Call it from
+  gem_build_v_InitToolchain_android_common().
+
+* Remove the sysroot setting in all the cmake toolchain files.  It's already
+  being passed to cmake.  You still should append it to FIND_ROOT_PATH,
+  however.
+
+* Implement gem_lib_type.
+
+* Initialize all the CMAKE_C_FLAGS_* family of cmake variables.
+
+* In gem/local/src/cmake/cmake_utils_pre.cmake add the rest of the CMAKE_AR
+  family of tools.
+
+* Search gem_build for $HOME.  Can we replace any with gem_fullpath_gem?
+
+* Set PIE for cmake.  I think clang doesn't support it.  Verify this.
+
+* Pass stl version to cmake.
+
+* Pass compiler version (e.g. c99, etc.) to cmake.
+
+* Prepend the gem/local/src/toolchain files with "gem_".
+
+In gem_build_OnArg what happens if we specify an argument twice?  E.g.
+"gem_build_zlib -m -m".  I believe it should work as the flag
+gem_option_configure=1 will just be set twice.  Please verify this.
+
+Extend the functionality of gem_option_quiet_mode to affect autotools, meson,
+and cmake builds scripts.
+
+The gem_v_DownloadSource seems pretty stable in derrived build scripts.
+Consider whether it's time to move the implementation into the gem_build base
+script.
+
+ ./gem_build_libiconv -c -m produces weird results.  We need to define what
+ "clean" means. Does that only clean build files, or does it also remove the
+ downloaded source tar ball?  I think it should only clean the build files.
+ This gives rise to another questions, does "scrub" delete the downloaded
+ source files?
+
+gem_Msg should automatically output "MESSAGE: ", and gem_Error should output
+"ERROR: ", etc.
+
+* The download of the source package should be perfomred during configure, so
+  that we're not generating messages concerning downloading during build and
+  install time.
+
+* Rename functions such as gem_v_OnCommandLine_Configure_CMake to
+  gem_v_OnConfigure_OnCommandLine_CMake.
+
+* Move the pkg-config stuff from gem_v_BuildFilePaths into something like
+    gem_v_BuildFilePaths_pkgconfig.
+
+* gem_os and gem_build_platform should be merged.  Use uname very early to
+  set gem_os to be the gem_build_platform string.  Since we have a gem_host
+  variable, it's symmetric to have a gem_build variable containing similarly
+  identified platforms.  
+
+* Document all the variables.  Include the meaning of "build" being the
+  architecture we are building on, and "host" being the architecture the code
+  is intended to run on.
+
+* Employ Doxygen to generate code for our scripts.
+
+* gem_bash_init shouldn't add the android paths to $PATH.  That should be done
+  in gem_build, or perhaps in the gem_bash_init in the gem/home directory.  The
+  gem_build script should verify that is has been set appropriately.   Is
+  gem_bash_init adding anything else that would better be loclated in gem_build?
+
+
+
+
+
+
+
+* Change gem_build to accepting params of the form "-host msvc" to "--host=msvc"
+  Source: https://devhints.io/bash
+  
+	while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do case $1 in
+	-V | --version )
+		echo $version
+		exit
+		;;
+	-s | --string )
+		shift; string=$1
+		;;
+	-f | --flag )
+		flag=1
+		;;
+	esac; shift; done
+	if [[ "$1" == '--' ]]; then shift; fi
+
+
+* Catch build errors.  When a build with -m fails, if -b is included, it should
+  not build.
+
+* What if there is a failure in gem_script or gem_build?  Their including
+  scripts ought to handle these cases.  For example, what happens if a function
+  defined in gem_script calls gem_v_ExitMsg()?  Does the including script
+  continue executing or terminate?
+
+* Change all occurances of mkdir->gem_script_mkdir, cd->gem_script_cd, and
+  cp->gem_script_cp.  Are there any others?
+
+* Across the build files, change "ERROR: func: " to "ERROR: func()".
+
+* gem_script_mkdir, gem_script_cd, gem_script_cp, etc. should support relative
+  paths, but still verify they are operating within .../gem/.
+
+* Move gem_os from gem_build to gem_script.  Repleace all occurances of
+  $(uname -s) with gem_os.
+
+* Migrate all the build scripts to python.
+
+* Change the sbin filenames from the likes of gem_script, to gem_bash_script,
+  or else add the .sh extension, so we don't mix them up with the forthcoming
+  python implementations.
+
+* Get pre-compiled headers working.  Look into mingw64/mingw-w64-x86_64-cotire
+  1.8.0_3.15-1 found using "pacman -Ss cmake"
+
+
+
+
+
+-------------------------------------------------------------------------------
 Gem Environment
 -------------------------------------------------------------------------------
 
@@ -130,114 +280,6 @@ gem_script
 Do we need to move the -q quiet mode argument to the front of the list?  If
 not, is it quiet if we do "-m -q"?  I suspect the configure process will not
 be quiet.
-
-
-
-
--------------------------------------------------------------------------------
-gem_build
--------------------------------------------------------------------------------
-
-In gem_build_OnArg what happens if we specify an argument twice?  E.g.
-"gem_build_zlib -m -m".  I believe it should work as the flag
-gem_option_configure=1 will just be set twice.  Please verify this.
-
-Extend the functionality of gem_option_quiet_mode to affect autotools, meson,
-and cmake builds scripts.
-
-The gem_v_DownloadSource seems pretty stable in derrived build scripts.
-Consider whether it's time to move the implementation into the gem_build base
-script.
-
- ./gem_build_libiconv -c -m produces weird results.  We need to define what
- "clean" means. Does that only clean build files, or does it also remove the
- downloaded source tar ball?  I think it should only clean the build files.
- This gives rise to another questions, does "scrub" delete the downloaded
- source files?
-
-gem_Msg should automatically output "MESSAGE: ", and gem_Error should output
-"ERROR: ", etc.
-
-* The download of the source package should be perfomred during configure, so
-  that we're not generating messages concerning downloading during build and
-  install time.
-
-* Rename functions such as gem_v_OnCommandLine_Configure_CMake to
-  gem_v_OnConfigure_OnCommandLine_CMake.
-
-* Move the pkg-config stuff from gem_v_BuildFilePaths into something like
-    gem_v_BuildFilePaths_pkgconfig.
-
-* gem_os and gem_build_platform should be merged.  Use uname very early to
-  set gem_os to be the gem_build_platform string.  Since we have a gem_host
-  variable, it's symmetric to have a gem_build variable containing similarly
-  identified platforms.  
-
-* Document all the variables.  Include the meaning of "build" being the
-  architecture we are building on, and "host" being the architecture the code
-  is intended to run on.
-
-* Employ Doxygen to generate code for our scripts.
-
-* gem_bash_init shouldn't add the android paths to $PATH.  That should be done
-  in gem_build, or perhaps in the gem_bash_init in the gem/home directory.  The
-  gem_build script should verify that is has been set appropriately.   Is
-  gem_bash_init adding anything else that would better be loclated in gem_build?
-
-* Rename gem_v_Cmd_Build to gem_build_v_Cmd_Build, so readers know where the
-  base implementation being overridden is located.  Do likewise for similarly
-  mis-named functions in gem_script.  Make sure you test all our build scripts
-  to be certain we have caught all instances.
-
-* Change the sbin filenames from the likes of gem_script, to gem_bash_script,
-  or else add the .sh extension, so we don't mix them up with the forthcoming
-  python implementations.
-
-* In gem_build_ValidateBuildTools validate *all* the tools.
-
-* Do CC, CXX, LD, etc. need to be exported?
-
-* Replace gem_host with gem_platform_host
-
-* Change gem_build to accepting params of the form "-host msvc" to "-host=msvc"
-
-* Catch build errors.  When a build with -m fails, if -b is included, it should
-  not build.
-
-* What if there is a failure in gem_script or gem_build?  Their including
-  scripts ought to handle these cases.  For example, what happens if a function
-  defined in gem_script calls gem_v_ExitMsg()?  Does the including script
-  continue executing or terminate?
-
-* Change all occurances of mkdir->gem_script_mkdir, cd->gem_script_cd, and
-  cp->gem_script_cp.  Are there any others?
-
-* Determine if we can change the many " -ne 0" with " != 0".
-
-* Across the build files, change "ERROR: func: " to "ERROR: func()".
-
-* gem_script_mkdir, gem_script_cd, gem_script_cp, etc. should support relative
-  paths, but still verify they are operating within .../gem/.
-
-* Move gem_os from gem_build to gem_script.  Repleace all occurances of
-  $(uname -s) with gem_os.
-
-Migrate all the build scripts to python.
-
-Build scripts need to support building on cygwin.  What should the name of the
-build directory be called.  vscode_cygwin.bat file is adding the binary output
-directory to the path so we can run our cygwin-built executables from the
-command line.
-
-When building for android, gem_build should give a descriptive message
-detailing which environment variables need to be defined, if they're not.  We
-don't want to define those in gem/local/sbin/gem_bash_init.  Our personal one
-would be more appropriate.
-    * Is ANDROID_SDK required?  Are we using it?
-    * Is ANDROID_NDK required?  Are we using it?
-
-Get pre-compiled headers working.  Look into
-mingw64/mingw-w64-x86_64-cotire 1.8.0_3.15-1 found using "pacman -Ss cmake"
 
 
 

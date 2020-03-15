@@ -132,38 +132,8 @@ function gem_script_ListContains
 	return ${gem_found}
 }
 
-# Verify that all the paths in a colon-separated list exist.
-function gem_script_ValidatePaths
-{
-	local gem_colon_separated_list=${1}
-	local gem_ifs_saved=${IFS}
-	IFS=":"
-	for gem_path in ${gem_colon_separated_list}
-	do
-		if [[ ! -d ${gem_path} ]]; then
-			gem_script_v_Error "gem_script_ValidatePaths(): Directory does not exist: ${gem_path}"
-		fi
-	done
-	IFS=${gem_ifs_saved}
-}
-
-# Verify that all the files in a space-separated list exist.
-function gem_script_ValidateFiles
-{
-	local gem_space_separated_list=${1}
-	local gem_ifs_saved=${IFS}
-	IFS=" "
-	for gem_file in ${gem_space_separated_list}
-	do
-		if [[ ! -f ${gem_file} ]]; then
-			gem_script_v_Error "gem_script_ValidateFiles(): File does not exist: ${gem_file}"
-		fi
-	done
-	IFS=${gem_ifs_saved}
-}
-
 # Receives as parameters a copy of the parameters that were passed to our file
-# systme wrappers gem_script_cd, ... etc.  We would like to restrict these
+# system wrappers gem_build_validate_cd, ... etc.  We would like to restrict these
 # functions from working outside the gem file heirarchy for safety purposes.
 #
 # Every argument that realpath successfully converts is expected to be a 
@@ -173,12 +143,12 @@ function gem_script_ValidateFileParams
 #	local gem_counter=0
 	for arg in "$@"
 	{
-		local gem_absolute_path
-		gem_absolute_path=$(realpath "${arg}" 2>/dev/null)	# Expand relative paths.
+		local gem_absolute_path=$(realpath "${arg}" 2>/dev/null)	# Expand relative paths.
 		local gem_result=$?
-		if [[ ${gem_result} -eq 0 ]]; then
+		if [[ ${gem_result} -eq 0 && -f $gem_absolute_path ]]; then
 			if [[ ${gem_absolute_path} != *"/gem/"* && ${arg} != *"/gem/"* ]]; then
 				gem_script_v_Error "gem_script_ValidateFileParams() Refusing to perform file operations outside of /gem/ file tree: ${arg}"
+                return 1
 #			else
 #				((gem_counter++))
 			fi

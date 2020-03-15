@@ -62,7 +62,6 @@
 #   http://landinghub.visualstudio.com/visual-cpp-build-tools (it's the file
 #   visualcppbuildtools_full.exe).
 
-
 function gem_script_v_ExitHelp { gem_build_ExitHelp "$@";}
 function gem_build_ExitHelp
 {
@@ -137,36 +136,6 @@ function gem_build_SetDefaults
 	local noop=0
 }
 
-# Sets and validates ${gem_fullpath_android_ndk}.
-function gem_build_ValidateNDKDir
-{
-    gem_fullpath_ndk_parent=${gem_fullpath_android_sdk}/ndk
-    if [[ ! -d ${gem_fullpath_ndk_parent} ]]; then
-        gem_script_v_ExitMsg "ERROR: Failed to find the android ndk directory at ${gem_fullpath_ndk_parent}.  This can happen if you're using an older version of the ndk.  The directory structures have been modified several times over several versions."
-    fi
-
-    local counter=0
-    for entry in ${gem_fullpath_ndk_parent}/${gem_android_ndk_version}*
-    do
-        entry=$(basename ${entry})
-        if [[ -d ${gem_fullpath_ndk_parent}/${entry} ]]; then
-            ((counter++))
-        fi
-    done
-
-    if [[ ${counter} -eq 0 ]]; then
-        gem_script_ExitMsg "ERROR: Failed to find ndk version ${gem_android_ndk_version} in directory ${gem_fullpath_ndk_parent}"
-    fi
-    if [[ ${counter} -gt 1 ]]; then
-        gem_script_ExitMsg "ERROR: Found multiple ndks of version ${gem_android_ndk_version} in directory ${gem_fullpath_ndk_parent}.  Specify the full version number (e.g. 21.0.1234)."
-    fi
-
-    gem_fullpath_android_ndk=${gem_fullpath_ndk_parent}/${entry}
-    if [[ ! -d ${gem_fullpath_android_ndk} ]]; then
-        gem_script_v_ExitMsg "ERROR: Android ndk does not exist at: ${gem_fullpath_android_ndk}"
-    fi
-}
-
 function gem_build_v_DownloadSource { gem_build_DownloadSource ;}
 function gem_build_DownloadSource
 {
@@ -193,49 +162,54 @@ function gem_build_DownloadSource
 
 		# Decompress
 		if [[ -d ${gem_fullpath_src} ]]; then
-			gem_script_v_Msg "MESSAGE: The source tree already exists.  Defying order to decompress."
-		else
-			gem_script_mkdir -p ${gem_fullpath_src}
-			gem_flags_tar="<undefined>"
-			if [[ ${gem_filename_exten} == *".gz" ]]; then
-				gem_flags_tar="xzf"
-			elif  [[ ${gem_filename_exten} == *".xz" ]]; then
-				gem_flags_tar="xf"
-			elif  [[ ${gem_filename_exten} == *".bz2" ]]; then
-				gem_flags_tar="xjf"
+			gem_script_DirIsEmpty ${gem_fullpath_src}
+			gem_dirIsEmpty=$?
+			if [[ ${gem_dirIsEmpty} -eq 0 ]]; then
+				gem_script_v_Msg "MESSAGE: The source tree already exists.  Defying order to decompress."
+				return
 			fi
-			if [[ ${gem_flags_tar} == "<undefined>" ]]; then
-				gem_script_v_Error "gem_build_v_DownloadSource: Unable to decompress downloaded file with extension \"${gem_filename_exten}\"."
-			fi
-			tar -${gem_flags_tar} ${gem_filename_archive} -C ${gem_fullpath_src}
-			if [[ $? != 0 ]]; then
-				gem_script_v_Error "gem_build_v_DownloadSource: Failed to uncompress the source archive: ${gem_filename_archive}"
-			fi
-			gem_script_cp -rf ${gem_fullpath_src}/${gem_filename_base}/* ${gem_fullpath_src}
-			gem_script_rm -rf ${gem_fullpath_src}/${gem_filename_base}
 		fi
+
+		gem_script_mkdir -p ${gem_fullpath_src}
+		gem_flags_tar="<undefined>"
+		if [[ ${gem_filename_exten} == *".gz" ]]; then
+			gem_flags_tar="xzf"
+		elif  [[ ${gem_filename_exten} == *".xz" ]]; then
+			gem_flags_tar="xf"
+		elif  [[ ${gem_filename_exten} == *".bz2" ]]; then
+			gem_flags_tar="xjf"
+		fi
+		if [[ ${gem_flags_tar} == "<undefined>" ]]; then
+			gem_script_v_Error "gem_build_v_DownloadSource: Unable to decompress downloaded file with extension \"${gem_filename_exten}\"."
+		fi
+		tar -${gem_flags_tar} ${gem_filename_archive} -C ${gem_fullpath_src}
+		if [[ $? != 0 ]]; then
+			gem_script_v_Error "gem_build_v_DownloadSource: Failed to uncompress the source archive: ${gem_filename_archive}"
+		fi
+		gem_script_cp -rf ${gem_fullpath_src}/${gem_filename_base}/* ${gem_fullpath_src}
+		gem_script_rm -rf ${gem_fullpath_src}/${gem_filename_base}
 	fi
 }
 
 function gem_build_v_GetFilePath_src { gem_build_GetFilePath_src ;}
 function gem_build_GetFilePath_src
 {
-	if [[ "${gem_fullpath_pkg}"x == "x" ]]; then
-		gem_script_v_Error "gem_fullpath_pkg referenced before being set."
+	if [[ "${gem_fullpath_project}"x == "x" ]]; then
+		gem_script_v_Error "gem_fullpath_project referenced before being set."
 	fi
-	echo ${gem_fullpath_pkg}/src
+	echo ${gem_fullpath_project}/src
 }
 
 function gem_build_v_GetFilePath_build { gem_build_GetFilePath_build ;}
 function gem_build_GetFilePath_build
 {
-	if [[ "${gem_fullpath_pkg}"x == "x" ]]; then
-		gem_script_v_Error "gem_fullpath_pkg referenced before being set."
+	if [[ "${gem_fullpath_project}"x == "x" ]]; then
+		gem_script_v_Error "gem_fullpath_project referenced before being set."
 	fi
 	if [[ "${gem_path_suffix}"x == "x" ]]; then
 		gem_script_v_Error "gem_path_suffix referenced before being set."
 	fi
-	echo ${gem_fullpath_pkg}/build/${gem_path_suffix}
+	echo ${gem_fullpath_project}/build/${gem_path_suffix}
 }
 
 function gem_build_v_GetFilePath_install { gem_build_GetFilePath_install ;}
@@ -263,10 +237,7 @@ function gem_build_BuildFilePaths
 	fi
 	gem_path_suffix=${gem_path_suffix}/${gem_build_type}
 
-	gem_fullpath_pkg=$(pwd)
-	if [[ ! -d ${gem_fullpath_pkg} ]]; then
-		gem_script_v_Error "Failed to determine directory containing this script: $(basename \"${0}\")"
-	fi
+	gem_fullpath_project=$(pwd)
 	gem_fullpath_build=$(gem_build_v_GetFilePath_build)
 	gem_fullpath_src=$(gem_build_v_GetFilePath_src)
 	gem_fullpath_install=$(gem_build_v_GetFilePath_install)
@@ -316,11 +287,12 @@ function gem_build_BuildFilePaths
 #			fi
 		fi
 	else
-		if [[ ${gem_option_quiet_mode} -eq 0 ]]; then
-			gem_script_v_Msg "MESSAGE: Gem's pkg-config was found at ${PKG_CONFIG}."
-		fi
+		local noop=0
+#		if [[ ${gem_option_quiet_mode} -eq 0 ]]; then
+#			gem_script_v_Msg "MESSAGE: Gem's pkg-config was found at ${PKG_CONFIG}."
+#		fi
 	fi
-	gem_fullpath_pkg_config=${PKG_CONFIG}
+	gem_fullpath_project_config=${PKG_CONFIG}
 
 	# PKG_CONFIG_PATH
 	#
@@ -364,51 +336,21 @@ function gem_build_BuildFilePaths
 			export TEMP_SYSROOT_DIR=/usr
 			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=${TEMP_SYSROOT_DIR}/include
 			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=${TEMP_SYSROOT_DIR}/lib64
-			export PKG_CONFIG_LIBDIR="${PKG_CONFIG_LIBDIR}\
-${gem_fullpath_install}/lib/pkgconfig:\
+			export PKG_CONFIG_LIBDIR="\
 ${TEMP_SYSROOT_DIR}/share/pkgconfig:\
 ${TEMP_SYSROOT_DIR}/lib64/pkgconfig"
 
 		elif [[ ${gem_triple} == "x86_64-w64-mingw32" ]]; then	# MinGW on Linux
-			if [[ "x" == "x" ]]; then
-				# This works.  Don't fuck with it.
-				export PKG_CONFIG_SYSROOT_DIR=
-				export TEMP_SYSROOT_DIR=/usr/x86_64-w64-mingw32/sys-root
-				# This will break the -L path to our gem libraries.
-	#			export PKG_CONFIG_SYSROOT_DIR=${TEMP_SYSROOT_DIR}
-				export PKG_CONFIG_SYSTEM_INCLUDE_PATH=${TEMP_SYSROOT_DIR}/mingw/include
-				export PKG_CONFIG_SYSTEM_LIBRARY_PATH=${TEMP_SYSROOT_DIR}/mingw/lib
-				export PKG_CONFIG_LIBDIR="${TEMP_SYSROOT_DIR}/mingw/lib/pkgconfig:${PKG_CONFIG_LIBDIR}"
-				export PKG_CONFIG_LIBDIR="${TEMP_SYSROOT_DIR}/mingw/share/pkgconfig:${PKG_CONFIG_LIBDIR}"
-				export PKG_CONFIG_LIBDIR="${gem_fullpath_install}/lib/pkgconfig:${PKG_CONFIG_LIBDIR}"
-
-			elif [[ "x" == "y" ]]; then
-				# Try considering our gem libraries to be system libraries so
-				# that we can set PKG_CONFIG_SYSROOT_DIR correctly.
-				export PKG_CONFIG_SYSROOT_DIR=/usr/x86_64-w64-mingw32/sys-root
-				export PKG_CONFIG_SYSTEM_INCLUDE_PATH="mingw/include"
-
-				export PKG_CONFIG_SYSTEM_LIBRARY_PATH="mingw/lib:${gem_fullpath_install}/lib"
-				export PKG_CONFIG_SYSTEM_LIBRARY_PATH="${PKG_CONFIG_SYSTEM_LIBRARY_PATH}:${gem_fullpath_install}/lib"
-				export PKG_CONFIG_SYSTEM_LIBRARY_PATH="${PKG_CONFIG_SYSTEM_LIBRARY_PATH}:..${gem_fullpath_install}/lib"
-				export PKG_CONFIG_SYSTEM_LIBRARY_PATH="${PKG_CONFIG_SYSTEM_LIBRARY_PATH}:../..${gem_fullpath_install}/lib"
-				export PKG_CONFIG_SYSTEM_LIBRARY_PATH="${PKG_CONFIG_SYSTEM_LIBRARY_PATH}:../../..${gem_fullpath_install}/lib"
-				export PKG_CONFIG_SYSTEM_LIBRARY_PATH="${PKG_CONFIG_SYSTEM_LIBRARY_PATH}:../../../..${gem_fullpath_install}/lib"
-				export PKG_CONFIG_SYSTEM_LIBRARY_PATH="${PKG_CONFIG_SYSTEM_LIBRARY_PATH}:../../../../..${gem_fullpath_install}/lib"
-				export PKG_CONFIG_SYSTEM_LIBRARY_PATH="${PKG_CONFIG_SYSTEM_LIBRARY_PATH}:/usr/x86_64-w64-mingw32/sys-root${gem_fullpath_install}/lib"
-				export PKG_CONFIG_SYSTEM_LIBRARY_PATH="${PKG_CONFIG_SYSTEM_LIBRARY_PATH}:/usr/x86_64-w64-mingw32/sys-root/..${gem_fullpath_install}/lib"
-				export PKG_CONFIG_SYSTEM_LIBRARY_PATH="${PKG_CONFIG_SYSTEM_LIBRARY_PATH}:/usr/x86_64-w64-mingw32/sys-root/../..${gem_fullpath_install}/lib"
-				export PKG_CONFIG_SYSTEM_LIBRARY_PATH="${PKG_CONFIG_SYSTEM_LIBRARY_PATH}:/usr/x86_64-w64-mingw32/sys-root/../../..${gem_fullpath_install}/lib"
-				export PKG_CONFIG_SYSTEM_LIBRARY_PATH="${PKG_CONFIG_SYSTEM_LIBRARY_PATH}:/usr/x86_64-w64-mingw32/sys-root/../../../..${gem_fullpath_install}/lib"
-				export PKG_CONFIG_SYSTEM_LIBRARY_PATH="${PKG_CONFIG_SYSTEM_LIBRARY_PATH}:/usr/lib64${gem_fullpath_install}/lib"
-				export PKG_CONFIG_SYSTEM_LIBRARY_PATH="${PKG_CONFIG_SYSTEM_LIBRARY_PATH}:/usr/lib64/..${gem_fullpath_install}/lib"
-				export PKG_CONFIG_SYSTEM_LIBRARY_PATH="${PKG_CONFIG_SYSTEM_LIBRARY_PATH}:/usr/lib64/../..${gem_fullpath_install}/lib"
-				export PKG_CONFIG_SYSTEM_LIBRARY_PATH="${PKG_CONFIG_SYSTEM_LIBRARY_PATH}:/usr/lib64/../../..${gem_fullpath_install}/lib"
-				export PKG_CONFIG_SYSTEM_LIBRARY_PATH="${PKG_CONFIG_SYSTEM_LIBRARY_PATH}:/usr/lib64/../../../..${gem_fullpath_install}/lib"
-				export PKG_CONFIG_LIBDIR="/mingw/lib/pkgconfig:${PKG_CONFIG_LIBDIR}"
-				export PKG_CONFIG_LIBDIR="/mingw/share/pkgconfig:${PKG_CONFIG_LIBDIR}"
-				export PKG_CONFIG_LIBDIR="${gem_fullpath_install}/lib/pkgconfig:${PKG_CONFIG_LIBDIR}"
-			fi
+			# This works.  Don't fuck with it.
+			export PKG_CONFIG_SYSROOT_DIR=
+			export TEMP_SYSROOT_DIR=/usr/x86_64-w64-mingw32/sys-root
+			# This will break the -L path to our gem libraries.
+#			export PKG_CONFIG_SYSROOT_DIR=${TEMP_SYSROOT_DIR}
+			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=${TEMP_SYSROOT_DIR}/mingw/include
+			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=${TEMP_SYSROOT_DIR}/mingw/lib
+			export PKG_CONFIG_LIBDIR="\
+${TEMP_SYSROOT_DIR}/mingw/lib/pkgconfig:\
+${TEMP_SYSROOT_DIR}/mingw/share/pkgconfig"
 
 		elif [[ ${gem_triple} == *"android"* ]]; then	# Android on Linux
 			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=/usr/include
@@ -426,21 +368,26 @@ ${TEMP_SYSROOT_DIR}/lib64/pkgconfig"
 /mingw64/lib:\
 /usr/lib"
 			export PKG_CONFIG_LIBDIR="${PKG_CONFIG_LIBDIR}\
-${gem_fullpath_install}/lib/pkgconfig:\
 /mingw64/share/pkgconfig:\
 /mingw64/lib/pkgconfig:\
 /usr/lib/pkgconfig"
 		fi
 
 	elif  [[ ${gem_os} == "CYGWIN"* ]]; then
-		if [[ ${gem_triple} == "cygwin" ]]; then	# Cygwin native on Windows
+		if [[ ${gem_triple} == "x86_64-pc-cygwin" ]]; then	# Cygwin native on Windows
 			export PKG_CONFIG_SYSROOT_DIR=
 			export TEMP_SYSROOT_DIR=/usr
 			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=${TEMP_SYSROOT_DIR}/include
 			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=${TEMP_SYSROOT_DIR}/lib
+
+#echo "1.) PKG_CONFIG_LIBDIR=$PKG_CONFIG_LIBDIR"
+#gem_build_v_DebugDumpVars
+#echo "This is where the first and only setting is being made."
 			export PKG_CONFIG_LIBDIR="${PKG_CONFIG_LIBDIR}\
-${gem_fullpath_install}/lib/pkgconfig:\
 ${TEMP_SYSROOT_DIR}/share/pkgconfig"
+
+#echo "2.) PKG_CONFIG_LIBDIR=$PKG_CONFIG_LIBDIR"
+#gem_build_v_DebugDumpVars
 
 		elif [[ ${gem_triple} == "x86_64-w64-mingw32" ]]; then		# MinGW on Cygwin(Windows)
 			export PKG_CONFIG_SYSROOT_DIR=
@@ -448,24 +395,29 @@ ${TEMP_SYSROOT_DIR}/share/pkgconfig"
 			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=${TEMP_SYSROOT_DIR}/mingw/include
 			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=${TEMP_SYSROOT_DIR}/mingw/lib
 			export PKG_CONFIG_LIBDIR="${PKG_CONFIG_LIBDIR}\
-${gem_fullpath_install}/lib/pkgconfig:\
 ${TEMP_SYSROOT_DIR}/mingw/lib/pkgconfig"
 		fi
 	fi
-#	gem_script_ValidatePaths ${PKG_CONFIG_SYSTEM_INCLUDE_PATH}:${PKG_CONFIG_SYSTEM_LIBRARY_PATH}
+#	gem_build_validate_PathList ${PKG_CONFIG_SYSTEM_INCLUDE_PATH}:${PKG_CONFIG_SYSTEM_LIBRARY_PATH}
 
 	# These must be reset to stay away from system libraries while cross compiling.
 	export PKG_CONFIG_PATH=
 	export PKG_CONFIG_DIR=
 
+#echo "3.) PKG_CONFIG_LIBDIR=$PKG_CONFIG_LIBDIR"
+#gem_build_v_DebugDumpVars
+
+#echo "3.4.) PKG_CONFIG_LIBDIR=$PKG_CONFIG_LIBDIR"
+
 	# Find the gem include file and libraries.
 	PKG_CONFIG_SYSTEM_INCLUDE_PATH=${PKG_CONFIG_SYSTEM_INCLUDE_PATH}:${gem_fullpath_install}/include
 	PKG_CONFIG_SYSTEM_LIBRARY_PATH=${PKG_CONFIG_SYSTEM_LIBRARY_PATH}:${gem_fullpath_install}/lib
-	PKG_CONFIG_LIBDIR="${PKG_CONFIG_LIBDIR}\
-${PKG_CONFIG_SYSTEM_INCLUDE_PATH}:${gem_fullpath_install}/share/pkgconfig:\
-${PKG_CONFIG_SYSTEM_INCLUDE_PATH}:${gem_fullpath_install}/lib/pkgconfig"
+	PKG_CONFIG_LIBDIR="${PKG_CONFIG_LIBDIR}:\
+${gem_fullpath_install}/share/pkgconfig:\
+${gem_fullpath_install}/lib/pkgconfig"
 
-
+#echo "3.5.) PKG_CONFIG_LIBDIR=$PKG_CONFIG_LIBDIR"
+#echo "Done.";exit
 #	echo $(pkg-config --cflags-only-I sdl2) ; echo
 #	echo $(pkg-config --libs-only-L sdl2) ; echo
 #	echo $(pkg-config --list-all) ; echo
@@ -531,9 +483,7 @@ ${PKG_CONFIG_SYSTEM_INCLUDE_PATH}:${gem_fullpath_install}/lib/pkgconfig"
 #	pkg-config --list-all ; exit
 
 
-
-
-	gem_build_v_ValidateFilePaths
+	gem_build_validate_ProjectFilePaths
 }
 
 function gem_build_v_UpdateWinePath { gem_build_UpdateWinePath ;}
@@ -585,50 +535,6 @@ function gem_build_SetFlags
 	gem_flags_cpp="${gem_flags_cpp}"
 	gem_flags_cxx="${gem_flags_cxx}"
 	gem_flags_ld="${gem_flags_ld}"
-}
-
-function gem_build_v_ValidateFilePaths { gem_build_ValidateFilePaths ;}
-function gem_build_ValidateFilePaths
-{
-	if [[ ${gem_build_script_type} == "cmake" ]]; then
-		if [[ ! -f ${gem_fullpath_toolchain_cmake} ]]; then
-			gem_script_v_Error "gem_build_ValidateFilePaths: CMake toolchain file not found at: ${gem_fullpath_toolchain_cmake}"
-		fi
-	elif [[ ${gem_build_script_type} == "autotools" ]]; then
-		if [[ ! -d ${gem_fullpath_toolchain_autotools} ]]; then
-			gem_script_v_Error "gem_build_ValidateFilePaths: Autotools toolchain directory not found at: ${gem_fullpath_toolchain_autotools}"
-		fi
-	fi
-	if [[ ! -d ${gem_fullpath_sysroot} ]]; then
-		gem_script_v_Error "gem_build_ValidateFilePaths: gem_fullpath_sysroot  directory not found at: ${gem_fullpath_sysroot}"
-	fi
-}
-
-function gem_build_v_ValidateCompatibility { gem_build_ValidateCompatibility ;}
-function gem_build_ValidateCompatibility
-{
-	if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW shell on Windows.
-		if [[ ${gem_triple} != "x86_64-w64-mingw32" && ${gem_triple} != "x86_64-pc-windows-msvc" ]]; then
-			gem_script_v_Error "gem_build_ValidateCompatibility: Can't build executables for host '${gem_triple}' under Mingw on Windows."
-		fi
-	elif [[ ${gem_os} == "CYGWIN"* ]]; then	# Cygwin shell on Windows.
-		if [[ ${gem_triple} != "x86_64-pc-cygwin" && ${gem_triple} != "x86_64-w64-mingw32" ]]; then
-			gem_script_v_Error "gem_build_ValidateCompatibility: Can't build executables for host '${gem_triple}' under Cygwin on Windows."
-		fi
-	elif [[ ${gem_os} == "Linux" ]]; then	# Linux shell.
-		if [[ ${gem_triple} != "x86_64-pc-linux-gnu" && ${gem_triple} != "x86_64-w64-mingw32" && ${gem_triple} != *"android"* ]]; then
-			gem_script_v_Error "gem_build_ValidateCompatibility: Can't build executables for host '${gem_triple}' on Linux."
-		fi
-	fi
-}
-
-function gem_build_v_ValidateToolchain { gem_build_ValidateToolchain ;}
-function gem_build_ValidateToolchain
-{
-	gem_script_ValidateFiles "${CC} ${CXX} ${AR} ${AS} ${LD} ${NM} ${OBJDUMP} ${RANLIB} ${STRIP}"
-	if [[ ${gem_triple} == "x86_64-w64-mingw32" || ${gem_triple} == "x86_64-pc-cygwin" ]]; then
-		gem_script_ValidateFiles "${DLLTOOL} ${RESCOMP}"
-	fi
 }
 
 function gem_build_v_SelectCMakeGenerator { gem_build_SelectCMakeGenerator ;}
@@ -828,15 +734,16 @@ function gem_build_PkgConfig
 function gem_build_v_InitToolchain_common { gem_build_InitToolchain_common ;}
 function gem_build_InitToolchain_common
 {
-	gem_flags_c="-fPIE -fPIC ${gem_flags_c}"
-	gem_flags_cpp="-fPIE -fPIC ${gem_flags_cpp}"
-	gem_flags_cxx="-fPIE -fPIC ${gem_flags_cxx}"
-
-	if [[ ${gem_os} == "MINGW64"* ]]; then	# -pie is causing mingw under
-		gem_flags_ld="${gem_flags_ld}"		# windows to hang during configure
-	else									# at "checking whether we are
-		gem_flags_ld="-pie ${gem_flags_ld}"	# cross compiling..."
+	if [[ ${gem_use_clang} -eq 0 ]]; then
+		gem_flags_c="-fPIE -fPIC ${gem_flags_c}"
+		gem_flags_cpp="-fPIE -fPIC ${gem_flags_cpp}"
+		gem_flags_cxx="-fPIE -fPIC ${gem_flags_cxx}"
 	fi
+
+	if [[ ${gem_os} != "MINGW64"* ]]; then	# -pie is causing mingw under windows
+		gem_flags_ld="-pie ${gem_flags_ld}"	# to hang during configure at
+	fi								# "checking whether we are cross compiling..."
+
 #	gem_flags_ld="-nostdlib -lc -lm -ldl -llog ${gem_flags_ld}"
 }
 
@@ -868,14 +775,13 @@ function gem_build_InitToolchain_x86_64-pc-linux-gnu
 {
 	gem_fullpath_sysroot=/
 	gem_fullpath_toolchain_autotools=/usr
-	gem_cmake_system_name="Linux"
-	gem_cmake_system_version=$(uname -r)	# *FIX: What to set for all version
 	# of Linux?  If setting this causes incompatibility issues, we can try
 	# leaving it blank.  I'm seeing some sources online setting it to 1.
 
 	if [[ ${gem_build_script_type} == "cmake" ]]; then
 		gem_fullpath_toolchain_cmake=${gem_fullpath_local}/src/toolchains/linux.toolchain.cmake
-
+		gem_cmake_system_name="Linux"
+		gem_cmake_system_version=$(uname -r)	# *FIX: What to set for all version
 	elif [[ ${gem_build_script_type} == "autotools" ]]; then
 		local noop=0
 	elif [[ ${gem_build_script_type} == "meson" ]]; then
@@ -902,16 +808,65 @@ function gem_build_InitToolchain_x86_64-pc-linux-gnu
 	gem_build_v_InitToolchain_x86_64_common
 }
 
+# Returns the fullpath to the found tool.
+function gem_build_FindTool
+{
+	local tool=${1}
+
+	if [[ "${tool}"x == "x" ]]; then
+		gem_script_v_Error "gem_build_FindTool(): A tool executable must be specified as a parameter."
+	fi
+
+	dirList="${gem_fullpath_toolchain_autotools}/bin:"
+	fileList="llvm-${tool}:${gem_triple}-${tool}:${gem_triple}-gcc-${tool}:${tool}"
+#	local extension=
+#	if  [[ ${gem_os} == "MINGW64"* || ${gem_os} == "CYGWIN"*  ]]; then
+#		extension=".exe"
+#	fi
+	local gem_file_found=
+	local fullpath
+	local gem_ifs_saved=IFS
+	IFS=":"
+	echo "" > ${gem_fullpath_gem}/gem_build_FindTool.txt
+	for dir in ${dirList}; do
+		echo "dir=$dir" >> ${gem_fullpath_gem}/gem_build_FindTool.txt
+		for file in ${fileList}; do
+			file=${file}${extension}
+			fullpath=${dir}/${file}
+
+			echo "    ${fullpath}" >> ${gem_fullpath_gem}/gem_build_FindTool.txt
+
+			if [[ (${gem_use_clang} -eq 0 && ${file} == "llvm"*) ||
+				  (${gem_use_clang} -ne 0 && ${file} == *"-gcc-"*) ]]; then
+				echo "        <skipped>" >> ${gem_fullpath_gem}/gem_build_FindTool.txt
+				continue
+			else
+				if [[ -f ${fullpath} ]]; then
+					gem_file_found=${fullpath}
+					echo "        Found!" >> ${gem_fullpath_gem}/gem_build_FindTool.txt
+					break
+				else
+					echo "        Doesn't exist." >> ${gem_fullpath_gem}/gem_build_FindTool.txt
+				fi
+			fi
+		done
+	done
+	IFS=gem_ifs_saved
+	if [[ ${gem_file_found}x == "x" ]]; then
+		gem_script_v_Error "Failed to find tool ${tool}."
+	fi
+	echo "${gem_file_found}"
+}
+
 function gem_build_v_InitToolchain_x86_64-pc-cygwin { gem_build_InitToolchain_x86_64-pc-cygwin ;}
 function gem_build_InitToolchain_x86_64-pc-cygwin
 {
 	gem_fullpath_sysroot=/usr
-	gem_cmake_system_name="Windows"
-	gem_cmake_system_version="10.0"	# Windows 10
 
 	if [[ ${gem_build_script_type} == "cmake" ]]; then
 		gem_fullpath_toolchain_cmake=${gem_fullpath_local}/src/toolchains/cygwin.toolchain.cmake
-
+		gem_cmake_system_name="Windows"
+		gem_cmake_system_version="10.0"	# Windows 10
 	elif [[ ${gem_build_script_type} == "autotools" ]]; then
 		gem_fullpath_toolchain_autotools=/usr
 
@@ -920,26 +875,43 @@ function gem_build_InitToolchain_x86_64-pc-cygwin
 	fi
 
 	if [[ ${gem_use_clang} -ne 0 ]]; then
-		gem_cmake_toolchain_prefix= "llvm-"
-		export CC=${gem_fullpath_toolchain_autotools}/bin/clang
-		export CXX=${gem_fullpath_toolchain_autotools}/bin/clang++
+#		gem_cmake_toolchain_prefix="llvm-"
+#		export CC=${gem_fullpath_toolchain_autotools}/bin/clang
+#		export CXX=${gem_fullpath_toolchain_autotools}/bin/clang++
+
+		export CC=$(gem_build_FindTool clang)
+		export CXX=$(gem_build_FindTool clang++)
 	else
-		gem_cmake_toolchain_prefix=
-		export CC=${gem_fullpath_toolchain_autotools}/bin/x86_64-pc-cygwin-gcc
-		export CXX=${gem_fullpath_toolchain_autotools}/bin/x86_64-pc-cygwin-g++
+#		gem_cmake_toolchain_prefix=
+#		export CC=${gem_fullpath_toolchain_autotools}/bin/x86_64-pc-cygwin-gcc
+#		export CXX=${gem_fullpath_toolchain_autotools}/bin/x86_64-pc-cygwin-g++
+
+		export CC=$(gem_build_FindTool gcc)
+		export CXX=$(gem_build_FindTool g++)
 	fi
+
 	if [[ ${gem_cmake_toolchain_prefix}x != "x" ]]; then
 		gem_script_v_Error "gem_build_InitToolchain_x86_64(): Need to find llvm- tools on cygwin."
 	fi
-	export AR=${gem_fullpath_toolchain_autotools}/bin/x86_64-pc-cygwin-gcc-ar
-	export AS=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}as
-	export DLLTOOL=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}dlltool
-	export LD=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}ld
-	export NM=${gem_fullpath_toolchain_autotools}/bin/x86_64-pc-cygwin-gcc-nm
-	export OBJDUMP=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}objdump
-	export RANLIB=${gem_fullpath_toolchain_autotools}/bin/x86_64-pc-cygwin-gcc-ranlib
-	export RESCOMP=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}windres
-	export STRIP=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}strip
+#	export AR=${gem_fullpath_toolchain_autotools}/bin/x86_64-pc-cygwin-gcc-ar
+#	export AS=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}as
+#	export DLLTOOL=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}dlltool
+#	export LD=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}ld
+#	export NM=${gem_fullpath_toolchain_autotools}/bin/x86_64-pc-cygwin-gcc-nm
+#	export OBJDUMP=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}objdump
+#	export RANLIB=${gem_fullpath_toolchain_autotools}/bin/x86_64-pc-cygwin-gcc-ranlib
+#	export RESCOMP=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}windres
+#	export STRIP=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}strip
+
+	export AR=$(gem_build_FindTool ar)
+	export AS=$(gem_build_FindTool as)
+	export DLLTOOL=$(gem_build_FindTool dlltool)
+	export LD=$(gem_build_FindTool ld)
+	export NM=$(gem_build_FindTool nm)
+	export OBJDUMP=$(gem_build_FindTool objdump)
+	export RANLIB=$(gem_build_FindTool ranlib)
+	export RESCOMP=$(gem_build_FindTool windres)
+	export STRIP=$(gem_build_FindTool strip)
 
 	gem_build_v_InitToolchain_x86_64_common
 }
@@ -947,9 +919,6 @@ function gem_build_InitToolchain_x86_64-pc-cygwin
 function gem_build_v_InitToolchain_x86_64-w64-mingw32 { gem_build_InitToolchain_x86_64-w64-mingw32 ;}
 function gem_build_InitToolchain_x86_64-w64-mingw32
 {
-	gem_cmake_system_name="Windows"
-	gem_cmake_system_version="10.0"	# Windows 10
-
 	gem_prefix_triple=
 	if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW on Windows
 		gem_prefix_triple=
@@ -970,6 +939,8 @@ function gem_build_InitToolchain_x86_64-w64-mingw32
 
 	if [[ ${gem_build_script_type} == "cmake" ]]; then
 		gem_fullpath_toolchain_cmake=${gem_fullpath_local}/src/toolchains/mingw.toolchain.cmake
+		gem_cmake_system_name="Windows"
+		gem_cmake_system_version="10.0"	# Windows 10
 
 	elif [[ ${gem_build_script_type} == "autotools" ]]; then
 
@@ -1062,12 +1033,12 @@ function gem_build_v_InitToolchain_x86_64-pc-windows-msvc { gem_build_InitToolch
 function gem_build_InitToolchain_x86_64-pc-windows-msvc
 {
 	gem_processor=x86_64
-	gem_cmake_system_name="Windows"
-	gem_cmake_system_version="10.0"	# Windows 10
 
 	if [[ ${gem_build_script_type} == "cmake" ]]; then
 		gem_script_v_Error "NOT REALLY AN ERROR: In gem_build_InitToolchain_x86_64-pc-windows-msvc(), did we mean to reference the mingw toolchain file?  Look into this."
 		gem_fullpath_toolchain_cmake=${gem_fullpath_local}/src/toolchains/mingw.toolchain.cmake
+		gem_cmake_system_name="Windows"
+		gem_cmake_system_version="10.0"	# Windows 10
 	elif [[ ${gem_build_script_type} == "autotools" ]]; then
 		noop=0
 	elif [[ ${gem_build_script_type} == "meson" ]]; then
@@ -1083,22 +1054,17 @@ function gem_build_InitToolchain_android_common
 	# Using the NDK with other build systems.
 	# Source: https://developer.android.com/ndk/guides/other_build_systems
 
-    # Validate android sdk directory.
-    if [[ ! -d ${gem_fullpath_android_sdk} ]]; then
-        gem_script_v_Error "Android SDK directory does not exist: gem_fullpath_android_sdk=${gem_fullpath_android_sdk}"
-    fi
-
 	# Android only supports clang compiler.
 	if [[ ${gem_use_clang} -eq 0 ]]; then
 		gem_script_v_Error "Android toolchain only supports the clang compiler.  Set gem_use_clang=1."
 	fi
 
-	gem_cmake_system_name="Android"
-	gem_cmake_system_version=		# What to set this to?
-
 	gem_triple_details_suffix=ndk_${gem_android_ndk_version}_api_${gem_android_api_level}_arch_${gem_arch}
 
 	gem_fullpath_toolchain_autotools=${gem_fullpath_android_ndk}/toolchains/llvm/prebuilt/linux-x86_64
+	gem_cmake_system_name="Android"
+	gem_cmake_system_version=		# What to set this to?
+	gem_script_v_Error "What to set gem_cmake_system_version to?"
 	gem_fullpath_sysroot=${gem_fullpath_toolchain_autotools}/sysroot
 
 	if [[ ${gem_build_script_type} == "cmake" ]]; then
@@ -1321,10 +1287,8 @@ function gem_build_SetBuildType_relwithdebinfo
 function gem_build_v_Cmd_Configure { gem_build_Cmd_Configure ;}
 function gem_build_Cmd_Configure
 {
-	# Clean build directory.
-	if [[ ${gem_fullpath_build}x == "x" ]]; then
-		gem_script_v_Error "gem_build_Cmd_Configure: gem_fullpath_build not defined in $(basename ${0})."
-	fi
+	gem_build_validate_BuildFile
+
 	# Start with a clean build directory.  If one already exists, delete it,
 	# else create a new one.
 	if [[ -d ${gem_fullpath_build} ]]; then
@@ -1435,7 +1399,7 @@ ${gem_cmake_params}"
 #-DCMAKE_TOOLCHAIN_FILE=${gem_fullpath_toolchain_cmake} \
 #-DCMAKE_BUILD_TYPE=${gem_build_type} \
 #-DCMAKE_INSTALL_PREFIX=${gem_fullpath_install} \
-#-DPKG_CONFIG_EXECUTABLE=${gem_fullpath_pkg_config} \
+#-DPKG_CONFIG_EXECUTABLE=${gem_fullpath_project_config} \
 #${gem_cmake_params}"
 
 	# Only use the toolchain file if we're cross compiling, because it
@@ -1678,7 +1642,7 @@ function gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common
 		sed -i "s|GEM_C_LINK_ARGS||g" ${gem_meson_crossfile}
 		sed -i "s|GEM_CPP_LINK_ARGS||g" ${gem_meson_crossfile}
 	fi
-	sed -i "s|GEM_FULLPATH_PKGCONFIG_EXE|${gem_fullpath_pkg_config}|g" ${gem_meson_crossfile}
+	sed -i "s|gem_fullpath_projectCONFIG_EXE|${gem_fullpath_project_config}|g" ${gem_meson_crossfile}
 }
 
 function gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_linux
@@ -1719,13 +1683,8 @@ function gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_android
 function gem_build_v_Cmd_ConfigureHelp { gem_build_Cmd_ConfigureHelp ;}
 function gem_build_Cmd_ConfigureHelp
 {
-	# Verify build directory exists, then enter it.
-	if [[ ${gem_fullpath_src}x == "x" ]]; then
-		gem_script_v_Error "gem_build_Cmd_ConfigureHelp: gem_fullpath_src not defined in $(basename ${0})."
-	fi
-	if [[ ! -d ${gem_fullpath_src} ]]; then
-		gem_script_v_Error "gem_build_Cmd_ConfigureHelp: Build directory ${gem_fullpath_src} does not exist.  Try configuring the project first using the -m option."
-	fi
+	gem_build_validate_SrcPath
+
 	gem_script_cd ${gem_fullpath_src}
 
 	if [[ ${gem_build_script_type} == "cmake" ]]; then
@@ -1752,10 +1711,8 @@ function gem_build_Cmd_ConfigureHelp
 function gem_build_v_Cmd_Build { gem_build_Cmd_Build ;}
 function gem_build_Cmd_Build
 {
-	if [[ ! -d ${gem_fullpath_build} ]]; then
-		gem_script_v_Error "Cannot build.  the build directory does not exist.  The project must be configured first."
-		return 0
-	fi
+	gem_build_validate_BuildFile
+
 	gem_script_cd ${gem_fullpath_build}
 
 	gem_build_v_OnBuild
@@ -1805,13 +1762,28 @@ function gem_build_OnCommandLine_Build
 
 	elif [[ ${gem_build_script_type} == "autotools" ]]; then
 
-		gem_cmd_line_build="make \
--j${gem_num_jobs}"
-
-		if [[ ${gem_fullpath_autotools_makefile}x != "x" ]]; then
-			gem_cmd_line_build="${gem_cmd_line_build} \
-${gem_fullpath_autotools_makefile}"
+		# Verify the makefile exists.
+		# gem_fullpath_makefile allows the make file to be specified.  This is
+		# handy when building a Windows package (zlib) that provides a Windows-
+		# specific make file, instead of producing one via a configure script.
+		gem_list_makefile="Makefile:makefile:${gem_fullpath_autotools_makefile}"
+		gem_fullpath_autotools_makefile=
+		local gem_ifs_saved=IFS
+		IFS=":"
+		for makefile in ${gem_list_makefile}; do
+			gem_fullpath_makefile=${gem_fullpath_build}/${makefile}
+#			echo $gem_fullpath_makefile
+			if [[ -f ${gem_fullpath_makefile} ]]; then
+				gem_fullpath_autotools_makefile=${gem_fullpath_makefile}
+				break
+			fi
+		done
+		IFS=${gem_ifs_saved}
+		if [[ "${gem_fullpath_autotools_makefile}"x == "x" ]]; then
+			gem_script_v_Error "Failed to find the makefile."
 		fi
+
+		gem_cmd_line_build="make -j${gem_num_jobs} ${gem_fullpath_autotools_makefile}"
 
 		# Append CMAKE_C_FLAGS, CMAKE_CPP_FLAGS, CMAKE_CXX_FLAGS, and
 		# CMAKE_LD_FLAGS or CFLAGS, CPPFLAGS, CXXFLAGS and LDFLAGS.
@@ -1834,10 +1806,8 @@ ${gem_fullpath_autotools_makefile}"
 function gem_build_v_Cmd_Install { gem_build_Cmd_Install ;}
 function gem_build_Cmd_Install
 {
-	if [[ ! -d ${gem_fullpath_build} ]]; then
-		gem_script_v_Error "Cannot install.  Build directory does not exist."
-		return 0
-	fi
+	gem_build_validate_BuildPath
+
 	gem_script_cd ${gem_fullpath_build}
 
 	gem_build_v_OnInstall
@@ -1884,10 +1854,8 @@ function gem_build_OnCommandLine_Install
 function gem_build_v_Cmd_Uninstall { gem_build_Cmd_Uninstall ;}
 function gem_build_Cmd_Uninstall
 {
-	if [[ ! -d ${gem_fullpath_build} ]]; then
-		gem_script_v_Error "Cannot uninstall.  Build directory does not exist."
-		return 0
-	fi
+	gem_build_validate_BuildPath
+
 	gem_script_cd ${gem_fullpath_build}
 
 	gem_build_v_OnUninstall
@@ -1926,10 +1894,8 @@ function gem_build_OnCommandLine_Uninstall
 function gem_build_v_Cmd_Clean { gem_build_Cmd_Clean ;}
 function gem_build_Cmd_Clean
 {
-	if [[ ! -d ${gem_fullpath_build} ]]; then
-		gem_script_v_Error "Cannot clean.  Build directory does not exist."
-		return 0
-	fi
+	gem_build_validate_BuildPath
+
 	gem_script_cd ${gem_fullpath_build}
 
 	gem_build_v_OnClean
@@ -1968,9 +1934,8 @@ function gem_build_OnCommandLine_Clean
 function gem_build_v_Cmd_Scrub { gem_build_Cmd_Scrub ;}
 function gem_build_Cmd_Scrub
 {
-	if [[ ! -d ${gem_fullpath_build} ]]; then
-		return 0
-	fi
+	gem_build_validate_BuildPath
+
 	gem_script_cd ${gem_fullpath_build}
 
 	gem_build_v_OnScrub
@@ -2005,9 +1970,8 @@ function gem_build_OnCommandLine_Scrub
 function gem_build_v_Cmd_CPack { gem_build_Cmd_CPack ;}
 function gem_build_Cmd_CPack
 {
-	if [[ ! -d ${gem_fullpath_build} ]]; then
-		gem_script_v_Error "gem_build_Cmd_CPack: Cannot create the package.  Build directory does not exist."
-	fi
+	gem_build_validate_BuildPath
+
 	gem_script_cd ${gem_fullpath_build}
 
 	if [[ ${gem_build_script_type} == "cmake" ]]; then
@@ -2024,10 +1988,8 @@ function gem_build_Cmd_CPack
 function gem_build_v_Cmd_Run_local { gem_build_Cmd_Run_local ;}
 function gem_build_Cmd_Run_local
 {
-	if [[ ! -d ${gem_fullpath_build} ]]; then
-		gem_script_v_Error "Cannot run the executable.  Build directory does not exist."
-		return 0
-	fi
+	gem_build_validate_BuildPath
+
 	gem_script_cd ${gem_fullpath_build}
 
 	# Build path to the executable.
@@ -2051,10 +2013,8 @@ function gem_build_Cmd_Run_local
 function gem_build_v_Cmd_Run_android { gem_build_Cmd_Run_android ;}
 function gem_build_Cmd_Run_android
 {
-	if [[ ! -d ${gem_fullpath_build} ]]; then
-		gem_script_v_Error "Cannot run the executable.  Build directory does not exist."
-		return 0
-	fi
+	gem_build_validate_BuildPath
+
 	gem_script_cd ${gem_fullpath_build}
 
 	gem_fullpath_exe=${gem_fullpath_build}/bin/${gem_project_name}
@@ -2108,6 +2068,8 @@ function gem_build_OnArg
 			case ${2} in
 				linux)
 					gem_triple=x86_64-pc-linux-gnu ;;
+				cygwin)
+					gem_triple=x86_64-pc-cygwin ;;
 				mingw)
 					gem_triple=x86_64-w64-mingw32 ;;
 				msvc)
@@ -2171,10 +2133,10 @@ function gem_build_Main
 #	gem_build_script_type="autotools"
 #	gem_build_script_type="meson"
 #	gem_build_script_type="cmake"
-	gem_build_script_type="<undefined>"
+#	gem_build_script_type="<undefined>"
 
 	# Directories
-	gem_fullpath_local=${HOME}/gem/local
+	gem_fullpath_local=${gem_fullpath_gem}/local
 	# gem_fullpath_install is set further below in function gem_build_v_BuildFilePaths().
 
 	gem_os=$(uname -s)
@@ -2206,11 +2168,6 @@ function gem_build_Main
 
 	gem_lib_type=shared
 #	gem_lib_type=static
-
-	# gem_fullpath_makefile allows the make file to be specified.  This is
-	# handy when building a Windows package (zlib) that provides a Windows-
-	# specific make file, instead of producing one via a configure script.
-	gem_fullpath_autotools_makefile=
 
 	gem_num_jobs=4
 
@@ -2267,17 +2224,25 @@ function gem_build_Main
 	fi
 
 	gem_build_v_SetDefaults
+	if [[ ${gem_build_script_type} != "autotools" && ${gem_build_script_type} != "cmake" && ${gem_build_script_type} != "meson" ]]; then
+		gem_script_v_Error "gem_build_script_type must be set to autotools, cmake, or meson."
+	fi
 
 	if [[ ${gem_triple} == *"android"* ]]; then
-		gem_build_ValidateNDKDir
+		gem_build_validate_NDKDir
 	fi
 	gem_build_v_InitToolchain_${gem_triple}
-	gem_build_v_ValidateToolchain
 	gem_build_v_SetBuildType_${gem_build_type}
 	gem_build_v_SelectCMakeGenerator
-	gem_build_v_ValidateCompatibility
+	gem_build_validate_Compatibility
+#echo "10.) PKG_CONFIG_LIBDIR=$PKG_CONFIG_LIBDIR"
+#gem_build_v_DebugDumpVars
 	gem_build_v_BuildFilePaths
+#echo "11.) PKG_CONFIG_LIBDIR=$PKG_CONFIG_LIBDIR"
+#gem_build_v_DebugDumpVars
 	gem_build_v_SetFlags
+#echo "12.) PKG_CONFIG_LIBDIR=$PKG_CONFIG_LIBDIR"
+#gem_build_v_DebugDumpVars
 	gem_build_v_UpdateWinePath	# for running Windows executables on Linux.
 
 	if [[ ${gem_option_redirect_output} -ne 0 ]]; then
@@ -2305,9 +2270,14 @@ function gem_build_Main
 	if [[ ${gem_option_scrub} -ne 0 ]]; then
 		gem_build_v_Cmd_Scrub
 	fi
+#echo "13.) PKG_CONFIG_LIBDIR=$PKG_CONFIG_LIBDIR"
+#gem_build_v_DebugDumpVars
 	if [[ ${gem_option_configure} -ne 0 ]]; then
 		gem_build_v_Cmd_Configure
 	fi
+#echo "14.) PKG_CONFIG_LIBDIR=$PKG_CONFIG_LIBDIR"
+#gem_build_v_DebugDumpVars
+#echo "Done.";exit
 	if [[ ${gem_option_configure_help} -ne 0 ]]; then
 		gem_build_v_Cmd_ConfigureHelp
 	fi
