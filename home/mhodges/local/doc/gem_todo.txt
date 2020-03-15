@@ -22,6 +22,8 @@ Uncategorized
 gem_build
 -------------------------------------------------------------------------------
 
+* Find ${gem_triple}-pkgconf for cross compiling.
+
 * Change the directory validation functions to accept a parameter "error",
   "warn", or "silent".  Silent just returns a success result.
 
@@ -52,9 +54,6 @@ gem_build
 * Implement gem_lib_type.
 
 * Initialize all the CMAKE_C_FLAGS_* family of cmake variables.
-
-* In gem/local/src/cmake/cmake_utils_pre.cmake add the rest of the CMAKE_AR
-  family of tools.
 
 * Search gem_build for $HOME.  Can we replace any with gem_fullpath_gem?
 
@@ -120,7 +119,7 @@ gem_Msg should automatically output "MESSAGE: ", and gem_Error should output
 
 * Change gem_build to accepting params of the form "-host msvc" to "--host=msvc"
   Source: https://devhints.io/bash
-  
+
 	while [[ "$1" =~ ^- && ! "$1" == "--" ]]; do case $1 in
 	-V | --version )
 		echo $version
