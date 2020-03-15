@@ -593,15 +593,19 @@ function gem_build_DebugDumpVars
 		gem_script_v_Msg "gem_arch =                 ${gem_arch}"
 	fi
 	gem_script_v_Msg "gem_use_clang = ${gem_use_clang}"
+	gem_script_v_Msg "ADDR2LINE =     ${ADDR2LINE}"
+	gem_script_v_Msg "AR =            ${AR}"
+	gem_script_v_Msg "AS =            ${AS}"
 	gem_script_v_Msg "CC =            ${CC}"
 	gem_script_v_Msg "CXX =           ${CXX}"
 	gem_script_v_Msg "DLLTOOL =       ${CXX}"
-	gem_script_v_Msg "AR =            ${AR}"
-	gem_script_v_Msg "AS =            ${AS}"
 	gem_script_v_Msg "LD =            ${LD}"
 	gem_script_v_Msg "NM =            ${NM}"
+	gem_script_v_Msg "OBJCOPY =       ${OBJCOPY}"
 	gem_script_v_Msg "OBJDUMP =       ${OBJDUMP}"
 	gem_script_v_Msg "RANLIB =        ${RANLIB}"
+	gem_script_v_Msg "READELF =       ${READELF}"
+	gem_script_v_Msg "RESCOMP =       ${RESCOMP}"
 	gem_script_v_Msg "STRIP =         ${STRIP}"
 	gem_script_v_Msg "gem_flags_c =         ${gem_flags_c}"
 	gem_script_v_Msg "gem_flags_cpp =       ${gem_flags_cpp}"
@@ -797,12 +801,15 @@ function gem_build_InitToolchain_x86_64-pc-linux-gnu
 		export CC=${gem_fullpath_toolchain_autotools}/bin/gcc
 		export CXX=${gem_fullpath_toolchain_autotools}/bin/g++
 	fi
+	export ADDR2LINE=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}addr2line
 	export AR=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}ar
 	export AS=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}as
 	export LD=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}ld
 	export NM=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}nm
+	export OBJCOPY=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}objcopy
 	export OBJDUMP=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}objdump
 	export RANLIB=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}ranlib
+	export READELF=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}readelf
 	export STRIP=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}strip
 
 	gem_build_v_InitToolchain_x86_64_common
@@ -893,23 +900,29 @@ function gem_build_InitToolchain_x86_64-pc-cygwin
 	if [[ ${gem_cmake_toolchain_prefix}x != "x" ]]; then
 		gem_script_v_Error "gem_build_InitToolchain_x86_64(): Need to find llvm- tools on cygwin."
 	fi
+#	export ADDR2LINE=${gem_fullpath_toolchain_autotools}/bin/x86_64-pc-cygwin-gcc-addr2line
 #	export AR=${gem_fullpath_toolchain_autotools}/bin/x86_64-pc-cygwin-gcc-ar
 #	export AS=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}as
 #	export DLLTOOL=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}dlltool
 #	export LD=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}ld
 #	export NM=${gem_fullpath_toolchain_autotools}/bin/x86_64-pc-cygwin-gcc-nm
 #	export OBJDUMP=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}objdump
+#	export OBJCOPY=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}objcopy
 #	export RANLIB=${gem_fullpath_toolchain_autotools}/bin/x86_64-pc-cygwin-gcc-ranlib
+#	export READELF=${gem_fullpath_toolchain_autotools}/bin/x86_64-pc-cygwin-gcc-readelf
 #	export RESCOMP=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}windres
 #	export STRIP=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}strip
 
+	export ADDR2LINE=$(gem_build_FindTool addr2line)
 	export AR=$(gem_build_FindTool ar)
 	export AS=$(gem_build_FindTool as)
 	export DLLTOOL=$(gem_build_FindTool dlltool)
 	export LD=$(gem_build_FindTool ld)
 	export NM=$(gem_build_FindTool nm)
+	export OBJCOPY=$(gem_build_FindTool objcopy)
 	export OBJDUMP=$(gem_build_FindTool objdump)
 	export RANLIB=$(gem_build_FindTool ranlib)
+	export READELF=$(gem_build_FindTool readelf)
 	export RESCOMP=$(gem_build_FindTool windres)
 	export STRIP=$(gem_build_FindTool strip)
 
@@ -1008,14 +1021,16 @@ function gem_build_InitToolchain_x86_64-w64-mingw32
 	if [[ ${gem_cmake_toolchain_prefix}x != "x" ]]; then
 		gem_script_v_Error "gem_build_InitToolchain_x86_64(): Need to find \"llvm\"- tools on cygwin."
 	fi
+	export ADDR2LINE=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}addr2line
 	export AR=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}ar
 	export AS=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}as
 	export DLLTOOL=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}dlltool
 	export LD=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}ld
 	export NM=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}nm
+	export OBJCOPY=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}objcopy
 	export OBJDUMP=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}objdump
 	export RANLIB=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}ranlib
-	export STRIP=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}strip
+	export READELF=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}readelf
 	if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW on Windows
 		export RESCOMP=${gem_fullpath_toolchain_autotools}/bin/windres
 	elif [[ ${gem_os} == "CYGWIN"* ]]; then	# MinGW under Cygwin on Windows.
@@ -1025,6 +1040,7 @@ function gem_build_InitToolchain_x86_64-w64-mingw32
 	else
 		gem_script_v_Error "gem_build_InitToolchain_x86_64-w64-mingw32: Unrecognized shell: ${gem_os}."
 	fi
+	export STRIP=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}strip
 
 	gem_build_v_InitToolchain_x86_64_common
 }
@@ -1081,15 +1097,17 @@ function gem_build_InitToolchain_android_common
 		# x86_64-linux-android
 		# armv7a-linux-androideabi
 		# aarch64-linux-android
-		export CC=${gem_fullpath_toolchain_autotools}/bin/${gem_triple}${gem_android_api_level}-clang
-		export CXX=${gem_fullpath_toolchain_autotools}/bin/${gem_triple}${gem_android_api_level}-clang++
-
+		export ADDR2LINE=${gem_fullpath_toolchain_autotools}/bin/${gem_triple}-addr2line
 		export AR=${gem_fullpath_toolchain_autotools}/bin/${gem_triple}-ar
 		export AS=${gem_fullpath_toolchain_autotools}/bin/${gem_triple}-as
+		export CC=${gem_fullpath_toolchain_autotools}/bin/${gem_triple}${gem_android_api_level}-clang
+		export CXX=${gem_fullpath_toolchain_autotools}/bin/${gem_triple}${gem_android_api_level}-clang++
 		export LD=${gem_fullpath_toolchain_autotools}/bin/${gem_triple}-ld
 		export NM=${gem_fullpath_toolchain_autotools}/bin/${gem_triple}-nm
+		export OBJCOPY=${gem_fullpath_toolchain_autotools}/bin/${gem_triple}-objcopy
 		export OBJDUMP=${gem_fullpath_toolchain_autotools}/bin/${gem_triple}-objdump
 		export RANLIB=${gem_fullpath_toolchain_autotools}/bin/${gem_triple}-ranlib
+		export READELF=${gem_fullpath_toolchain_autotools}/bin/${gem_triple}-readelf
 		export STRIP=${gem_fullpath_toolchain_autotools}/bin/${gem_triple}-strip
 	fi
 
@@ -1362,6 +1380,8 @@ function gem_build_OnCommandLine_Configure_CMake
 # SET (CMAKE_CXX_FLAGS_RELEASE_INIT        "-O3 -DNDEBUG")
 # SET (CMAKE_CXX_FLAGS_RELWITHDEBINFO_INIT "-O2 -g")
 
+	# The following link describes every CMAKE_ variable:
+	# https://cmake.org/cmake/help/latest/manual/cmake-variables.7.html
 	gem_cmd_line_configure="cmake \
 ${gem_fullpath_src} \
 ${gem_cmake_generator} \
@@ -1379,7 +1399,6 @@ ${gem_cmake_params}"
 -DANDROID_NATIVE_API_LEVEL=${gem_android_api_level} \
 -DANDROID_NDK=${gem_fullpath_android_ndk} \
 -DCMAKE_SYSROOT=${gem_fullpath_android_standalone_toolchain}/sysroot"
-
 	elif [[ ${gem_triple} == "x86_64-pc-windows-msvc" ]]; then
 		# Source: https://cmake.org/cmake/help/latest/generator/Visual%20Studio%2015%202017.html
 #			-T host=x64 # Use 64-bit tools.
@@ -1392,6 +1411,25 @@ ${gem_cmake_params}"
 		gem_cmd_line_configure="${gem_cmd_line_configure} \
 -DCMAKE_SYSROOT=${gem_fullpath_sysroot}"
 	fi
+
+
+	# I'm not sure how to set AS for cmake.  CMAKE_ASM_COMPILER may, or may
+	# not, be what we want.
+
+	gem_cmd_line_configure="${gem_cmd_line_configure} \
+-DCMAKE_ADDR2LINE=${ADDR2LINE} \
+-DCMAKE_AR=${AR} \
+-DCMAKE_C_COMPILER=${CC} \
+-DCMAKE_CXX_COMPILER=${CXX} \
+-DCMAKE_DLLTOOL=${DLLTOOL} \
+-DCMAKE_LINKER=${LD} \
+-DCMAKE_NM=${NM} \
+-DCMAKE_OBJCOPY=${OBJCOPY} \
+-DCMAKE_OBJDUMP=${OBJDUMP} \
+-DCMAKE_RANLIB=${RANLIB} \
+-DCMAKE_READELF=${READELF} \
+-DCMAKE_RC_COMPILER=${RESCOMP} \
+-DCMAKE_STRIP=${STRIP}"
 
 	export CMAKE_BUILD_PARALLEL_LEVEL=${gem_num_jobs}
 
