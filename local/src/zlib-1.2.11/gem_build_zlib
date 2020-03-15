@@ -21,7 +21,7 @@ function gem_build_v_SetDefaults
 	gem_c_standard="-std=gnu11"	# c90, c99, c11, gnu90, gnu99, gnu11
 	gem_cxx_standard="-std=gnu++11"	# c++98, c++03, c++14, c++17, c++2a, gnu++98, gnu++11, gnu++14, gnu++17
 
-	gem_use_clang=0
+	gem_use_clang=1
 
 	gem_is_cplusplus=0
 
