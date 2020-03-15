@@ -883,7 +883,7 @@ function gem_build_InitToolchain_x86_64-pc-linux-gnu
 	fi
 
 	if [[ ${gem_use_clang} -ne 0 ]]; then
-		gem_cmake_toolchain_prefix= "llvm-"
+		gem_cmake_toolchain_prefix="llvm-"
 		export CC=${gem_fullpath_toolchain_autotools}/bin/clang
 		export CXX=${gem_fullpath_toolchain_autotools}/bin/clang++
 	else	# clang
