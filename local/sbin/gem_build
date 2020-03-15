@@ -735,6 +735,56 @@ function gem_build_PkgConfig
 # =============================================================================
 #                          Configure Build Platform
 # =============================================================================
+# Returns the fullpath to the found tool (e.g. CC, CXX, AR, LD, etc.)
+function gem_build_FindTool
+{
+	local tool=${1}
+
+	if [[ "${tool}"x == "x" ]]; then
+		gem_script_v_Error "gem_build_FindTool(): A tool executable must be specified as a parameter."
+	fi
+
+	dirList="${gem_fullpath_toolchain_autotools}/bin:"
+	fileList="llvm-${tool}:${gem_triple}-${tool}:${gem_triple}-gcc-${tool}:${tool}"
+	local extension=
+	if  [[ ${gem_os} == "MINGW64"* || ${gem_os} == "CYGWIN"*  ]]; then
+		extension=".exe"
+	fi
+	local gem_file_found=
+	local fullpath
+	local gem_ifs_saved=IFS
+	IFS=":"
+	echo "" > ${gem_fullpath_gem}/gem_build_FindTool.txt
+	for dir in ${dirList}; do
+		echo "dir=$dir" >> ${gem_fullpath_gem}/gem_build_FindTool.txt
+		for file in ${fileList}; do
+			file=${file}${extension}
+			fullpath=${dir}/${file}
+
+			echo "    ${fullpath}" >> ${gem_fullpath_gem}/gem_build_FindTool.txt
+
+			if [[ (${gem_use_clang} -eq 0 && ${file} == "llvm"*) ||
+				  (${gem_use_clang} -ne 0 && ${file} == *"-gcc-"*) ]]; then
+				echo "        <skipped>" >> ${gem_fullpath_gem}/gem_build_FindTool.txt
+				continue
+			else
+				if [[ -f ${fullpath} ]]; then
+					gem_file_found=${fullpath}
+					echo "        Found!" >> ${gem_fullpath_gem}/gem_build_FindTool.txt
+					break
+				else
+					echo "        Doesn't exist." >> ${gem_fullpath_gem}/gem_build_FindTool.txt
+				fi
+			fi
+		done
+	done
+	IFS=gem_ifs_saved
+	if [[ ${gem_file_found}x == "x" ]]; then
+		gem_script_v_Error "Failed to find tool ${tool}."
+	fi
+	echo "${gem_file_found}"
+}
+
 function gem_build_v_InitToolchain_common { gem_build_InitToolchain_common ;}
 function gem_build_InitToolchain_common
 {
@@ -813,56 +863,6 @@ function gem_build_InitToolchain_x86_64-pc-linux-gnu
 	export STRIP=${gem_fullpath_toolchain_autotools}/bin/${gem_cmake_toolchain_prefix}strip
 
 	gem_build_v_InitToolchain_x86_64_common
-}
-
-# Returns the fullpath to the found tool.
-function gem_build_FindTool
-{
-	local tool=${1}
-
-	if [[ "${tool}"x == "x" ]]; then
-		gem_script_v_Error "gem_build_FindTool(): A tool executable must be specified as a parameter."
-	fi
-
-	dirList="${gem_fullpath_toolchain_autotools}/bin:"
-	fileList="llvm-${tool}:${gem_triple}-${tool}:${gem_triple}-gcc-${tool}:${tool}"
-	local extension=
-	if  [[ ${gem_os} == "MINGW64"* || ${gem_os} == "CYGWIN"*  ]]; then
-		extension=".exe"
-	fi
-	local gem_file_found=
-	local fullpath
-	local gem_ifs_saved=IFS
-	IFS=":"
-	echo "" > ${gem_fullpath_gem}/gem_build_FindTool.txt
-	for dir in ${dirList}; do
-		echo "dir=$dir" >> ${gem_fullpath_gem}/gem_build_FindTool.txt
-		for file in ${fileList}; do
-			file=${file}${extension}
-			fullpath=${dir}/${file}
-
-			echo "    ${fullpath}" >> ${gem_fullpath_gem}/gem_build_FindTool.txt
-
-			if [[ (${gem_use_clang} -eq 0 && ${file} == "llvm"*) ||
-				  (${gem_use_clang} -ne 0 && ${file} == *"-gcc-"*) ]]; then
-				echo "        <skipped>" >> ${gem_fullpath_gem}/gem_build_FindTool.txt
-				continue
-			else
-				if [[ -f ${fullpath} ]]; then
-					gem_file_found=${fullpath}
-					echo "        Found!" >> ${gem_fullpath_gem}/gem_build_FindTool.txt
-					break
-				else
-					echo "        Doesn't exist." >> ${gem_fullpath_gem}/gem_build_FindTool.txt
-				fi
-			fi
-		done
-	done
-	IFS=gem_ifs_saved
-	if [[ ${gem_file_found}x == "x" ]]; then
-		gem_script_v_Error "Failed to find tool ${tool}."
-	fi
-	echo "${gem_file_found}"
 }
 
 function gem_build_v_InitToolchain_x86_64-pc-cygwin { gem_build_InitToolchain_x86_64-pc-cygwin ;}
