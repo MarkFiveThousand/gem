@@ -826,10 +826,10 @@ function gem_build_FindTool
 
 	dirList="${gem_fullpath_toolchain_autotools}/bin:"
 	fileList="llvm-${tool}:${gem_triple}-${tool}:${gem_triple}-gcc-${tool}:${tool}"
-#	local extension=
-#	if  [[ ${gem_os} == "MINGW64"* || ${gem_os} == "CYGWIN"*  ]]; then
-#		extension=".exe"
-#	fi
+	local extension=
+	if  [[ ${gem_os} == "MINGW64"* || ${gem_os} == "CYGWIN"*  ]]; then
+		extension=".exe"
+	fi
 	local gem_file_found=
 	local fullpath
 	local gem_ifs_saved=IFS
@@ -989,58 +989,80 @@ function gem_build_InitToolchain_x86_64-w64-mingw32
 	gem_fullpath_gcc_libs=$(pwd)/$(dirname ${gem_path_found})
 	popd &>/dev/null
 
-	if [[ ${gem_use_clang} -ne 0 ]]; then	# clang
-		gem_cmake_toolchain_prefix= "llvm-"
-		if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW on Windows
-			export CC=${gem_fullpath_toolchain_autotools}/bin/clang
-			export CXX=${gem_fullpath_toolchain_autotools}/bin/clang++
-		elif [[ ${gem_os} == "CYGWIN"* ]]; then	# MinGW under Cygwin on Windows.
-			export CC=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}clang
-			export CXX=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}clang++
-		elif [[ ${gem_os} == "Linux" ]]; then		# MinGW on Linux
-			export CC=/bin/${gem_prefix_triple}clang
-			export CXX=/bin/${gem_prefix_triple}clang++
-		else
-			gem_script_v_Error "gem_build_InitToolchain_x86_64-w64-mingw32: Unrecognized shell: ${gem_os}."
-		fi
-	else	# clang
-		gem_cmake_toolchain_prefix=
-		if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW on Windows
-			export CC=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}gcc
-			export CXX=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}g++
-		elif [[ ${gem_os} == "CYGWIN"* ]]; then	# MinGW under Cygwin on Windows.
-			export CC=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}gcc
-			export CXX=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}g++
-		elif [[ ${gem_os} == "Linux" ]]; then		# MinGW on Linux
-			export CC=/bin/${gem_prefix_triple}gcc
-			export CXX=/bin/${gem_prefix_triple}g++
-		else
-			gem_script_v_Error "gem_build_InitToolchain_x86_64-w64-mingw32: Unrecognized shell: ${gem_os}."
-		fi
-	fi
-	if [[ ${gem_cmake_toolchain_prefix}x != "x" ]]; then
-		gem_script_v_Error "gem_build_InitToolchain_x86_64(): Need to find \"llvm\"- tools on cygwin."
-	fi
-	export ADDR2LINE=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}addr2line
-	export AR=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}ar
-	export AS=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}as
-	export DLLTOOL=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}dlltool
-	export LD=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}ld
-	export NM=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}nm
-	export OBJCOPY=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}objcopy
-	export OBJDUMP=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}objdump
-	export RANLIB=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}ranlib
-	export READELF=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}readelf
-	if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW on Windows
-		export RESCOMP=${gem_fullpath_toolchain_autotools}/bin/windres
-	elif [[ ${gem_os} == "CYGWIN"* ]]; then	# MinGW under Cygwin on Windows.
-		export RESCOMP=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}windres
-	elif [[ ${gem_os} == "Linux" ]]; then		# MinGW on Linux
-		export RESCOMP=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}windres
+
+	if [[ ${gem_use_clang} -ne 0 ]]; then
+		export CC=$(gem_build_FindTool clang)
+		export CXX=$(gem_build_FindTool clang++)
 	else
-		gem_script_v_Error "gem_build_InitToolchain_x86_64-w64-mingw32: Unrecognized shell: ${gem_os}."
+		export CC=$(gem_build_FindTool gcc)
+		export CXX=$(gem_build_FindTool g++)
 	fi
-	export STRIP=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}strip
+
+	export ADDR2LINE=$(gem_build_FindTool addr2line)
+	export AR=$(gem_build_FindTool ar)
+	export AS=$(gem_build_FindTool as)
+	export DLLTOOL=$(gem_build_FindTool dlltool)
+	export LD=$(gem_build_FindTool ld)
+	export NM=$(gem_build_FindTool nm)
+	export OBJCOPY=$(gem_build_FindTool objcopy)
+	export OBJDUMP=$(gem_build_FindTool objdump)
+	export RANLIB=$(gem_build_FindTool ranlib)
+	export READELF=$(gem_build_FindTool readelf)
+	export RESCOMP=$(gem_build_FindTool windres)
+	export STRIP=$(gem_build_FindTool strip)
+
+#	if [[ ${gem_use_clang} -ne 0 ]]; then	# clang
+#		gem_cmake_toolchain_prefix="llvm-"
+#		if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW on Windows
+#			export CC=${gem_fullpath_toolchain_autotools}/bin/clang
+#			export CXX=${gem_fullpath_toolchain_autotools}/bin/clang++
+#		elif [[ ${gem_os} == "CYGWIN"* ]]; then	# MinGW under Cygwin on Windows.
+#			export CC=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}clang
+#			export CXX=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}clang++
+#		elif [[ ${gem_os} == "Linux" ]]; then		# MinGW on Linux
+#			export CC=/bin/${gem_prefix_triple}clang
+#			export CXX=/bin/${gem_prefix_triple}clang++
+#		else
+#			gem_script_v_Error "gem_build_InitToolchain_x86_64-w64-mingw32: Unrecognized shell: ${gem_os}."
+#		fi
+#	else	# clang
+#		gem_cmake_toolchain_prefix=
+#		if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW on Windows
+#			export CC=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}gcc
+#			export CXX=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}g++
+#		elif [[ ${gem_os} == "CYGWIN"* ]]; then	# MinGW under Cygwin on Windows.
+#			export CC=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}gcc
+#			export CXX=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}g++
+#		elif [[ ${gem_os} == "Linux" ]]; then		# MinGW on Linux
+#			export CC=/bin/${gem_prefix_triple}gcc
+#			export CXX=/bin/${gem_prefix_triple}g++
+#		else
+#			gem_script_v_Error "gem_build_InitToolchain_x86_64-w64-mingw32: Unrecognized shell: ${gem_os}."
+#		fi
+#	fi
+#	if [[ ${gem_cmake_toolchain_prefix}x != "x" ]]; then
+#		gem_script_v_Error "gem_build_InitToolchain_x86_64(): Need to find \"llvm\"- tools on cygwin."
+#	fi
+#	export ADDR2LINE=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}addr2line
+#	export AR=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}ar
+#	export AS=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}as
+#	export DLLTOOL=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}dlltool
+#	export LD=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}ld
+#	export NM=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}nm
+#	export OBJCOPY=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}objcopy
+#	export OBJDUMP=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}objdump
+#	export RANLIB=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}ranlib
+#	export READELF=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}readelf
+#	if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW on Windows
+#		export RESCOMP=${gem_fullpath_toolchain_autotools}/bin/windres
+#	elif [[ ${gem_os} == "CYGWIN"* ]]; then	# MinGW under Cygwin on Windows.
+#		export RESCOMP=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}windres
+#	elif [[ ${gem_os} == "Linux" ]]; then		# MinGW on Linux
+#		export RESCOMP=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}windres
+#	else
+#		gem_script_v_Error "gem_build_InitToolchain_x86_64-w64-mingw32: Unrecognized shell: ${gem_os}."
+#	fi
+#	export STRIP=${gem_fullpath_toolchain_autotools}/bin/${gem_prefix_triple}strip
 
 	gem_build_v_InitToolchain_x86_64_common
 }

@@ -99,7 +99,7 @@ function gem_build_v_OnInstall
 	gem_build_OnInstall
 
 	if [[ ${gem_host} == "mingw" ]]; then
-		gem_script_ln -s ${gem_fullpath_install}/lib/libzlibstatic.a ${gem_fullpath_install}/lib/libz.a
+		gem_script_ln -sf ${gem_fullpath_install}/lib/libzlibstatic.a ${gem_fullpath_install}/lib/libz.a
 	fi
 }
 

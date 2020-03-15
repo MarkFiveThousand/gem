@@ -207,9 +207,10 @@ function gem_script_cp
 
 function gem_script_ln
 {
+	# ln creates a link to the first file from the second.
 	gem_script_ValidateFileParams ${@}
 
-	local gem_cmd_line="ln ${@}"
+	local gem_cmd_line="ln -f ${@}"
 	${gem_cmd_line}
 	local gem_result=$?
 	if [[ ${gem_result} -ne 0 ]]; then
