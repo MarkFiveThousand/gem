@@ -9,6 +9,7 @@
 
 
 . gem_script
+. gem_build_validate
 . gem_build
 
 function gem_build_v_SetDefaults

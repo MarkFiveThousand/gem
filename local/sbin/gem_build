@@ -232,8 +232,8 @@ function gem_build_BuildFilePaths
 	# for various build parameters.  Each output must be produced in it's own
 	# directory, so we append the build parameters to the directory name.
 	gem_path_suffix=${gem_triple}
-	if [[ ${gem_triple_details_suffix}x != "x" ]]; then
-		gem_path_suffix=${gem_path_suffix}_${gem_triple_details_suffix}
+	if [[ ! -z ${gem_path_triple_details_suffix} ]]; then
+		gem_path_suffix=${gem_path_suffix}_${gem_path_triple_details_suffix}
 	fi
 	gem_path_suffix=${gem_path_suffix}/${gem_build_type}
 
@@ -379,15 +379,8 @@ ${TEMP_SYSROOT_DIR}/mingw/share/pkgconfig"
 			export TEMP_SYSROOT_DIR=/usr
 			export PKG_CONFIG_SYSTEM_INCLUDE_PATH=${TEMP_SYSROOT_DIR}/include
 			export PKG_CONFIG_SYSTEM_LIBRARY_PATH=${TEMP_SYSROOT_DIR}/lib
-
-#echo "1.) PKG_CONFIG_LIBDIR=$PKG_CONFIG_LIBDIR"
-#gem_build_v_DebugDumpVars
-#echo "This is where the first and only setting is being made."
 			export PKG_CONFIG_LIBDIR="${PKG_CONFIG_LIBDIR}\
 ${TEMP_SYSROOT_DIR}/share/pkgconfig"
-
-#echo "2.) PKG_CONFIG_LIBDIR=$PKG_CONFIG_LIBDIR"
-#gem_build_v_DebugDumpVars
 
 		elif [[ ${gem_triple} == "x86_64-w64-mingw32" ]]; then		# MinGW on Cygwin(Windows)
 			export PKG_CONFIG_SYSROOT_DIR=
@@ -404,11 +397,6 @@ ${TEMP_SYSROOT_DIR}/mingw/lib/pkgconfig"
 	export PKG_CONFIG_PATH=
 	export PKG_CONFIG_DIR=
 
-#echo "3.) PKG_CONFIG_LIBDIR=$PKG_CONFIG_LIBDIR"
-#gem_build_v_DebugDumpVars
-
-#echo "3.4.) PKG_CONFIG_LIBDIR=$PKG_CONFIG_LIBDIR"
-
 	# Find the gem include file and libraries.
 	PKG_CONFIG_SYSTEM_INCLUDE_PATH=${PKG_CONFIG_SYSTEM_INCLUDE_PATH}:${gem_fullpath_install}/include
 	PKG_CONFIG_SYSTEM_LIBRARY_PATH=${PKG_CONFIG_SYSTEM_LIBRARY_PATH}:${gem_fullpath_install}/lib
@@ -416,8 +404,6 @@ ${TEMP_SYSROOT_DIR}/mingw/lib/pkgconfig"
 ${gem_fullpath_install}/share/pkgconfig:\
 ${gem_fullpath_install}/lib/pkgconfig"
 
-#echo "3.5.) PKG_CONFIG_LIBDIR=$PKG_CONFIG_LIBDIR"
-#echo "Done.";exit
 #	echo $(pkg-config --cflags-only-I sdl2) ; echo
 #	echo $(pkg-config --libs-only-L sdl2) ; echo
 #	echo $(pkg-config --list-all) ; echo
@@ -569,27 +555,29 @@ function gem_build_DebugDumpVars
 	gem_script_v_Msg "----------------------------- gem_build_v_DebugDumpVars() ----------------------------"
 	gem_script_v_Msg "gem_os =                ${gem_os}"
 	gem_script_v_Msg "gem_triple =            ${gem_triple}"
-	gem_script_v_Msg "gem_triple_details_suffix ="
-	gem_script_v_Msg "                        ${gem_triple_details_suffix}"
+	gem_script_v_Msg "gem_isCrossCompiling =  ${gem_isCrossCompiling}"
+	gem_script_v_Msg "gem_path_triple_details_suffix ="
 	gem_script_v_Msg "gem_build_type =        ${gem_build_type}"
 	gem_script_v_Msg "gem_build_script_type = ${gem_build_script_type}"
 	gem_script_v_Msg "gem_lib_type =          ${gem_lib_type}"
+	gem_script_v_Msg "                        ${gem_path_triple_details_suffix}"
 	gem_script_v_Msg "gem_path_suffix =       ${gem_path_suffix}"
 	gem_script_v_Msg "gem_fullpath_src =      ${gem_fullpath_src}"
 	gem_script_v_Msg "gem_fullpath_build =    ${gem_fullpath_build}"
 	gem_script_v_Msg "gem_fullpath_install =  ${gem_fullpath_install}"
-	gem_script_v_Msg "gem_isCrossCompiling =  ${gem_isCrossCompiling}"
-	gem_script_v_Msg "gem_fullpath_findtools =    ${gem_fullpath_findtools}"
 	gem_script_v_Msg "gem_fullpath_sysroot=   ${gem_fullpath_sysroot}"
+	gem_script_v_Msg
 	if [[ ${gem_build_script_type} == "cmake" ]]; then
 		gem_script_v_Msg "gem_fullpath_toolchain_cmake ="
 		gem_script_v_Msg "                       ${gem_fullpath_toolchain_cmake}"
 		gem_script_v_Msg "gem_cmake_generator =  ${gem_cmake_generator}"
+		gem_script_v_Msg
 	fi
 	if [[ ${gem_triple} == *"android"* ]]; then
 		gem_script_v_Msg "gem_android_ndk_version =  ${gem_android_ndk_version}"
 		gem_script_v_Msg "gem_android_api_level =    ${gem_android_api_level}"
 		gem_script_v_Msg "gem_arch =                 ${gem_arch}"
+		gem_script_v_Msg
 	fi
 	gem_script_v_Msg "gem_use_clang = ${gem_use_clang}"
 	gem_script_v_Msg "ADDR2LINE =     ${ADDR2LINE}"
@@ -606,11 +594,13 @@ function gem_build_DebugDumpVars
 	gem_script_v_Msg "READELF =       ${READELF}"
 	gem_script_v_Msg "RESCOMP =       ${RESCOMP}"
 	gem_script_v_Msg "STRIP =         ${STRIP}"
+	gem_script_v_Msg
 	gem_script_v_Msg "gem_flags_c =         ${gem_flags_c}"
 	gem_script_v_Msg "gem_flags_cpp =       ${gem_flags_cpp}"
 	gem_script_v_Msg "gem_flags_cxx =       ${gem_flags_cxx}"
 	gem_script_v_Msg "gem_flags_ld =        ${gem_flags_ld}"
 	gem_script_v_Msg "gem_flags_configure = ${gem_flags_configure}"
+	gem_script_v_Msg
 	gem_script_v_Msg "PKG_CONFIG =                     ${PKG_CONFIG}"
 	gem_script_v_Msg "PKG_CONFIG_PATH =                ${PKG_CONFIG_PATH}"
 	gem_script_v_Msg "PKG_CONFIG_DIR =                 ${PKG_CONFIG_DIR}"
@@ -735,51 +725,110 @@ function gem_build_PkgConfig
 #                          Configure Build Platform
 # =============================================================================
 # Returns the fullpath to the found tool (e.g. CC, CXX, AR, LD, etc.)
+
 function gem_build_FindTool
 {
-	local tool=${1}
+	local gem_fullpath_findtools=$1
+	local lvalue=$2
+	local tool=$3
 
-	if [[ "${tool}"x == "x" ]]; then
-		gem_script_v_Error "gem_build_FindTool(): A tool executable must be specified as a parameter."
+	if [[ -z ${lvalue} || -z ${tool} || -z ${gem_fullpath_findtools}  ]]; then
+		gem_script_v_Error "gem_build_FindTool() must be called with 3 parameters; the path to search within, an identifier and tool name must be specified as a parameters. E.g. gem_build_FindTool \usr\bin CXX clang++."
 	fi
 
-	fileList="llvm-${tool}:${gem_triple}-${tool}:${gem_triple}-gcc-${tool}:${tool}"
-	local extension=
+	local fileList="llvm-${tool}:${gem_triple}-${tool}:${gem_triple}-gcc-${tool}:${tool}"
+
+	local extensionList=":"
 	if  [[ ${gem_os} == "MINGW64"* || ${gem_os} == "CYGWIN"*  ]]; then
-		extension=".exe"
+		extensionList="${extensionList}.exe:"
 	fi
-	local gem_file_found=
-	local fullpath
-	local gem_ifs_saved=IFS
+	local gem_build_findtool_found=
+	local gem_ifs_saved=${IFS}
 	IFS=":"
-#	echo "" > ${gem_fullpath_gem}/gem_build_FindTool.txt
 	for dir in ${gem_fullpath_findtools}; do
-#		echo "dir=$dir" >> ${gem_fullpath_gem}/gem_build_FindTool.txt
 		for file in ${fileList}; do
-			file=${file}${extension}
-			fullpath=${dir}/${file}
-
-#			echo "    ${fullpath}" >> ${gem_fullpath_gem}/gem_build_FindTool.txt
-
 			if [[ (${gem_use_clang} -eq 0 && ${file} == "llvm"*) ||
-				  (${gem_use_clang} -ne 0 && ${file} == *"-gcc-"*) ]]; then
-#				echo "        <skipped>" >> ${gem_fullpath_gem}/gem_build_FindTool.txt
+				(${gem_use_clang} -ne 0 && ${file} == *"-gcc-"*) ]]; then
 				continue
 			else
-				if [[ -f ${fullpath} ]]; then
-					gem_file_found=${fullpath}
-#					echo "        Found!" >> ${gem_fullpath_gem}/gem_build_FindTool.txt
+				for ext in ${extensionList}; do
+
+					local fullpath=${dir}/${file}${ext}
+					if [[ -f ${fullpath} ]]; then
+						gem_build_findtool_found=${fullpath}
+						break
+					fi
+				done
+				if [[ ! -z ${gem_build_findtool_found} ]]; then
 					break
-#				else
-#					echo "        Doesn't exist." >> ${gem_fullpath_gem}/gem_build_FindTool.txt
 				fi
 			fi
 		done
+		if [[ ! -z ${gem_build_findtool_found} ]]; then
+			break
+		fi
 	done
-	if [[ ${gem_file_found}x == "x" ]]; then
-		gem_script_v_Error "Failed to find tool ${tool}."
+	IFS=${gem_ifs_saved}
+
+	if [[ -z ${gem_build_findtool_found} ]]; then
+		gem_script_v_Error "gem_build_FindTool(): Failed to find tool ${tool}."
 	fi
-	echo "${gem_file_found}"
+	local cmd="export ${lvalue}=${gem_build_findtool_found}"
+	eval "${cmd}"
+	if [[ $? != 0 ]]; then
+		gem_script_v_Error "gem_build_FindTool(): Failed to execute the following assignment: \"${cmd}\""
+	fi
+}
+
+function gem_build_FindAllToolsHere
+{
+	local gem_fullpath_findtools=$1
+	if [[ -z $1 ]]; then
+		gem_script_v_Error "gem_build_FindAllToolsHere() requires one path argument."
+	fi
+
+	if [[ 0 == 1 ]]; then
+		# Cygwin
+		export ADDR2LINE=/usr/bin/addr2line
+		export AR=/usr/bin/llvm-ar
+		export AS=/usr/bin/llvm-as
+		export CC=/usr/bin/clang
+		export CXX=/usr/bin/clang++
+		export DLLTOOL=/usr/bin/llvm-dlltool
+		export LD=/usr/bin/ld
+		export NM=/usr/bin/llvm-nm
+		export OBJCOPY=/usr/bin/llvm-objcopy
+		export OBJDUMP=/usr/bin/llvm-objdump
+		export RANLIB=/usr/bin/llvm-ranlib
+		export READELF=/usr/bin/llvm-readelf
+		export RESCOMP=/usr/bin/windres
+		export STRIP=/usr/bin/llvm-strip
+		return
+	fi
+
+	if [[ ${gem_use_clang} -ne 0 ]]; then
+		gem_build_FindTool ${gem_fullpath_findtools} CC clang
+		gem_build_FindTool ${gem_fullpath_findtools} CXX clang++
+	else
+		gem_build_FindTool ${gem_fullpath_findtools} CC gcc
+		gem_build_FindTool ${gem_fullpath_findtools} CXX g++
+	fi
+
+	gem_build_FindTool ${gem_fullpath_findtools} ADDR2LINE addr2line
+	gem_build_FindTool ${gem_fullpath_findtools} AR ar
+	gem_build_FindTool ${gem_fullpath_findtools} AS as
+	gem_build_FindTool ${gem_fullpath_findtools} LD ld
+	gem_build_FindTool ${gem_fullpath_findtools} NM nm
+	gem_build_FindTool ${gem_fullpath_findtools} OBJCOPY objcopy
+	gem_build_FindTool ${gem_fullpath_findtools} OBJDUMP objdump
+	gem_build_FindTool ${gem_fullpath_findtools} RANLIB ranlib
+	gem_build_FindTool ${gem_fullpath_findtools} READELF readelf
+	gem_build_FindTool ${gem_fullpath_findtools} STRIP strip
+
+	if [[ ${gem_triple} == "x86_64-w64-mingw32" || ${gem_triple} == "x86_64-pc-cygwin" ]]; then
+		gem_build_FindTool ${gem_fullpath_findtools} DLLTOOL dlltool
+		gem_build_FindTool ${gem_fullpath_findtools} RESCOMP windres
+	fi
 }
 
 function gem_build_v_InitToolchain_common { gem_build_InitToolchain_common ;}
@@ -824,9 +873,6 @@ function gem_build_InitToolchain_x86_64_common
 function gem_build_v_InitToolchain_x86_64-pc-linux-gnu { gem_build_InitToolchain_x86_64-pc-linux-gnu ;}
 function gem_build_InitToolchain_x86_64-pc-linux-gnu
 {
-	gem_fullpath_sysroot=/
-	gem_fullpath_findtools=/usr/bin
-	
 	if [[ ${gem_build_script_type} == "cmake" ]]; then
 
 		gem_fullpath_toolchain_cmake=${gem_fullpath_local}/src/toolchains/linux.toolchain.cmake
@@ -836,25 +882,8 @@ function gem_build_InitToolchain_x86_64-pc-linux-gnu
 		# leaving it blank.  I'm seeing some sources online setting it to 1.
 	fi
 
-	if [[ ${gem_use_clang} -ne 0 ]]; then
-		export CC=$(gem_build_FindTool clang)
-		export CXX=$(gem_build_FindTool clang++)
-	else
-		export CC=$(gem_build_FindTool gcc)
-		export CXX=$(gem_build_FindTool g++)
-	fi
-
-	export ADDR2LINE=$(gem_build_FindTool addr2line)
-	export AR=$(gem_build_FindTool ar)
-	export AS=$(gem_build_FindTool as)
-	export LD=$(gem_build_FindTool ld)
-	export NM=$(gem_build_FindTool nm)
-	export OBJCOPY=$(gem_build_FindTool objcopy)
-	export OBJDUMP=$(gem_build_FindTool objdump)
-	export RANLIB=$(gem_build_FindTool ranlib)
-	export READELF=$(gem_build_FindTool readelf)
-	export STRIP=$(gem_build_FindTool strip)
-
+	gem_fullpath_sysroot=/
+	gem_build_FindAllToolsHere /usr/bin
 	gem_build_v_InitToolchain_x86_64_common
 }
 
@@ -862,8 +891,7 @@ function gem_build_v_InitToolchain_x86_64-pc-cygwin { gem_build_InitToolchain_x8
 function gem_build_InitToolchain_x86_64-pc-cygwin
 {
 	gem_fullpath_sysroot=/
-	gem_fullpath_findtools=/usr/bin
-
+	gem_build_FindAllToolsHere /usr/bin
 	if [[ ${gem_build_script_type} == "cmake" ]]; then
 
 		gem_fullpath_toolchain_cmake=${gem_fullpath_local}/src/toolchains/cygwin.toolchain.cmake
@@ -871,117 +899,74 @@ function gem_build_InitToolchain_x86_64-pc-cygwin
 		gem_cmake_system_version="10.0"	# Windows 10
 	fi
 
-	if [[ ${gem_use_clang} -ne 0 ]]; then
-		export CC=$(gem_build_FindTool clang)
-		export CXX=$(gem_build_FindTool clang++)
-	else
-		export CC=$(gem_build_FindTool gcc)
-		export CXX=$(gem_build_FindTool g++)
-	fi
-
-	export ADDR2LINE=$(gem_build_FindTool addr2line)
-	export AR=$(gem_build_FindTool ar)
-	export AS=$(gem_build_FindTool as)
-	export DLLTOOL=$(gem_build_FindTool dlltool)
-	export LD=$(gem_build_FindTool ld)
-	export NM=$(gem_build_FindTool nm)
-	export OBJCOPY=$(gem_build_FindTool objcopy)
-	export OBJDUMP=$(gem_build_FindTool objdump)
-	export RANLIB=$(gem_build_FindTool ranlib)
-	export READELF=$(gem_build_FindTool readelf)
-	export RESCOMP=$(gem_build_FindTool windres)
-	export STRIP=$(gem_build_FindTool strip)
-
 	gem_build_v_InitToolchain_x86_64_common
 }
 
 function gem_build_v_InitToolchain_x86_64-w64-mingw32 { gem_build_InitToolchain_x86_64-w64-mingw32 ;}
 function gem_build_InitToolchain_x86_64-w64-mingw32
 {
-	gem_prefix_triple=
 	if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW on Windows
 
-		gem_prefix_triple=
 		gem_fullpath_sysroot=/mingw64
-		gem_fullpath_findtools=/mingw64/bin
+		gem_build_FindAllToolsHere /mingw64/bin
+
 	elif [[ ${gem_os} == "CYGWIN"* ]]; then	# MinGW under Cygwin on Windows.
 
-		gem_prefix_triple=${gem_triple}-
 		gem_fullpath_sysroot=/usr/x86_64-w64-mingw32/sys-root
-		gem_fullpath_findtools=/bin
+		gem_build_FindAllToolsHere /bin
 
 	elif [[ ${gem_os} == "Linux" ]]; then		# MinGW on Linux
 
-		gem_prefix_triple=${gem_triple}-
 		gem_fullpath_sysroot=/usr/x86_64-w64-mingw32/sys-root
-		gem_fullpath_findtools=/usr/bin
-#		gem_fullpath_findtools=/usr/x86_64-w64-mingw32/bin
+		gem_build_FindAllToolsHere /usr/bin
 	else
 		gem_script_v_Error "gem_build_InitToolchain_x86_64-w64-mingw32: Unrecognized shell: ${gem_os}."
 	fi
 
 	if [[ ${gem_build_script_type} == "cmake" ]]; then
+
 		gem_fullpath_toolchain_cmake=${gem_fullpath_local}/src/toolchains/mingw.toolchain.cmake
 		gem_cmake_system_name="Windows"
 		gem_cmake_system_version="10.0"	# Windows 10
 
 	elif [[ ${gem_build_script_type} == "autotools" ]]; then
 
-		gem_script_v_Error "How did this ever work?! gem_fullpath_gcc_libs is set *AFTER* we test if the directory exists.  Shouldn't this have been failing all along?!"
+		# Find the compiler's library directory.  The gcc library directory
+		# name includes an ever changing version number, so we'll enter the
+		# parent directory, then search for a file expected to be present (i.e.
+		# libgcc.a.)  When found we'll parse the path for the version number.
+		if [[ ${gem_os} == "CYGWIN"* || ${gem_os} == "Linux" ]]; then
+			pushd /usr/lib/gcc/${gem_triple} &>/dev/null
+		elif [[ ${gem_os} == "MINGW64"* ]]; then
+			# Not cross compiling.
+			pushd /mingw64/lib/gcc/${gem_triple} &>/dev/null
+			gem_fullpath_gcc_libs=${gem_fullpath_sysroot}/mingw/lib
+		else
+			gem_script_v_Error "gem_build_InitToolchain_x86_64-w64-mingw32: Unrecognized shell: ${gem_os}."
+		fi
+		gem_path_found=$(find -name libgcc.a)
+		if [[ -z ${gem_path_found} ]]; then
+			gem_script_v_Error "gem_build_InitToolchain_x86_64-w64-mingw32(): Failed to determine library directory."
+		fi
+		gem_fullpath_gcc_libs=$(pwd)/$(dirname ${gem_path_found})
+		popd &>/dev/null
 
-		if [[ ${gem_os} != "MINGW64"* ]]; then	# Building for mingw on cygwin or linux.
+
+
+
+#		gem_script_v_Error "How did this ever work?! gem_fullpath_gcc_libs is set *AFTER* we test if the directory exists.  Shouldn't this have been failing all along?!"
+
+# REMOVING THIS CONDITION.  DON'T WE ALWAYS WANT TO FAIL HERE?
+#		if [[ ${gem_os} != "MINGW64"* ]]; then	# Building for mingw on cygwin or linux.
 			if [[ ! -d ${gem_fullpath_gcc_libs} ]]; then
 				gem_script_v_Error "gem_build_InitToolchain_x86_64-w64-mingw32(): Library path does not exist: ${gem_fullpath_gcc_libs}.  Did the version number change?"
 			fi
 			# *FIX: Is this still required now that we have pkg-config working properly?
 			gem_flags_ld="${gem_flags_ld} -L${gem_fullpath_gcc_libs}"
-		fi
-
-	elif [[ ${gem_build_script_type} == "meson" ]]; then
-		local noop=0
+#		fi
 	fi
 
-	# Find the compiler's library directory.  The gcc library directory
-	# name includes an ever changing version number, so we'll enter the
-	# parent directory, then search for a file expected to be present (i.e.
-	# libgcc.a.)  When found we'll parse the path for the version number.
-	if [[ ${gem_os} == "CYGWIN"* || ${gem_os} == "Linux" ]]; then
-		pushd /usr/lib/gcc/${gem_triple} &>/dev/null
-	elif [[ ${gem_os} == "MINGW64"* ]]; then
-		# Not cross compiling.
-		pushd /mingw64/lib/gcc/${gem_triple} &>/dev/null
-		gem_fullpath_gcc_libs=${gem_fullpath_sysroot}/mingw/lib
-	else
-		gem_script_v_Error "gem_build_InitToolchain_x86_64-w64-mingw32: Unrecognized shell: ${gem_os}."
-	fi
-	gem_path_found=$(find -name libgcc.a)
-	if [[ ${gem_path_found}x == "x" ]]; then
-		gem_script_v_Error "gem_build_InitToolchain_x86_64-w64-mingw32(): Failed to determine library directory."
-	fi
-	gem_fullpath_gcc_libs=$(pwd)/$(dirname ${gem_path_found})
-	popd &>/dev/null
 
-
-	if [[ ${gem_use_clang} -ne 0 ]]; then
-		export CC=$(gem_build_FindTool clang)
-		export CXX=$(gem_build_FindTool clang++)
-	else
-		export CC=$(gem_build_FindTool gcc)
-		export CXX=$(gem_build_FindTool g++)
-	fi
-
-	export ADDR2LINE=$(gem_build_FindTool addr2line)
-	export AR=$(gem_build_FindTool ar)
-	export AS=$(gem_build_FindTool as)
-	export DLLTOOL=$(gem_build_FindTool dlltool)
-	export LD=$(gem_build_FindTool ld)
-	export NM=$(gem_build_FindTool nm)
-	export OBJCOPY=$(gem_build_FindTool objcopy)
-	export OBJDUMP=$(gem_build_FindTool objdump)
-	export RANLIB=$(gem_build_FindTool ranlib)
-	export READELF=$(gem_build_FindTool readelf)
-	export RESCOMP=$(gem_build_FindTool windres)
-	export STRIP=$(gem_build_FindTool strip)
 
 	gem_build_v_InitToolchain_x86_64_common
 }
@@ -992,14 +977,11 @@ function gem_build_InitToolchain_x86_64-pc-windows-msvc
 	gem_processor=x86_64
 
 	if [[ ${gem_build_script_type} == "cmake" ]]; then
+
 		gem_script_v_Error "NOT REALLY AN ERROR: In gem_build_InitToolchain_x86_64-pc-windows-msvc(), did we mean to reference the mingw toolchain file?  Look into this."
 		gem_fullpath_toolchain_cmake=${gem_fullpath_local}/src/toolchains/mingw.toolchain.cmake
 		gem_cmake_system_name="Windows"
 		gem_cmake_system_version="10.0"	# Windows 10
-	elif [[ ${gem_build_script_type} == "autotools" ]]; then
-		noop=0
-	elif [[ ${gem_build_script_type} == "meson" ]]; then
-		noop=0
 	fi
 
 	gem_build_v_InitToolchain_x86_64_common
@@ -1016,17 +998,15 @@ function gem_build_InitToolchain_android_common
 		gem_script_v_Error "Android toolchain only supports the clang compiler.  Set gem_use_clang=1."
 	fi
 
-	gem_triple_details_suffix=ndk_${gem_android_ndk_version}_api_${gem_android_api_level}_arch_${gem_arch}
-
-	gem_fullpath_findtools=${gem_fullpath_android_ndk}/toolchains/llvm/prebuilt/linux-x86_64/bin
-	gem_cmake_system_name="Android"
-	gem_cmake_system_version=		# What to set this to?
-	gem_script_v_Error "What to set gem_cmake_system_version to?"
-	gem_fullpath_sysroot=${gem_fullpath_android_ndk}/toolchains/llvm/prebuilt/linux-x86_64/sysroot
+	gem_path_triple_details_suffix=ndk_${gem_android_ndk_version}_api_${gem_android_api_level}_arch_${gem_arch}
 
 	if [[ ${gem_build_script_type} == "cmake" ]]; then
+
 		#	gem_fullpath_toolchain_cmake=${gem_fullpath_local}/src/toolchains/android.toolchain.cmake
 		gem_fullpath_toolchain_cmake=${gem_fullpath_android_ndk}/build/cmake/android.toolchain.cmake
+		gem_cmake_system_name="Android"
+		gem_cmake_system_version=		# What to set this to?
+		gem_script_v_Error "What to set gem_cmake_system_version to?"
 
 	elif [[ ${gem_build_script_type} == "autotools" || ${gem_build_script_type} == "meson" ]]; then
 
@@ -1038,6 +1018,7 @@ function gem_build_InitToolchain_android_common
 		# x86_64-linux-android
 		# armv7a-linux-androideabi
 		# aarch64-linux-android
+
 #		export ADDR2LINE=${gem_fullpath_findtools}/${gem_triple}-addr2line
 #		export AR=${gem_fullpath_findtools}/${gem_triple}-ar
 #		export AS=${gem_fullpath_findtools}/${gem_triple}-as
@@ -1050,27 +1031,11 @@ function gem_build_InitToolchain_android_common
 #		export RANLIB=${gem_fullpath_findtools}/${gem_triple}-ranlib
 #		export READELF=${gem_fullpath_findtools}/${gem_triple}-readelf
 #		export STRIP=${gem_fullpath_findtools}/${gem_triple}-strip
-	
-		if [[ ${gem_use_clang} -ne 0 ]]; then
-			export CC=$(gem_build_FindTool clang)
-			export CXX=$(gem_build_FindTool clang++)
-		else
-			export CC=$(gem_build_FindTool gcc)
-			export CXX=$(gem_build_FindTool g++)
-		fi
-
-		export ADDR2LINE=$(gem_build_FindTool addr2line)
-		export AR=$(gem_build_FindTool ar)
-		export AS=$(gem_build_FindTool as)
-		export LD=$(gem_build_FindTool ld)
-		export NM=$(gem_build_FindTool nm)
-		export OBJCOPY=$(gem_build_FindTool objcopy)
-		export OBJDUMP=$(gem_build_FindTool objdump)
-		export RANLIB=$(gem_build_FindTool ranlib)
-		export READELF=$(gem_build_FindTool readelf)
-		export STRIP=$(gem_build_FindTool strip)
+		local noop=0
 	fi
 
+	gem_fullpath_sysroot=${gem_fullpath_android_ndk}/toolchains/llvm/prebuilt/linux-x86_64/sysroot
+	gem_build_FindAllToolsHere ${gem_fullpath_android_ndk}/toolchains/llvm/prebuilt/linux-x86_64/bin
 	gem_build_v_InitToolchain_common
 }
 
@@ -1291,6 +1256,10 @@ function gem_build_OnConfigure
 	else
 		if [[ ${gem_cmd_line_configure}x != "x" ]]; then
 			eval "${gem_cmd_line_configure} ${gem_redirect_suffix_configure}"
+			gem_result=$?
+			gem_script_v_Msg "=============================================="
+			gem_script_v_Msg "Configure result: ${gem_result}"
+			gem_script_v_Msg "=============================================="
 		fi
 	fi
 }
@@ -1420,10 +1389,10 @@ ${gem_cmake_params}"
 	# to be aware if we're crosscompiling and modulate the prohibited sources
 	# of resource files.  *UPDATE!  It seems to be working now.
 
-#	if  [[ ${gem_isCrossCompiling} -ne 0 ]]; then
+	if  [[ ${gem_isCrossCompiling} -ne 0 ]]; then
 		gem_cmd_line_configure="${gem_cmd_line_configure} \
 -DCMAKE_TOOLCHAIN_FILE=${gem_fullpath_toolchain_cmake}"
-#	fi
+	fi
 
 
 
@@ -1761,6 +1730,10 @@ function gem_build_OnBuild
 
 	if [[ ${gem_option_cmdline_only} -eq 0 ]]; then
 		eval "${gem_cmd_line_build} ${gem_redirect_suffix_build}"
+		gem_result=$?
+		gem_script_v_Msg "=============================================="
+		gem_script_v_Msg "Build result: ${gem_result}"
+		gem_script_v_Msg "=============================================="
 	else
 		gem_script_v_Msg_NotQuiet "${gem_cmd_line_build}"
 	fi
@@ -1784,7 +1757,7 @@ function gem_build_OnCommandLine_Build
 		# specific make file, instead of producing one via a configure script.
 		gem_list_makefile="Makefile:makefile:${gem_fullpath_autotools_makefile}"
 		gem_fullpath_autotools_makefile=
-		local gem_ifs_saved=IFS
+		local gem_ifs_saved=${IFS}
 		IFS=":"
 		for makefile in ${gem_list_makefile}; do
 			gem_fullpath_makefile=${gem_fullpath_build}/${makefile}
@@ -1799,7 +1772,7 @@ function gem_build_OnCommandLine_Build
 			gem_script_v_Error "Failed to find the makefile."
 		fi
 
-		gem_cmd_line_build="make -j${gem_num_jobs} ${gem_fullpath_autotools_makefile}"
+		gem_cmd_line_build="make -j${gem_num_jobs} -f ${gem_fullpath_autotools_makefile}"
 
 		# Append CMAKE_C_FLAGS, CMAKE_CPP_FLAGS, CMAKE_CXX_FLAGS, and
 		# CMAKE_LD_FLAGS or CFLAGS, CPPFLAGS, CXXFLAGS and LDFLAGS.
@@ -2251,14 +2224,8 @@ function gem_build_Main
 	gem_build_v_SetBuildType_${gem_build_type}
 	gem_build_v_SelectCMakeGenerator
 	gem_build_validate_Compatibility
-#echo "10.) PKG_CONFIG_LIBDIR=$PKG_CONFIG_LIBDIR"
-#gem_build_v_DebugDumpVars
 	gem_build_v_BuildFilePaths
-#echo "11.) PKG_CONFIG_LIBDIR=$PKG_CONFIG_LIBDIR"
-#gem_build_v_DebugDumpVars
 	gem_build_v_SetFlags
-#echo "12.) PKG_CONFIG_LIBDIR=$PKG_CONFIG_LIBDIR"
-#gem_build_v_DebugDumpVars
 	gem_build_v_UpdateWinePath	# for running Windows executables on Linux.
 
 	if [[ ${gem_option_redirect_output} -ne 0 ]]; then
@@ -2286,14 +2253,9 @@ function gem_build_Main
 	if [[ ${gem_option_scrub} -ne 0 ]]; then
 		gem_build_v_Cmd_Scrub
 	fi
-#echo "13.) PKG_CONFIG_LIBDIR=$PKG_CONFIG_LIBDIR"
-#gem_build_v_DebugDumpVars
 	if [[ ${gem_option_configure} -ne 0 ]]; then
 		gem_build_v_Cmd_Configure
 	fi
-#echo "14.) PKG_CONFIG_LIBDIR=$PKG_CONFIG_LIBDIR"
-#gem_build_v_DebugDumpVars
-#echo "Done.";exit
 	if [[ ${gem_option_configure_help} -ne 0 ]]; then
 		gem_build_v_Cmd_ConfigureHelp
 	fi
