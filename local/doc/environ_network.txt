@@ -28,7 +28,7 @@
 # sticker on the rounter.  In my experience the following have been common
 # router IP addresses:
 #
-# Xfinity: http:\\10.0.0.1
+# Comcast/Xfinity: http:\\10.0.0.1
 # ATT: http:\\192.168.1.1
 
 # To allow Windows to share files with Fedora, we need to assign each computer
@@ -36,7 +36,7 @@
 # dynamically.  We will have to change that so each computer can talk directly
 # to another as required by the file sharing process.  Even though Fedora may
 # be running inside Windows via VirtualBox, Fedora still gets it's own IP
-# address.
+# address, separate from Windows.
 #
 # Windows and Fedora, whether running in VirtualBox or not, share files through
 # a network file sharing protocol called Samba.
@@ -112,12 +112,12 @@
 #                  to keep this IP address constant, i.e. become a static IP
 #                  address.
 #
-# Subnet Mask-     This is usually the same value: 255.255.255.0
+# Subnet Mask-     This is always the same value: 255.255.255.0
 #
 # Default Gateway- This is your router's IP address on your local network.
-#                  This is the address you http into using the web browser.
-#                  Some common values are http://10.0.0.1 on Xfinity, and
-#                  http://192.168.1.1 on ATT.
+#                  This is the address you http into using the web browser to
+#                  make changes to your router's settings.  Some common values
+#                  are http://10.0.0.1 on Xfinity, and http://192.168.1.1 on ATT.
 
 
 # View Your Network Settings on Fedora:
@@ -156,7 +156,7 @@
 #
 # inet-            This is the network address of your Fedora installation.
 #                  This is the one we're going to change.
-# netmask-         This is usually the same value: 255.255.255.0, also called
+# netmask-         This is always the same value: 255.255.255.0, also called
 #                  the subnet mask.
 
 
@@ -170,10 +170,10 @@
 
 # Our approach has two stages.  First, we're going to log into the router and
 # tell it to limit the range of addresses that it issues as dynamic IP address.
-# This third number, denoted by xxx above, can hold values 0 to 255.  We're
-# going to limit the range to 0-99 for dynamic IP addresses.  The we're going
-# to tell Windows and Fedora to begin assigning static IP address starting with
-# 100.
+# The fourth number of the IP address, denoted by xxx above, can hold values 0
+# to 255.  We're going to limit the range to 0-99 for dynamic IP addresses.
+# Then we're going to tell Windows and Fedora to begin assigning static IP
+# address starting with 100.
 
 
 # Limit Dynamic IP Address Range- Xfinity Router
@@ -183,7 +183,7 @@
 #
 # WARNING: Making changes to your router can render it unable to provide an
 # internet connection.  If this happens, you may have to contact your internet
-# service provider
+# service provider by telephone to correct any issues created.
 
 
 
@@ -198,19 +198,25 @@
 
 
 
-# Manually Under Linux:
+# Tell Linux to Insist on a Specific IP address (static IP address).
 # 
-# First check Comcast router:
-# 1.) Login (Browse to 10.0.0.1)
+# NOTE: This directions are specifically for Comcast/Xfinity routers.  However,
+# the steps are similar for AT&T Linksys routers.
+#
+# 1.) Login to your router using your web browser. Browse to 10.0.0.1 (Comcast/
+#     Xfinity) or 192.168.1.1 (AT&T).
+#
 # 2.) Gateway->Connection->Local IP Network
 #     Under IPv4 make set DHCP Ending Address to 10.0.0.99
-#     This is necessary so that dynamicly assigned ip addresses stay
-#     away from our linux server.
+#     This is necessary so that dynamicly assigned ip addresses are limited.
+#     Our reserved IP addresses will range from 10.0.0.100 to 10.0.0.255.
 # 
-# Start Menu->Preferences->Network Connections
-# Ethernet->Wired connection 1
+# Run Fedora->Preferences->Advanced Network Configuration
+#
+# If you're running in a virtual machine, select Ethernet->Wired connection 1.
+# Otherwise, select your wireless network.
+#
 # Click the settings gear at the bottom.
-
 # 
 # Click IPv6 Settings tab.
 # Under "Method:", select "Ignore".
@@ -218,25 +224,27 @@
 # 
 # Click IPv4 Settings tab.
 # For Method: select Manual.
-# Click +Add
+# Click Add
 # Set...
 # 
-# Navigate to 192.168.1.254 to log into the ATT router.
-#
-# ---->Lynksys Router (ATT)
-# Address: 192.168.1.---  <- .121 for webserver, .122 for vbox
+# ---->Lynksys Router (AT&T)
+# Address: 192.168.1.100    <-- .100 for 1st device, .101, for 2nd, etc.
 # Netmask: 255.255.255.0
 # Gateway: 192.168.1.1
 # DNS Servers:75.75.75.75,75.75.76.76
 # 
-# ---->Comcast Router:
-# NOTE: Maybe first set up DHCP.  On Windows log into the router: 10.0.0.1.
-# See which IP address was assigned.  Use that IP address as static.
 #
-# Address: 10.0.0.100    <--  Set Comcast router to end DHCP range at 99, so we
-# Netmask: 255.255.255.0      can use the rest for static IP addresses.
+# ---->Comcast/Xfinity Router:
+#
+# Address: 10.0.0.100    <-- .100 for 1st device, .101, for 2nd, etc.
+# Netmask: 255.255.255.0
 # Default Gateway:10.0.0.1
 # DNS Servers:75.75.75.75,75.75.76.76
+#
+# NOTE: The last Address number, 100, must be unique for each device on your
+# network.  For example, if you have three devices with static IP addresses,
+# those addresses would be 10.0.0.100, 10.0.0.101, and 10.0.0.102.  Keep track
+# of which address corresponds with which device.
 # 
 # Reboot.
 
@@ -462,13 +470,18 @@ need to set the following flags, too:
 setsebool -P use_samba_home_dirs 1
 setsebool -P samba_export_all_rw 1
 
-# *FIX: These are old and can be remved.  Verify and remove, please.
-#setsebool -P samba_enable_home_dirs 1
-#setsebool -P allow_smbd_anon_write 1
-
 
 
 su
+
+# You need to specify the samba password for this user.  Your user password is
+# fine.  Set gem_password to your user's password.
+gem_password=<you put your password here>
+
+
+# *FIX: These are old and can be removed.  Verify and remove, please.
+#setsebool -P samba_enable_home_dirs 1
+#setsebool -P allow_smbd_anon_write 1
 
 # Allow samba to modify public files used for public file transfer services.
 setsebool -P allow_smbd_anon_write on
@@ -476,21 +489,26 @@ setsebool -P allow_smbd_anon_write on
 # Enable sharing home directories via samba:
 setsebool -P samba_enable_home_dirs on
 
+
+# Create a directory for our web site.
+su ${USER}
+mkdir /home/${USER}/www
+exit
+
+
+
+
 # To share files with multiple domains (i.e. Apache, FTP, rsync, Samba) we must
 # recursively set the file context of all shared files to public_content_rw_t.
-# OLD
-# chcon -R -t public_content_rw_t /var/www
-# NEW
-su mhodges
-mkdir /home/mhodges/www
-exit
-chcon -R -t public_content_rw_t /home/mhodges/www
+
+chcon -R -t public_content_rw_t /home/${USER}/www
+
 
 # Back up smb.conf in case we mess it up.
 yes | cp /etc/samba/smb.conf /etc/samba/smb.conf.bak
 
 # Should we use samba-tool user add?
-echo -e "<password>\n<password>" | smbpasswd -a mhodges
+echo -e "${gem_password}\n${gem_password}" | smbpasswd -a ${USER}
 
 
 cp /etc/samba/smb.conf /etc/samba/smb.conf.backup
