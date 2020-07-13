@@ -288,37 +288,44 @@ lxsession-logout
 # =============================================================================
 # Samba- Make Linux Computer Visible to Windows
 # =============================================================================
-#
-# NEXT TIME:
-# When I get the status of the selinux bool allow_smbd_anon_write nothing comes
-# up.  Has this bool been depricated?
-#
 # Documentation at: https://wiki.samba.org/index.php/User_Documentation
 # Comes with example: /etc/samba/smb.conf.example
 #
-# The CIFS (Common Internet File System (CIFS) protocol is the successor to the
-# SMB protocol and is supported by most Windows servers and many other
-# commercial servers and Network Attached Storage appliances.
-# 
-# NOTE: If you are having difficulty accessing /var/www/html it may be because
-# you copied/restored that directory *after* setting up LAMP.  See the Samba
-# troublshooting notes in the LAMP section regarding troubleshooting
-# /var/www/html.
 #
-# * When you log in from windows the user must be "mhodges".
-# 
+# NEXT TIME:
+#
+# When I get the status of the selinux bool allow_smbd_anon_write nothing comes
+# up.  Has this bool been depricated?
+#
+#
+# NOTES:
+#
+# * The CIFS (Common Internet File System (CIFS) protocol is the successor to
+#   the SMB protocol and is supported by most Windows servers and many other
+#   commercial servers and Network Attached Storage appliances.
+#
+# * If you are having difficulty accessing /var/www/html it may be because you
+#   copied/restored that directory *after* setting up LAMP.  See the Samba
+#   troublshooting notes in the LAMP section regarding troubleshooting
+#   /var/www/html.
+#
+# * When you mount a windows drive in linux the user credentials are those of
+#   the Windows user.
+#
 # * Don't forget to restart smb and nmb anytime you make changes.  If you need
 #   to debug, remember you can disable the firewall and SELinux.
-# 
-# * IMPORTANT: As you log into samba as user mhodges, you will only have read
-#   access to all files owned by root.
+#
+# * Remember, as you log into samba as ${USER}, you will only have read access
+#   to all files owned by root.  You have exactly the same privileges as
+#   ${USER}.
 #
 # * Windows stores the username and password information in the Windows
-#   Credential Manager.  In Windows10 search for Credential Manager then delete
-#   all the credentials to clear them.
-
+#   Credential Manager.  In Windows 10 search for Credential Manager then
+#   delete all the credentials to clear them.
+#
+#
 # CONVENIENCE COMMANDS:
-# 
+#
 # List all samba users:
 pdbedit -L -v
 
@@ -467,6 +474,8 @@ setsebool -P samba_export_all_rw 1
 #setsebool -P allow_smbd_anon_write 1
 
 
+
+# Begin by assuming root identity.
 
 su
 
