@@ -8,7 +8,7 @@
 #     \/__________/\/____/  \/__/\/__/\/__/ \/_________/\/____/  \/______/\/__/ \/___/  \/____/
 
 
-_echo_local=0
+_echo_local=1
 function echo_local
 {
 	if [[ ${_echo_local} -ne 0 ]]; then
@@ -288,13 +288,17 @@ echo_local
 # $gem_fullpathlist_compiler_hdrs for each file in colon-separated private file
 # list $gem_filelist_compiler_hdrs. Directories containing the target header
 # files will be set with the -I include directories flag to gem_flags_cpp.
+#
+# Are the files in $gem_filelist_compiler_hdrs all required (AND) or any one (OR)?
+#
 # =============================================================================
 function gem_build_FindCompilerHeaders
 {
 #	local gem_filelist_compiler_hdrs="stdio.h:stdbool.h"
 	local gem_filelist_compiler_hdrs="stdbool.h"
 	if [[ gem_is_cplusplus -ne 0 ]]; then
-		local gem_filelist_compiler_hdrs="${gem_filelist_compiler_hdrs}:cstdio:bits/c++io.h"
+		# don't use bits/c++io.h.  It's present twice on linux.
+		local gem_filelist_compiler_hdrs="${gem_filelist_compiler_hdrs}:cstdio"
 	fi
 
 	local gem_ifs_saved=${IFS}
