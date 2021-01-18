@@ -806,7 +806,6 @@ function gem_build_InitToolchain_x86_64-pc-cygwin
 	if [[ ${gem_use_clang} -ne 0 ]]; then
 		gem_fullpathlist_compiler_hdrs=
 		gem_fullpathlist_compiler_libs=
-		gem_script_v_Error "Do we need to implement finding x86_64-pc-cygwin libraries on cygwin."
 	fi
 	gem_build_v_InitToolchain_x86_64_common
 }
@@ -852,7 +851,6 @@ function gem_build_InitToolchain_x86_64-w64-mingw32
 			gem_fullpathlist_compiler_hdrs=
 			gem_fullpathlist_compiler_libs=
 		fi
-		gem_script_v_Error "Need to implement finding x86_64-w64-mingw32 libraries on cygwin."
 
 	else
 		gem_script_v_Error "gem_build_InitToolchain_x86_64-w64-mingw32: Unrecognized shell: ${gem_os}."
@@ -867,20 +865,7 @@ function gem_build_InitToolchain_x86_64-w64-mingw32
 	elif [[ ${gem_build_script_type} == "autotools" ]]; then
 
 		if [[ ${gem_os} != "MINGW64"* ]]; then	# Building for mingw on cygwin or linux.
-			if [[ ! -d ${gem_fullpath_gcc_libs} ]]; then
-				gem_script_v_Msg
-				gem_script_v_Msg
-				gem_script_v_Msg
-				gem_script_v_Msg
-				gem_script_v_Msg
-				gem_script_v_Msg "gem_build_InitToolchain_x86_64-w64-mingw32(): Library path does not exist: ${gem_fullpath_gcc_libs}.  Did the version number change?"
-				gem_script_v_Msg "*FIX: Is this still required now that we have pkg-config working properly?"
-				gem_script_v_Msg
-				gem_script_v_Msg
-				gem_script_v_Msg
-				gem_script_v_Msg
-				gem_script_v_Msg
-			else
+			if [[ -d ${gem_fullpath_gcc_libs} ]]; then
 				# *FIX: Is this still required now that we have pkg-config working properly?
 				gem_flags_ld="${gem_flags_ld} -L${gem_fullpath_gcc_libs}"
 			fi
