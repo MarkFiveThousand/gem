@@ -8,6 +8,16 @@
 #     \/__________/\/____/  \/__/\/__/\/__/ \/_________/\/____/  \/______/\/__/ \/___/  \/____/
 
 
+_echo_local=0
+function echo_local
+{
+	if [[ ${_echo_local} -ne 0 ]]; then
+		echo "$@"
+	fi
+}
+
+
+
 # Returns the fullpath to the found tool (e.g. CC, CXX, AR, LD, etc.)
 function gem_build_FindCompilerTool
 {
@@ -111,15 +121,21 @@ function gem_build_FindCompilerTools
 	fi
 }
 
-echo_hdr=0
-function echo_hdr
-{
-	if [[ ${echo_hdr} -ne 0 ]]; then
-		echo "$@"
-	fi
-}
 
-# Sometimes when we search for a header it will be found in several locations.
+# =============================================================================
+# gem_build_FindCompilerHeader()- Search for file $2 in $1 and its children.
+# Sets gem_build_FindCompilerHeader_result with the result.
+#
+# $1- File path to search for $2.
+# $2- Name of the file to be searched for.
+#
+# Returns: The number of directories containing file $2.
+#
+# In an effort to cull undesired locations, directories in which the file has
+# been found will be checked for the presence of a word in colon-separated
+# bad_word_list.  If the path contains a bad work, it is removed from the
+# results.
+# =============================================================================
 function gem_build_FindCompilerHeader
 {
 	# Paths containing these words will be removed from consideration.
@@ -127,19 +143,24 @@ function gem_build_FindCompilerHeader
 	local gem_path=${1}
 	local gem_file=${2}	# May contain a partial path.
 
-#	echo "gem_build_FindCompilerHeader ${gem_path} ${gem_file}"
-#	echo "gem_file=$gem_file"
+echo_local "gem_build_FindCompilerHeader ${gem_path} ${gem_file}"
+echo_local "gem_file=$gem_file"
 
 	gem_subpath_file_parent=$(dirname ${gem_file})
 	if [[ ${gem_subpath_file_parent} == "." ]]; then
 		gem_subpath_file_parent=	# No parent directory supplied.
 	fi
 	dirname_gem_file=$(dirname $gem_file)
-echo_hdr "gem_subpath_file_parent=$gem_subpath_file_parent"
+echo_local "gem_subpath_file_parent=$gem_subpath_file_parent"
 
 	# find: warning: Unix filenames usually don't contain slashes (though
 	# pathnames do).  That means that '-name ‘bits/c++io.h’' will probably
 	# evaluate to false all the time on this system.
+
+	# Find returns results like:
+	#
+	# ./file_00.c
+	# ./child/file_01.c
 
 	local gem_result_find=$(find ${gem_path} -wholename "*/${gem_file}")
 	if [[ -z ${gem_result_find} ]]; then
@@ -148,43 +169,43 @@ echo_hdr "gem_subpath_file_parent=$gem_subpath_file_parent"
 	fi
 	gem_result_find=$(dirname ${gem_result_find})
 
-echo_hdr "gem_result_find:"
-echo_hdr "$gem_result_find"
-echo_hdr
+echo_local "gem_result_find:"
+echo_local "$gem_result_find"
+echo_local
 
-	# Interate over the diretories where the file was found.  If it's more than
+	# Iterate over the diretories where the file was found.  If it's more than
 	# one, hopefully, we can prune the undesirable locations where it was found.
 	local num_good_lines=0
 	gem_build_FindCompilerHeader_result=
 	local line=
 	while IFS= read -r line; do
-		echo_hdr "    ${line}"
+		echo_local "    ${line}"
 		# Test if the current line contains any bad words.
 		local bad_word_found=0
 		for gem_word in ${bad_word_list}
 		do
 			# If contains bad word...
 			if [[ ${line} == *"${gem_word}"* ]]; then
-echo_hdr "        + ${gem_word}"
+echo_local "        + ${gem_word}"
 				bad_word_found=1
-echo_hdr
-echo_hdr "        bad_word_found=$bad_word_found"
+echo_local
+echo_local "        bad_word_found=$bad_word_found"
 				break
 			else
-echo_hdr "        - ${gem_word}"
+echo_local "        - ${gem_word}"
 			fi
 
 		done
 
-echo_hdr
+echo_local
 		if [[ ${bad_word_found} -ne 0 ]]; then
 			continue	# Found bad word.  Reject this directory.
 		else
 			gem_build_FindCompilerHeader_result=${line}
 			((num_good_lines++))
-echo_hdr "        num_good_lines=$num_good_lines"
-echo_hdr "        gem_build_FindCompilerHeader_result=$gem_build_FindCompilerHeader_result"
-echo_hdr
+echo_local "        num_good_lines=$num_good_lines"
+echo_local "        gem_build_FindCompilerHeader_result=$gem_build_FindCompilerHeader_result"
+echo_local
 		fi
 	done <<< "${gem_result_find}"
 
@@ -194,10 +215,10 @@ echo_hdr
 	fi
 
 	if [[ ${num_good_lines} -gt 1 ]]; then
-		gem_script_v_Msg "Found the file: ${gem_file} in more than one location and failed to determine which one to keep."
+		gem_script_v_Error "Found the file: ${gem_file} in more than one location and failed to determine which one to keep."
 		gem_build_FindCompilerHeader_result=
-echo_hdr
-		return 1
+echo_local
+		return ${num_good_lines}
 	fi
 
 	# All is good.  Now we just have to remove gem_subpath_file_parent from
@@ -209,17 +230,17 @@ echo_hdr
 	# The find command includes the searched for file name in the results
 	# output.  We want to keep only the directory.
 	if [[ ! -d ${gem_build_FindCompilerHeader_result} ]]; then
-		echo_hdr "OH NO!  ${gem_build_FindCompilerHeader_result} is not a directory!"
+		echo_local "OH NO!  ${gem_build_FindCompilerHeader_result} is not a directory!"
 
 		gem_build_FindCompilerHeader_result=$(dirname ${gem_build_FindCompilerHeader_result})
 		if [[ ! -d ${gem_build_FindCompilerHeader_result} ]]; then
 			gem_script_v_Error "Still broken."
 		else
-			echo_hdr "Fixed it!"
+			echo_local "Fixed it!"
 		fi
 	fi
 
-	echo_hdr "Success!  Found ${gem_file} in ${gem_build_FindCompilerHeader_result}."
+	echo_local "Success!  Found ${gem_file} in ${gem_build_FindCompilerHeader_result}."
 	return 0
 }
 
@@ -259,11 +280,15 @@ echo_hdr
 
 
 
-# Adds the -I include directories to gem_flags_cpp.  Success condition: each .h
-# file is found in 1 or more directories.  Searches all directories and
-# subdirectories previously specified in the colon-separated directory list,
-# gem_fullpathlist_compiler_hdrs, for all header files specified in the colon-
-# separated list gem_filelist_compiler_hdrs.
+
+# =============================================================================
+# gem_build_FindCompilerHeaders() - 
+#
+# Recursively searches each dirctory in colon-separated private directory list
+# $gem_fullpathlist_compiler_hdrs for each file in colon-separated private file
+# list $gem_filelist_compiler_hdrs. Directories containing the target header
+# files will be set with the -I include directories flag to gem_flags_cpp.
+# =============================================================================
 function gem_build_FindCompilerHeaders
 {
 #	local gem_filelist_compiler_hdrs="stdio.h:stdbool.h"
@@ -281,7 +306,7 @@ function gem_build_FindCompilerHeaders
 		# For each parent search directory...
 		for gem_path in ${gem_fullpathlist_compiler_hdrs}
 		do
-echo_hdr "--------------------- ${gem_file}: ${gem_path} ---------------------"
+echo_local "--------------------- ${gem_file}: ${gem_path} ---------------------"
 			if [[ ! -d ${gem_path} ]]; then
 				gem_script_v_Error "Directory does not exist: ${gem_path}"
 			fi
@@ -289,11 +314,11 @@ echo_hdr "--------------------- ${gem_file}: ${gem_path} ---------------------"
 			gem_build_FindCompilerHeader ${gem_path} ${gem_file}
 			local gem_result=$?
 			if [[ gem_result -ne 0 ]]; then
-				echo_hdr "gem_build_FindCompilerHeaders() failed to find ${gem_file}."
+				echo_local "gem_build_FindCompilerHeaders() failed to find ${gem_file}."
 				continue
 			fi
 			gem_fullpath_parent=${gem_build_FindCompilerHeader_result}
-#echo_hdr "gem_fullpath_parent=$gem_fullpath_parent"
+#echo_local "gem_fullpath_parent=$gem_fullpath_parent"
 			if [[ -z ${gem_fullpath_parent} ]]; then
 				gem_script_v_Msg "${gem_path} does not contain ${gem_file}."
 			else
@@ -301,7 +326,7 @@ echo_hdr "--------------------- ${gem_file}: ${gem_path} ---------------------"
 					gem_script_v_Error "Header directory did not exist.  That can happen if the file being searched for was located in more that one location.  The following was output by find: -->${gem_fullpath_parent}<--"
 				fi
 				gem_flags_cpp="${gem_flags_cpp} -isystem ${gem_fullpath_parent}"
-echo_hdr "${gem_fullpath_parent} contains ${gem_file}."
+echo_local "${gem_fullpath_parent} contains ${gem_file}."
 			fi
 		done
 	done
