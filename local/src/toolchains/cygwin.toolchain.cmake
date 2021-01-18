@@ -1,6 +1,9 @@
 # The name of the target operating system.
 SET(CMAKE_SYSTEM_NAME Cygwin)
 
+# Shut up the WIN32 not defined warning.
+#set (CMAKE_LEGACY_CYGWIN_WIN32 0)
+
 # Which compilers to use for C and C++.
 SET(CMAKE_C_COMPILER gcc)
 SET(CMAKE_CXX_COMPILER g++)

@@ -28,7 +28,7 @@
 # sticker on the rounter.  In my experience the following have been common
 # router IP addresses:
 #
-# Xfinity: http:\\10.0.0.1
+# Comcast/Xfinity: http:\\10.0.0.1
 # ATT: http:\\192.168.1.1
 
 # To allow Windows to share files with Fedora, we need to assign each computer
@@ -36,7 +36,7 @@
 # dynamically.  We will have to change that so each computer can talk directly
 # to another as required by the file sharing process.  Even though Fedora may
 # be running inside Windows via VirtualBox, Fedora still gets it's own IP
-# address.
+# address, separate from Windows.
 #
 # Windows and Fedora, whether running in VirtualBox or not, share files through
 # a network file sharing protocol called Samba.
@@ -112,12 +112,12 @@
 #                  to keep this IP address constant, i.e. become a static IP
 #                  address.
 #
-# Subnet Mask-     This is usually the same value: 255.255.255.0
+# Subnet Mask-     This is always the same value: 255.255.255.0
 #
 # Default Gateway- This is your router's IP address on your local network.
-#                  This is the address you http into using the web browser.
-#                  Some common values are http://10.0.0.1 on Xfinity, and
-#                  http://192.168.1.1 on ATT.
+#                  This is the address you http into using the web browser to
+#                  make changes to your router's settings.  Some common values
+#                  are http://10.0.0.1 on Xfinity, and http://192.168.1.1 on ATT.
 
 
 # View Your Network Settings on Fedora:
@@ -156,7 +156,7 @@
 #
 # inet-            This is the network address of your Fedora installation.
 #                  This is the one we're going to change.
-# netmask-         This is usually the same value: 255.255.255.0, also called
+# netmask-         This is always the same value: 255.255.255.0, also called
 #                  the subnet mask.
 
 
@@ -170,10 +170,10 @@
 
 # Our approach has two stages.  First, we're going to log into the router and
 # tell it to limit the range of addresses that it issues as dynamic IP address.
-# This third number, denoted by xxx above, can hold values 0 to 255.  We're
-# going to limit the range to 0-99 for dynamic IP addresses.  The we're going
-# to tell Windows and Fedora to begin assigning static IP address starting with
-# 100.
+# The fourth number of the IP address, denoted by xxx above, can hold values 0
+# to 255.  We're going to limit the range to 0-99 for dynamic IP addresses.
+# Then we're going to tell Windows and Fedora to begin assigning static IP
+# address starting with 100.
 
 
 # Limit Dynamic IP Address Range- Xfinity Router
@@ -183,7 +183,7 @@
 #
 # WARNING: Making changes to your router can render it unable to provide an
 # internet connection.  If this happens, you may have to contact your internet
-# service provider
+# service provider by telephone to correct any issues created.
 
 
 
@@ -229,19 +229,25 @@
 
 
 
-# Manually Under Linux:
+# Tell Linux to Insist on a Specific IP address (static IP address).
 # 
-# First check Comcast router:
-# 1.) Login (Browse to 10.0.0.1)
+# NOTE: This directions are specifically for Comcast/Xfinity routers.  However,
+# the steps are similar for AT&T Linksys routers.
+#
+# 1.) Login to your router using your web browser. Browse to 10.0.0.1 (Comcast/
+#     Xfinity) or 192.168.1.1 (AT&T).
+#
 # 2.) Gateway->Connection->Local IP Network
 #     Under IPv4 make set DHCP Ending Address to 10.0.0.99
-#     This is necessary so that dynamicly assigned ip addresses stay
-#     away from our linux server.
+#     This is necessary so that dynamicly assigned ip addresses are limited.
+#     Our reserved IP addresses will range from 10.0.0.100 to 10.0.0.255.
 # 
-# Start Menu->Preferences->Network Connections
-# Ethernet->Wired connection 1
+# Run Fedora->Preferences->Advanced Network Configuration
+#
+# If you're running in a virtual machine, select Ethernet->Wired connection 1.
+# Otherwise, select your wireless network.
+#
 # Click the settings gear at the bottom.
-
 # 
 # Click IPv6 Settings tab.
 # Under "Method:", select "Ignore".
@@ -249,25 +255,27 @@
 # 
 # Click IPv4 Settings tab.
 # For Method: select Manual.
-# Click +Add
+# Click Add
 # Set...
 # 
-# Navigate to 192.168.1.254 to log into the ATT router.
-#
-# ---->Lynksys Router (ATT)
-# Address: 192.168.1.---  <- .121 for webserver, .122 for vbox
+# ---->Lynksys Router (AT&T)
+# Address: 192.168.1.100    <-- .100 for 1st device, .101, for 2nd, etc.
 # Netmask: 255.255.255.0
 # Gateway: 192.168.1.1
 # DNS Servers:75.75.75.75,75.75.76.76
 # 
-# ---->Comcast Router:
-# NOTE: Maybe first set up DHCP.  On Windows log into the router: 10.0.0.1.
-# See which IP address was assigned.  Use that IP address as static.
 #
-# Address: 10.0.0.100    <--  Set Comcast router to end DHCP range at 99, so we
-# Netmask: 255.255.255.0      can use the rest for static IP addresses.
+# ---->Comcast/Xfinity Router:
+#
+# Address: 10.0.0.100    <-- .100 for 1st device, .101, for 2nd, etc.
+# Netmask: 255.255.255.0
 # Default Gateway:10.0.0.1
 # DNS Servers:75.75.75.75,75.75.76.76
+#
+# NOTE: The last Address number, 100, must be unique for each device on your
+# network.  For example, if you have three devices with static IP addresses,
+# those addresses would be 10.0.0.100, 10.0.0.101, and 10.0.0.102.  Keep track
+# of which address corresponds with which device.
 # 
 # Reboot.
 
@@ -319,37 +327,44 @@ lxsession-logout
 # =============================================================================
 # Samba- Make Linux Computer Visible to Windows
 # =============================================================================
-#
-# NEXT TIME:
-# When I get the status of the selinux bool allow_smbd_anon_write nothing comes
-# up.  Has this bool been depricated?
-#
 # Documentation at: https://wiki.samba.org/index.php/User_Documentation
 # Comes with example: /etc/samba/smb.conf.example
 #
-# The CIFS (Common Internet File System (CIFS) protocol is the successor to the
-# SMB protocol and is supported by most Windows servers and many other
-# commercial servers and Network Attached Storage appliances.
-# 
-# NOTE: If you are having difficulty accessing /var/www/html it may be because
-# you copied/restored that directory *after* setting up LAMP.  See the Samba
-# troublshooting notes in the LAMP section regarding troubleshooting
-# /var/www/html.
 #
-# * When you log in from windows the user must be "mhodges".
-# 
+# NEXT TIME:
+#
+# When I get the status of the selinux bool allow_smbd_anon_write nothing comes
+# up.  Has this bool been depricated?
+#
+#
+# NOTES:
+#
+# * The CIFS (Common Internet File System (CIFS) protocol is the successor to
+#   the SMB protocol and is supported by most Windows servers and many other
+#   commercial servers and Network Attached Storage appliances.
+#
+# * If you are having difficulty accessing /var/www/html it may be because you
+#   copied/restored that directory *after* setting up LAMP.  See the Samba
+#   troublshooting notes in the LAMP section regarding troubleshooting
+#   /var/www/html.
+#
+# * When you mount a windows drive in linux the user credentials are those of
+#   the Windows user.
+#
 # * Don't forget to restart smb and nmb anytime you make changes.  If you need
 #   to debug, remember you can disable the firewall and SELinux.
-# 
-# * IMPORTANT: As you log into samba as user mhodges, you will only have read
-#   access to all files owned by root.
+#
+# * Remember, as you log into samba as ${USER}, you will only have read access
+#   to all files owned by root.  You have exactly the same privileges as
+#   ${USER}.
 #
 # * Windows stores the username and password information in the Windows
-#   Credential Manager.  In Windows10 search for Credential Manager then delete
-#   all the credentials to clear them.
-
+#   Credential Manager.  In Windows 10 search for Credential Manager then
+#   delete all the credentials to clear them.
+#
+#
 # CONVENIENCE COMMANDS:
-# 
+#
 # List all samba users:
 pdbedit -L -v
 
@@ -493,13 +508,21 @@ need to set the following flags, too:
 setsebool -P use_samba_home_dirs 1
 setsebool -P samba_export_all_rw 1
 
-# *FIX: These are old and can be remved.  Verify and remove, please.
-#setsebool -P samba_enable_home_dirs 1
-#setsebool -P allow_smbd_anon_write 1
 
 
+# Begin by assuming root identity.
 
 su
+
+# You need to specify the samba password for this user.  Your user password is
+# fine.  Set gem_password to your user's password.
+
+gem_password=<put your password here>
+
+
+# *FIX: These are old and can be removed.  Verify and remove, please.
+#setsebool -P samba_enable_home_dirs 1
+#setsebool -P allow_smbd_anon_write 1
 
 # Allow samba to modify public files used for public file transfer services.
 setsebool -P allow_smbd_anon_write on
@@ -507,31 +530,37 @@ setsebool -P allow_smbd_anon_write on
 # Enable sharing home directories via samba:
 setsebool -P samba_enable_home_dirs on
 
+
+# Create a directory for our web site.
+su ${USER}
+mkdir /home/${USER}/www
+exit
+
+
+
+
 # To share files with multiple domains (i.e. Apache, FTP, rsync, Samba) we must
 # recursively set the file context of all shared files to public_content_rw_t.
-# OLD
-# chcon -R -t public_content_rw_t /var/www
-# NEW
-su mhodges
-mkdir /home/mhodges/www
-exit
-chcon -R -t public_content_rw_t /home/mhodges/www
+
+chcon -R -t public_content_rw_t /home/${USER}/www
+
 
 # Back up smb.conf in case we mess it up.
 yes | cp /etc/samba/smb.conf /etc/samba/smb.conf.bak
 
 # Should we use samba-tool user add?
-echo -e "<password>\n<password>" | smbpasswd -a mhodges
+echo -e "${gem_password}\n${gem_password}" | smbpasswd -a ${USER}
 
-
+# Back up smb.conf in case we mess it up.
 cp /etc/samba/smb.conf /etc/samba/smb.conf.backup
 
 # Add shares to /etc/samba/smb.conf.
-sed 's/;\tvalid users = %S, %D%w%S/\tvalid users = mhodges/g' /etc/samba/smb.conf > /etc/samba/smb.conf_temp1
-sed 's/\tworkgroup = SAMBA/\tworkgroup = MSHOME/g' /etc/samba/smb.conf_temp1 > /etc/samba/smb.conf_temp2
-sed 's/\tbrowseable = No/\tbrowseable = yes/g' /etc/samba/smb.conf_temp2 > /etc/samba/smb.conf_temp3
+sed -i 's/\tvalid users = %S, %D%w%S/\tvalid users = mhodges/g' /etc/samba/smb.conf
+sed -i 's/\tworkgroup = SAMBA/\tworkgroup = MSHOME/g' /etc/samba/smb.conf
+sed -i 's/\tbrowseable = No/\tbrowseable = yes/g' /etc/samba/smb.conf
 
-cat > temp << "EOF"
+# Append the sharing of root directory / to smb.conf.
+cat << EOF >> /etc/samba/smb.conf
 
 [root]
     path = /
@@ -540,12 +569,7 @@ cat > temp << "EOF"
     valid users = mhodges
 
 EOF
-cat temp >> /etc/samba/smb.conf_temp3
-rm -f temp
-yes | cp /etc/samba/smb.conf_temp3 /etc/samba/smb.conf
-rm -f /etc/samba/smb.conf_temp1
-rm -f /etc/samba/smb.conf_temp2
-rm -f /etc/samba/smb.conf_temp3
+
 
 
 ............................................................
@@ -580,14 +604,20 @@ Verify smb.conf looks like the following, that works!
 
 firewall-cmd --permanent --add-service=samba
 
-# The above line seems to no longer be enough for Windows 10.
-# Open firewall ports for Samba:
+# The above line seems to no longer be enough for Windows 10.  We need to open
+# these additional ports:
 # 
 # 445 tcp
 # 139 tcp
 # 445 udp
 # 137 udp
 # 138 udp
+
+# Run the firewall app:   Fedora->Preferences->Firewall
+#
+# In the right pane, under Zones->public select the Ports tab, then click +Add.
+# Do this to add each of the ports listed above.
+
 #
 # No need to restart the firewall.
 

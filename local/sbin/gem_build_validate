@@ -20,7 +20,7 @@
 
 gem_build_validate_response="error"
 
-new Stack gem_build_validate_stack
+#new Stack gem_build_validate_stack
 
 # Sets the global response variable, gem_build_validate_response, used by
 # gem_build_validate_Respond.  Allowable valuses for $1 are "warn", "error", or
@@ -181,15 +181,6 @@ function gem_build_validate_ProjectFilePaths
 			gem_build_validate_Respond "gem_build_validate_ProjectFilePaths(): CMake toolchain file not found at: ${gem_fullpath_toolchain_cmake}"
 	        return 1
     	fi
-	elif [[ ${gem_build_script_type} == "autotools" ]]; then
-		if [[ ${gem_fullpath_toolchain_autotools}x == x ]]; then
-			gem_build_validate_Respond "gem_build_validate_ProjectFilePaths(): gem_fullpath_toolchain_autotools is not defined."
-            return 1
-		fi
-		if [[ ! -f ${gem_fullpath_toolchain_autotools} ]]; then
-			gem_build_validate_Respond "gem_build_validate_ProjectFilePaths(): Autotools toolchain directory not found at: ${gem_fullpath_toolchain_autotools}"
-            return 1
-		fi
 	fi
 
 	if [[ ${gem_fullpath_sysroot}x == "x" ]]; then

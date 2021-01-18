@@ -22,6 +22,16 @@ Uncategorized
 gem_build
 -------------------------------------------------------------------------------
 
+* ./gem_build_cmake_hello -host mingw -m -cmdLine -redir does not produce
+  output directed to a file.
+
+* pkg-conf-1.6.3 creates a .libs folder under ../build/x86_64-pc-cygwin/release.
+  In gem_build_Cmd_Configure() the .libs folder is not deleted because it
+  starts with a .
+
+* Pass exception handling to cmake gem_flags_cxx="${gem_cxx_standard}
+  -fexceptions -frtti ${gem_flags_cxx}"
+
 * Find ${gem_triple}-pkgconf for cross compiling.
 
 * Change the directory validation functions to accept a parameter "error",
