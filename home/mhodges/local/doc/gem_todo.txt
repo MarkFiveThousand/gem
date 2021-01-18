@@ -163,7 +163,7 @@ gem_Msg should automatically output "MESSAGE: ", and gem_Error should output
 * Get pre-compiled headers working.  Look into mingw64/mingw-w64-x86_64-cotire
   1.8.0_3.15-1 found using "pacman -Ss cmake"
 
-
+* Rename gem_build_OnCommandLine_... to gem_build_OnModifyCommandLine_...
 
 
 

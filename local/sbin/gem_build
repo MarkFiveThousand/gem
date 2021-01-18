@@ -85,7 +85,7 @@ function gem_build_ExitHelp
 	gem_script_v_Msg "  -b           Build"
 	gem_script_v_Msg "  -c           Clean"
 	gem_script_v_Msg "  -ch          Run ./configure --help."
-	gem_script_v_Msg "  -d           Download the source file."
+	gem_script_v_Msg "  -d           Download the source."
 	gem_script_v_Msg "  -scrub       Uninstall and delete all build files."
 	gem_script_v_Msg "  -help        Display this help message."
 	gem_script_v_Msg "  -i           Install"
@@ -166,7 +166,7 @@ function gem_build_DownloadSource
 			gem_dirIsEmpty=$?
 			if [[ ${gem_dirIsEmpty} -eq 0 ]]; then
 				gem_script_v_Msg "MESSAGE: The source tree already exists.  Defying order to decompress."
-				return
+				return 1
 			fi
 		fi
 
@@ -189,6 +189,7 @@ function gem_build_DownloadSource
 		gem_script_cp -rf ${gem_fullpath_src}/${gem_filename_base}/* ${gem_fullpath_src}
 		gem_script_rm -rf ${gem_fullpath_src}/${gem_filename_base}
 	fi
+	return 0
 }
 
 function gem_build_v_GetFilePath_src { gem_build_GetFilePath_src ;}
@@ -232,8 +233,8 @@ function gem_build_BuildFilePaths
 	# for various build parameters.  Each output must be produced in it's own
 	# directory, so we append the build parameters to the directory name.
 	gem_path_suffix=${gem_triple}
-	if [[ ${gem_triple_details_suffix}x != "x" ]]; then
-		gem_path_suffix=${gem_path_suffix}_${gem_triple_details_suffix}
+	if [[ ! -z ${gem_path_triple_details_suffix} ]]; then
+		gem_path_suffix=${gem_path_suffix}_${gem_path_triple_details_suffix}
 	fi
 	gem_path_suffix=${gem_path_suffix}/${gem_build_type}
 
@@ -471,7 +472,7 @@ ${gem_fullpath_install}/lib/pkgconfig"
 #   Modify -I and -L to use the directories located in target sysroot. this
 #   option is usefull when crosscompiling package that use pkg-config to
 #   determine CFLAGS and LDFLAGS. -I and -L are modified to point to the new
-#   system root. this means that a -I/usr/include/libfoo will become
+#   system root. This means that a -I/usr/include/libfoo will become
 #   -I/var/target/usr/include/libfoo with a PKG_CONFIG_SYSROOT_DIR equal to
 #   /var/target (same rule apply to -L)
 #
@@ -581,6 +582,7 @@ function gem_build_DebugDumpVars
 	gem_script_v_Msg "gem_isCrossCompiling =  ${gem_isCrossCompiling}"
 	gem_script_v_Msg "gem_fullpath_findtools =    ${gem_fullpath_findtools}"
 	gem_script_v_Msg "gem_fullpath_sysroot=   ${gem_fullpath_sysroot}"
+	gem_script_v_Msg
 	if [[ ${gem_build_script_type} == "cmake" ]]; then
 		gem_script_v_Msg "gem_fullpath_toolchain_cmake ="
 		gem_script_v_Msg "                       ${gem_fullpath_toolchain_cmake}"
@@ -606,11 +608,13 @@ function gem_build_DebugDumpVars
 	gem_script_v_Msg "READELF =       ${READELF}"
 	gem_script_v_Msg "RESCOMP =       ${RESCOMP}"
 	gem_script_v_Msg "STRIP =         ${STRIP}"
+	gem_script_v_Msg
 	gem_script_v_Msg "gem_flags_c =         ${gem_flags_c}"
 	gem_script_v_Msg "gem_flags_cpp =       ${gem_flags_cpp}"
 	gem_script_v_Msg "gem_flags_cxx =       ${gem_flags_cxx}"
 	gem_script_v_Msg "gem_flags_ld =        ${gem_flags_ld}"
 	gem_script_v_Msg "gem_flags_configure = ${gem_flags_configure}"
+	gem_script_v_Msg
 	gem_script_v_Msg "PKG_CONFIG =                     ${PKG_CONFIG}"
 	gem_script_v_Msg "PKG_CONFIG_PATH =                ${PKG_CONFIG_PATH}"
 	gem_script_v_Msg "PKG_CONFIG_DIR =                 ${PKG_CONFIG_DIR}"
@@ -927,11 +931,12 @@ function gem_build_InitToolchain_x86_64-w64-mingw32
 
 	elif [[ ${gem_build_script_type} == "autotools" ]]; then
 
-		gem_script_v_Error "How did this ever work?! gem_fullpath_gcc_libs is set *AFTER* we test if the directory exists.  Shouldn't this have been failing all along?!"
-
 		if [[ ${gem_os} != "MINGW64"* ]]; then	# Building for mingw on cygwin or linux.
 			if [[ ! -d ${gem_fullpath_gcc_libs} ]]; then
 				gem_script_v_Error "gem_build_InitToolchain_x86_64-w64-mingw32(): Library path does not exist: ${gem_fullpath_gcc_libs}.  Did the version number change?"
+echo "not exist"; exit
+else
+echo "Exists."; exit
 			fi
 			# *FIX: Is this still required now that we have pkg-config working properly?
 			gem_flags_ld="${gem_flags_ld} -L${gem_fullpath_gcc_libs}"
@@ -1784,6 +1789,7 @@ function gem_build_OnCommandLine_Build
 		# specific make file, instead of producing one via a configure script.
 		gem_list_makefile="Makefile:makefile:${gem_fullpath_autotools_makefile}"
 		gem_fullpath_autotools_makefile=
+		gem_script_v_Error "Are we saving IFS correctly here?  Are we sure it's not supposed to be $IFS?  Please test and verify."
 		local gem_ifs_saved=IFS
 		IFS=":"
 		for makefile in ${gem_list_makefile}; do
@@ -1799,6 +1805,8 @@ function gem_build_OnCommandLine_Build
 			gem_script_v_Error "Failed to find the makefile."
 		fi
 
+		gem_script_v_Error "Do we need the -f switch?"
+#		gem_cmd_line_build="make -j${gem_num_jobs} -f ${gem_fullpath_autotools_makefile}"
 		gem_cmd_line_build="make -j${gem_num_jobs} ${gem_fullpath_autotools_makefile}"
 
 		# Append CMAKE_C_FLAGS, CMAKE_CPP_FLAGS, CMAKE_CXX_FLAGS, and
@@ -2061,6 +2069,14 @@ function gem_build_Cmd_Run_android
 	fi
 }
 
+# gem_build_v_OnExit()- Provide a means for clients to output results.
+function gem_build_v_OnExit { gem_build_OnExit "$@";}
+function gem_build_OnExit
+{
+	noop=0
+}
+
+
 # =============================================================================
 #                                       gem_build_v_Main
 # =============================================================================
@@ -2079,7 +2095,7 @@ function gem_build_OnArg
 		-ch)		gem_option_configure_help=1 ;;
 		-cmdline)	gem_option_cmdline_only=1 ; gem_script_option_quiet_mode=1 ;;
 		-d)			gem_option_download=1 ;;
-		-help)		gem_script_v_ExitHelp ;;
+		-help|-h)		gem_script_v_ExitHelp ;;
 		-host)
 			case ${2} in
 				linux)
@@ -2145,6 +2161,7 @@ function gem_build_Main
 	gem_is_cplusplus=0
 	gem_c_standard="-std=c11"		# c90, c99, c11, c17, c2x, gnu90, gnu99, gnu11
 	gem_cxx_standard="-std=c++11"	# c++98, c++03, c++14, c++17, gnu++98, gnu++11, gnu++14, gnu++17
+	gem_stdlib="-stdlib=libc++"
 
 #	gem_build_script_type="autotools"
 #	gem_build_script_type="meson"
@@ -2251,14 +2268,8 @@ function gem_build_Main
 	gem_build_v_SetBuildType_${gem_build_type}
 	gem_build_v_SelectCMakeGenerator
 	gem_build_validate_Compatibility
-#echo "10.) PKG_CONFIG_LIBDIR=$PKG_CONFIG_LIBDIR"
-#gem_build_v_DebugDumpVars
 	gem_build_v_BuildFilePaths
-#echo "11.) PKG_CONFIG_LIBDIR=$PKG_CONFIG_LIBDIR"
-#gem_build_v_DebugDumpVars
 	gem_build_v_SetFlags
-#echo "12.) PKG_CONFIG_LIBDIR=$PKG_CONFIG_LIBDIR"
-#gem_build_v_DebugDumpVars
 	gem_build_v_UpdateWinePath	# for running Windows executables on Linux.
 
 	if [[ ${gem_option_redirect_output} -ne 0 ]]; then
@@ -2316,6 +2327,8 @@ function gem_build_Main
 	if [[ ${gem_option_pack} -ne 0 ]]; then
 		gem_build_v_Cmd_CPack
 	fi
+
+	gem_build_v_OnExit
 
 	gem_time_ellapsed=$(( $(( 10#$(date +%s) )) - ${gem_time_start} ))
 	gem_script_v_Msg "Execution time: $(( ${gem_time_ellapsed}/60 )) min, $(( ${gem_time_ellapsed}%60 )) sec."

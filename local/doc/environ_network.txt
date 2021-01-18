@@ -69,7 +69,7 @@
 # Open a DOS command prompt.  Enter the command "ipconfig". A report showing
 # network devices will be displayed.  Different sections will be displayed
 # depending which network devices you have installed.  Look for the section
-# related to your PC's internet connetion.  Below is an *abbreviated* list of
+# related to your PC's internet connection.  Below is an *abbreviated* list of
 # what's shown on my PC.  Yours will likely be different, but similar.
 #
 # -----------------------------------------------------------------------------
@@ -193,6 +193,37 @@
 # Source: https://www.noip.com/blog/2013/10/29/how-to-setup-remote-access-for-a-computer-with-a-dynamic-ip-address/
 #
 # Create an account at: https://www.noip.com/sign-up
+
+
+# Manually Under Windows 10:
+#
+# Source: https://pureinfotech.com/set-static-ip-address-windows-10/
+# 
+# 
+# 1.) From the Windows 10 Start Menu search box search for Settings.
+# 
+# 2.) Open Network & Internet.
+# 
+# 3.) Open Wifi.
+#
+# 4.) Near the top, click on your network.
+#
+# 5.) Under IP settings click Edit.
+#
+# 6.) Under Edit IP settings, change Automatic (DHCP) to Manual.
+#
+# 7.) Leave IPv4: On.  Turn IPv6: Off.
+#
+# 8.) Enter the following settings, replacing noted values with your own.
+#
+#     IP address: 10.0.0.100		# Change this to your desired static IP
+#                               	# address.
+#     Subnet prefix length: 24		# That's 24-bits, which corresponds to
+#                               	# 255.255.255.0
+#     Gateway: 10.0.0.1				# change this to the IP address of your
+#                                   # router on your local network.
+#     Preferred DNS: 8.8.8.8		# Choose DNS servers.  I use Google's.
+#     Alternate DNS: 8.8.4.4
 
 
 

@@ -7,7 +7,7 @@
 #     \/__________/\/____/  \/__/\/__/\/__/ \/_________/\/____/  \/______/\/__/ \/___/  \/____/
 
 # =============================================================================
-# NOTE: This file has not yet been groomed for public comsumption.  All the
+# NOTE: This file has not yet been groomed for public consumption.  All the
 # information required to install Msys is present, albeit only moderately
 # well organized.
 # =============================================================================
@@ -22,7 +22,13 @@
 # factored out into gem\local\doc\environ_network.txt.  This is currently a
 # work in progress.  If you don't need to share files with Fedora, all file
 # mounting instructions may be disregarded.
-
+#
+# As of 1/8/2021, the msys installation/update system is going through updates.
+# Be aware that you may run into unexpected difficulties.  Please consult
+# enviorn_msys_setup_troubleshooting.  If you find solutions to new problems
+# please document them there. With the installation system going through
+# changes, it's a good idea to read through the msys installation instructions
+# at https://www.msys2.org/.
 
 
 # =============================================================================
@@ -57,18 +63,6 @@ Appendix G: Links
 
 
 # =============================================================================
-# Choose the Correct Shell
-# =============================================================================
-#
-# We are using the msys shell.  Should we be using the mingw64 shell?  Read up
-# on the differences.  My current understanding is at least part of it is
-# related to command line parameters.
-
-
-
-
-
-# =============================================================================
 # Install MSYS2 & MinGW-64
 # =============================================================================
 #
@@ -93,6 +87,23 @@ Appendix G: Links
 # https://wiki.archlinux.org/index.php/Pacman
 
 
+# -----------------------------------------------------------------------------
+# NEW!  I think the below commands are all replaced with:
+# -----------------------------------------------------------------------------
+
+pacman -Syuu
+
+# NOTE: During the installation, if you receive messages about a database lock,
+# and you are certain the database is not currently being accessed, you can
+# delete the lock file:
+#
+# rm -f /var/lib/pacman/db.lck
+
+
+# -----------------------------------------------------------------------------
+# OLD: If these consistanty have nothing to do following the above command,
+# then we ought to delete this section.
+# -----------------------------------------------------------------------------
 # Update the package database and pacman:
 
 pacman -Sy pacman
@@ -105,48 +116,8 @@ pacman -Syu
 # Again, close MSYS2, run it again from Start menu. Update the rest with:
 
 pacman -Su
-
-
-
-
-# TROUBLSHOOTING:
-#
-# Database Lock Issues:
-# ---------------------
-# Source:  https://forum.manjaro.org/t/how-to-solve-the-unable-to-lock-database-or-failed-to-synchronize-any-databases-errors/3939
-
-# If you are certain the database is not currently being accessed, you can
-# delete the lock file:
-
-rm -f /var/lib/pacman/db.lck
-
-
-# pacman -Sy Not doing anything.
-# ------------------------------
-# Source: https://github.com/msys2/MSYS2-packages/issues/1298
-#
-# edit /etc/pacman.conf and uncomment the following line:
-# XferCommand = /usr/bin/wget --passive-ftp -c -O %o %u
-#
-# I found the workaround above in this comment:
-# #1022 (comment)
-#
-# However then I ran into another problem when running "pacman -Syu" whereby
-# updating gnupg fails because the gpg-agent cannot connect. The workaround for
-# this other issue is to disable update of the gnupg package by modifying
-# pacman.conf as follows:
-#
-# IgnorePkg = gnupg
-#
-# Of course the above is a temporary workaround!
-
-
-# FURTHER TROUBLSHOOTING:
-#
-# Take look at Detailed MSYS2 install guide for troubleshooting and additional
-# details on how to keep your MSYS2 up-to-date. 
-
-https://sourceforge.net/p/msys2/wiki/MSYS2%20installation/
+# -----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 
 
@@ -177,7 +148,7 @@ EOF
 
 
 # =============================================================================
-# Change Msys User Name
+# Change Msys User Name?
 # =============================================================================
 # Source:
 # https://sourceforge.net/p/msys2/discussion/general/thread/76612760/
@@ -226,9 +197,9 @@ rm /etc/passwd_temp1
 # -----------------------------------------------------------------------------
 # Source: https://github.com/msys2/msys2/wiki/Using-packages
 #
-# This takes about 30 minutes, on my machine.  A reinstall takes about 3
-# minutes.  Please note the difference in the two date timestamps, and update
-# here with an accurate ellapsed time to install.  Thank you.
+# This takes about 10 minutes, on my machine (180 files).  Please note the
+# difference in the two date timestamps, and update here with an accurate
+# ellapsed time to install.  Thank you.
 #
 # We're installing the mingw-w64-x86_64-* packages before the others.  When
 # they're available, we favor the mingw-w64-x86_64-* variant.
@@ -240,22 +211,32 @@ rm /etc/passwd_temp1
 # error: failed to update mingw64 (unable to lock database)
 # error: failed to update msys (unable to lock database)
 #
-# If you receive errors with the "(unable to lock database)" message refer
-# the the secion titled "Database Lock Issues" above.  If you are certain a
-# simultaneous installation is not taking place, then it's safe to delete the
-# lock file.  This seems to be a known issue.
+# If you receive errors with the "(unable to lock database)", and you are
+# certain a simultaneous installation is not taking place, then it's safe to
+# delete the lock file.  This seems to be a known issue.
 #
 # rm -f /var/lib/pacman/db.lck
 
 date
-pacman -Sy --noconfirm python3 mingw-w64-x86_64-toolchain mingw-w64-x86_64-ninja mingw-w64-x86_64-clang base-devel p7zip zip unzip git mercurial cvs svn meson
+pacman -Sy --noconfirm python3 python3-pip mingw-w64-x86_64-toolchain mingw-w64-x86_64-ninja mingw-w64-x86_64-clang base-devel p7zip zip unzip git mercurial cvs svn meson
 date
 
 
+# -----------------------------------------------------------------------------
+# Install Qt?
+# -----------------------------------------------------------------------------
+# Qt is required to build the Doxywizard tool, for Doxygen.  Graphviz allows
+# Doxygen to generate inheritance diagrams.
+pacman -Sy --noconfirm mingw-w64-x86_64-qt5 mingw-w64-x86_64-qt5-static mingw-w64-x86_64-graphviz
+
+# Beware!  Many dependencies will be brought in.  See:
+# https://packages.msys2.org/package/mingw-w64-x86_64-graphviz
+# https://packages.msys2.org/package/mingw-w64-x86_64-qt5
 
 
+# -----------------------------------------------------------------------------
 # More meson
-# ----------
+# -----------------------------------------------------------------------------
 # NOTE: We would like to install meson this way.  However, glib requires meson
 # version >= 0.50.0.  See if this version has been updated yet.  If it has,
 # then we can remove the one in ~/gem/local/src/meson.  See below.
@@ -271,7 +252,7 @@ pacman -S meson
 # IMPORTANT!
 #
 # We've had problems with pacman.  Some of the packages rquested have not been
-# installing.  I wonder if this is related to the "no deleting the lock file"
+# installing.  I wonder if this is related to the "not deleting the lock file"
 # bug.
 #
 # Verify that the packages that you expected to be installed above, were
@@ -328,20 +309,14 @@ EOF
 
 
 # =============================================================================
-# Initialize Git
+# Configure Git- Part 1
 # =============================================================================
-# Initialize Git.
+#
+# Initialize Git.  Enter your own info.  The one specified here is only an
+# example:
+
 git config --global user.email "markhodges5000@gmail.com"
 git config --global user.name "Mark Hodges"
-
-
-
-git remote rm origin
-git remote add origin git@github.com:MarkFiveThousand/gem
-# I'm not sure what these do, or if they're necessary.
-git config master.remote origin
-git config master.merge refs/heads/master
-
 
 
 # =============================================================================
@@ -362,45 +337,87 @@ git clone https://github.com/MarkFiveThousand/gem.git
 
 # NOTE: The clone operation will fail if you already have a gem directory.  If
 # you do, you'll either need to rename your existing gem directory, or perform
-# a "git pull" from within your gem directory to update it from github.
+# a "git pull", instead of "git clone" from within your gem directory to update
+# it from github.
 
 
 
 
 # =============================================================================
-# .bashrc
+# Configure Git- Part 2
 # =============================================================================
-# Append the following command to .bashrc.  Our ~/gem/sbin/gem_bash_init is
-# common to all our linux-based environments.  It will set the msys & linux
-# environment the way we like it.
+
+cd ${gem_fullpath_gem_parent}/gem
+
+git remote rm origin
+git remote add origin git@github.com:MarkFiveThousand/gem
+# I'm not sure what these do, or if they're necessary.
+git config master.remote origin
+git config master.merge refs/heads/master
 
 
-mv ~/.bashrc ~/.bashrc.bak
-cat << EOF > ~/.bashrc
 
+
+# =============================================================================
+# Initialize Gem Development Environment
+# =============================================================================
+
+# Gem uses two initialization files to configure the development environment.
+# Settings that are specific to a single user will be located under the user's
+# home directory, which may be created next to user mhodges' folder, located
+# under ${gem_fullpath_gem}/home/${USER}.
+# 
+# File gem_bash_init sets various environmental variables common for all users.
+# File user_bash_init contains settings that are unique to each user.
 #
-# File: .bashrc
-#
-# Configure user-specific environment and startup programs
-#
+# To get up and running, we'll copy user mhodges' environment settings, then
+# make changes as desired.
 
-# Source global definitions
-if [ -f /etc/bashrc ]; then
-    . /etc/bashrc
+# Copy mhodges' settings
+# ----------------------
+gem_fullpath_src=${gem_fullpath_gem}/home/mhodges/local/sbin
+gem_fullpath_dst=${gem_fullpath_gem}/home/${USER}/local/sbin
+
+gem_filename_src=${gem_fullpath_src}/user_bash_init
+gem_filename_dst=${gem_fullpath_dst}/user_bash_init
+
+mkdir -p ${gem_fullpath_dst}
+
+if [[ -f ${gem_filename_dst} ]]; then
+	cp ${gem_filename_dst} ${gem_filename_dst}.bak
 fi
+cp ${gem_filename_src} ${gem_filename_dst}
 
 
+# Append calls to initialize the bash environment to ~/.bashrc.
+# -------------------------------------------------------------
 
-export gem_fullpath_gem=${HOME}/gem
+yes | cp ~/.bashrc ~/.bashrc.bak
+cat << EOF >> ~/.bashrc
 
-# Source our definitions. *FIX: Move personal preferences out of gem_bash_init.
-source ${gem_fullpath_gem}/local/sbin/gem_bash_init
+# =============================================================================
+#                                       Gem
+# =============================================================================
+if [[ ${USER} != "root" ]]; then
+    gem_fullpath_gem_bash_init=/home/${USER}/gem/local/sbin/gem_bash_init
+    gem_fullpath_user_bash_init=/home/${USER}/gem/home/${USER}/local/sbin/user_bash_init
 
-# Where would you like to go today?
-cd ~/gem/local/src
+    if [[ -f \${gem_fullpath_gem_bash_init} ]]; then
+        source \${gem_fullpath_gem_bash_init}
+        if [[ -f \${gem_fullpath_user_bash_init} ]]; then
+            source \${gem_fullpath_user_bash_init}
+        else
+            echo "\$BASH_SOURCE(\${LINENO}) WARNING: \${gem_fullpath_user_bash_init} not found."
+        fi
+    else
+        echo "\$BASH_SOURCE(\${LINENO}) WARNING: \${gem_fullpath_gem_bash_init} not found."
+    fi
+fi
+EOF
 
-
-
+#
+# Restart the terminal.
+#
 
 
 
@@ -409,28 +426,32 @@ cd ~/gem/local/src
 # Pin the Terminal To the Windows Taskbar
 # =============================================================================
 #
+# We're going to try switching from the msys2.exe to mingw64.exe based upon:
+# https://sourceforge.net/p/msys2/discussion/general/thread/dcf8f4d3/
+#
+# OLD (Remove this, if the other works fine):
 # In Windows, right-click C:\msys64\msys2.exe and drag it to the taskbar.
+#
+# NEW:
+# In Windows, right-click C:\msys64\mingw64.exe and drag it to the taskbar.
 
-# Set the shortcut start up to:
+# -----------------------------------------------------------------------------
+# OLD: We're going to try not setting this.  If everything works, come back and
+# remove this portion.
+#
+# Right-click on the shortcut pinned to the taskbar.  In the popup menu, right-
+# click on MSYS MING64 shell launcher to bring up its properties.
 #
 # C:\msys64\usr\bin\mintty.exe /usr/bin/env MSYSTEM=MINGW64 /usr/bin/bash --login
+#
+# Others suggested trying these:
+#
+# C:\msys64\usr\bin\mintty.exe /usr/bin/bash
+# or
+# D:\msys64\usr\bin\bash.exe -c 'MSYSTEM=MSYS exec /bin/fish -l -i'
+# -----------------------------------------------------------------------------
 
 
-
-
-
-
-# =============================================================================
-# Create Share Directories
-# =============================================================================
-
-# NOTE: This is deprecated.
-
-mkdir ~/gem/mnt
-mkdir ~/gem/mnt/f28v2_mhodges
-mkdir ~/gem/mnt/f28v2_root
-mkdir ~/gem/mnt/f29v1_mhodges
-mkdir ~/gem/mnt/f29v1_root
 
 
 
@@ -457,9 +478,7 @@ mkdir ~/gem/mnt/f29v1_root
 # download from https://fping.org/dist.
 
 
-
 gem_filename_remote_gz=fping-4.2.tar.gz
-
 
 
 mkdir -p ${gem_fullpath_gem}/
@@ -481,473 +500,6 @@ rm -rf ~/fping
 
 
 
-
-
-
-# =============================================================================
-# Create gem_bash_init
-# =============================================================================
-
-# NOTE: This is deprecated.
-
-# Create gem_bash_init, mount, and mountall, for both user mhodges and root.  It's
-# overkill for root, but gives a nice shell prompt and doesn't do any harm.
-# 
-# IMPORTANT!
-#
-# If you restored files from a backup, you already have these files.
-
-mkdir ~/gem/local/sbin
-cat << EOF > ~/gem/local/sbin/gem_bash_init
-#!/bin/bash
-
-#
-# File: gem_bash_init
-#
-# Configure user-specific environment and startup programs.
-# 
-
-function gem_bash_init_main()
-{
-    # =========================================================================
-    # How to run a Windows .bat file in mingw64 mintty terminal. Important for
-    # building for Android under mingw64.
-    # =========================================================================
-    # Source: http://sourceforge.net/p/mingw/bugs/1902/
-    # Source: http://ss64.com/nt/cmd.html
-    # cmd //C mark.bat
-
-
-    # Source global definitions
-    if [[ -f /etc/bashrc ]]; then
-        . /etc/bashrc    # We expect this to only happen on Linux.
-    fi
-
-    # =========================================================================
-    # Path & Environment Variables
-    # =========================================================================
-    export PATH="/usr/local/bin:/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/sbin:\${HOME}/gem/local/sbin"
-
-    # *FIX: Move ~/sbin/* to /usr/local/sbin so everyone can use the scripts instead doing this crap!
-    if [[ \$(whoami) == "root" ]]; then
-        export PATH=\${PATH}:/home/mhodges/gem/local/sbin
-    fi
-
-    # Git command line needs to know which editor you use:
-    export EDITOR=npp
-
-    # File listing colors
-    export LS_COLORS="rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=01;05;37;41:su=37;41:sg=30;43:ca=30;41:tw=3;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*xz=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.jpg=01;35:*.jpeg=01;35:*.gif=01;35:*.bmp=1;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.axv=01;35:*.anx=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=01;36:*.au=01;36:*.flac=01;36:*.mid=01;36:*.midi=01;36:*.mka=01;36:*.mp3=01;36:*.mpc=01;36:*.ogg=01;36:*.ra=01;36:*.wav=01;36:*.axa=01;36:*.oga=1;36:*.spx=01;36:*.xspf=01;36:"
-
-    # Rainbow Prompt
-    export PS1="\[\$(tput bold)\]\[\$(tput setaf 1)\][\[\$(tput setaf 3)\]\u\[\$(tput setaf 2)\]@\[\$(tput setaf 4)\]\h \[\$(tput setaf 5)\]\W\[\$(tput setaf 1)\]]\[\$(tput setaf 7)\]\\$ \[\$(tput sgr0)\]"
-
-
-    # =========================================================================
-    # Gem
-    # =========================================================================
-    export GEM_FULLPATH_LOCAL=\${HOME}/gem/local
-    export PATH=\${GEM_FULLPATH_LOCAL}/bin:\${PATH}
-
-    if [[ \$(uname -s) == "Linux" ]]; then
-        export PATH=\${GEM_FULLPATH_LOCAL}/../local_x86_64-pc-linux-gnu/release/bin:\${PATH}
-    elif [[ \$(uname -s) == *"MINGW64"* ]]; then
-        export PATH=\${GEM_FULLPATH_LOCAL}/../local_x86_64-w64-mingw32/release/bin:\${PATH}
-    fi
-
-    # Determine the OS we are building on.
-    if [[ \$(uname -m) == "x86_64" ]]; then
-        if [[ \$(uname -s) == "Linux" ]]; then
-            export GEM_OS_HOST_BUILD="GEM_OS_HOST_BUILD_LINUX"
-        elif [[ \$(uname -s) == *"MINGW64"* ]]; then
-            export GEM_OS_HOST_BUILD="GEM_OS_HOST_BUILD_MINGW"
-        else
-            echo "gem_bash_init(\${LINENO}) Error: Operating system \$(uname -s) is not supported."; return
-        fi
-    else
-        echo "gem_bash_init(\${LINENO}) Error: Operating system architecture \$(uname -m) is not supported."; return
-    fi
-
-
-    # =========================================================================
-    # Mount Shares
-    # =========================================================================
-    if [[ \$(whoami) != "root" ]]; then
-        mountall
-    fi
-
-
-    # =========================================================================
-    # Aliases
-    # =========================================================================
-
-    if [[ \${GEM_OS_HOST_BUILD} == GEM_OS_HOST_BUILD_MINGW ]]; then
-        alias npp="/c/Program\ Files\ \(x86\)/Notepad++/notepad++.exe "
-    elif [[ \${GEM_OS_HOST_BUILD} == GEM_OS_HOST_BUILD_LINUX ]]; then
-        alias npp="notepadqq "
-        if [[ \$(whoami) == "root" ]]; then
-            alias npp="notepadqq --allow-root "
-        fi
-    else
-        echo "gem_bash_init(\${LINENO}) Error: GEM_OS_HOST_BUILD value of /"\${GEM_OS_HOST_BUILD}/" not supported.  Aborting script." && return
-    fi
-
-    alias ls='ls -al --color=auto'
-    alias npplinux="(npp /home/mhodges/mnt/vbox_mhodges/projects/docs/Linux/Linux_Notes.txt &> /dev/null &)"
-    alias nppfedora="(npp /home/mhodges/mnt/vbox_mhodges/projects/docs/Linux/Fedora_25.txt &> /dev/null &)"
-    alias npptodo="(npp /home/mhodges/mnt/vbox_mhodges/Desktop/ToDo.txt &> /dev/null &)"
-    alias nppgem="(npp ~/sbin/gem_bash_init &> /dev/null &)"  # Only edits local version.
-	alias gitpush="git push git@github.com:MarkFiveThousand/gem.git"
-	alias gitpull="git pull git@github.com:MarkFiveThousand/gem.git"
-
-
-    # =========================================================================
-    # Android
-    # =========================================================================
-    if [[ \${GEM_OS_HOST_BUILD} == GEM_OS_HOST_BUILD_MINGW ]]; then
-
-        export ANDROID_SDK=/c/Android/sdk
-        export PATH="\${PATH}:\${ANDROID_SDK}/build-tools/26.0.2"
-
-    elif [[ \${GEM_OS_HOST_BUILD} == GEM_OS_HOST_BUILD_LINUX ]]; then
-
-        export ANDROID_SDK=~/Android/sdk
-
-    else echo "gem_bash_init(\${LINENO}) Error: GEM_OS_HOST_BUILD value of /"\${GEM_OS_HOST_BUILD}/" not supported.  Aborting script." && return
-    fi
-    export PATH="\${PATH}:\${ANDROID_SDK}/tools:\${ANDROID_SDK}/platform-tools"
-
-
-    # =========================================================================
-    # Additional Settings For MinGW
-    # =========================================================================
-    if [[ \${GEM_OS_HOST_BUILD} == GEM_OS_HOST_BUILD_MINGW ]]; then
-
-        export PATH=\${PATH}:/c/msys64/mingw64/bin
-        export PATH=\${PATH}:"/c/Program Files/KDiff3"
-    fi
-
-
-    # =========================================================================
-    # Database gem_bash_init_maintenance Support
-    # =========================================================================
-    export CRED_NAME_DATABASE_ADMIN=root
-    export CRED_PASSWORD_DATABASE_ADMIN=xxxxxxxxx
-    export CRED_PASSWORD_ROOT=xxxxxxxxx
-}
-gem_bash_init_main
-
-EOF
-chmod u+x ~/gem/local/sbin/gem_bash_init
-
-
-
-# To update this from a file you need to escape $:
-
-ESCAPE_FILE=~/gem/local/sbin/gem_bash_init
-sed 's/\$/\\$/g' $ESCAPE_FILE > ${ESCAPE_FILE}_temp
-npp ${ESCAPE_FILE}_temp
-
-# Then copy it to this file.
-
-
-
-
-
-# =============================================================================
-# Create gem_mountall
-# =============================================================================
-
-# NOTE: This is deprecated.
-
-# IMPORTANT!!!: The following will not work properly until you have run:
-# source ~/gem/local/sbin/gem_bash_init  as it initializes the GEM_OS environment variable
-# that makes the mountall and umountall scripts work.
-
-
-mkdir ~/gem/local/sbin
-
-cat << EOF > ~/gem/local/sbin/mountall
-#
-# File: \${HOME}/gem/local/sbin/mountall
-#
-# Mount all the user-defined drives.
-#
-
-# IMPORTANT: If you're having difficulty mounting drives your may want to
-# consider using a GUI.  See:
-# https://www.samba.org/samba/GUI/
-
-# Does mhodges need to belong to the group vboxfs?  Didn't seem to help.  Wait
-# off on this.
-printf "I did: usermod -a -G vboxsf mhodges\n\n"
-
-# *FIX: We must eliminate the password here!
-gem_password_linux_user=<your user's password>
-
-gem_hostname=`echo \${HOSTNAME} | tr '[A-Z]' '[a-z]'`
-
-gem_windows_hostname=mars
-gem_windows_ip_address=10.0.0.100
-
-gem_linux1_hostname=f28v2
-gem_linux1_ip_address=10.0.0.101
-
-gem_linux2_hostname=f29v1
-gem_linux2_ip_address=10.0.0.102
-
-gem_fullpath_mnt=\${HOME}/gem/mnt
-
-function gem_mountall_main()
-{
-    gem_fping_how_many=-c1
-    if [[ \${gem_hostname} == "\${gem_windows_hostname}" ]]; then
-        gem_fping_how_many=-n1  # fping for windows needs special treatment.
-    fi
-
-    fping \${gem_windows_ip_address} \${gem_fping_how_many} -t300 2> /dev/null 1> /dev/null ; gem_windows_is_online=\$(expr \$? == 0)
-    fping  \${gem_linux1_ip_address} \${gem_fping_how_many} -t300 2> /dev/null 1> /dev/null ;  gem_linux1_is_online=\$(expr \$? == 0)
-    if [[ ! -z "\${gem_linux2_ip_address}" ]]; then
-        fping  \${gem_linux2_ip_address} \${gem_fping_how_many} -t300 2> /dev/null 1> /dev/null ;  gem_linux2_is_online=\$(expr \$? == 0)
-    fi
-
-    echo "gem_windows_is_online = \${gem_windows_is_online}"
-    echo "gem_linux1_is_online = \${gem_linux1_is_online}"
-    if [[ ! -z "\${gem_linux2_ip_address}" ]]; then
-        echo "gem_linux2_is_online = \${gem_linux2_is_online}"
-    fi
-
-    gem_windows_root_not_mounted=\$(expr \$(grep -c "\${gem_windows_hostname}_root"     /proc/mounts) == 0)
-    gem_windows_home_not_mounted=\$(expr \$(grep -c "\${gem_windows_hostname}_\${USER}"  /proc/mounts) == 0)
-    gem_linux1_root_not_mounted=\$(expr \$(grep -c "\${LINUX1}_root"           /proc/mounts) == 0)
-    gem_linux1_home_not_mounted=\$(expr \$(grep -c "\${LINUX1}_\${USER}"        /proc/mounts) == 0)
-    if [[ ! -z "\${gem_linux2_ip_address}" ]]; then
-        gem_linux2_root_not_mounted=\$(expr \$(grep -c "\${LINUX2}_root"       /proc/mounts) == 0)
-        gem_linux2_home_not_mounted=\$(expr \$(grep -c "\${LINUX2}_\${USER}"    /proc/mounts) == 0)
-    fi
-
-    echo "Before mount:"
-    echo "gem_windows_root_not_mounted = \${gem_windows_root_not_mounted}"
-    echo "gem_windows_home_not_mounted = \${gem_windows_home_not_mounted}"
-    echo " gem_linux1_root_not_mounted = \${gem_linux1_root_not_mounted}"
-    echo " gem_linux1_home_not_mounted = \${gem_linux1_home_not_mounted}"
-    if [[ ! -z "\${gem_linux2_ip_address}" ]]; then
-        echo " gem_linux2_root_not_mounted = \${gem_linux2_root_not_mounted}"
-        echo " gem_linux2_home_not_mounted = \${gem_linux2_home_not_mounted}"
-    fi
-    echo
-
-    case \${gem_hostname} in
-    (\${gem_windows_hostname}) # Running on Windows(MinGW).  Mount Linux1 and Linux 2.
-
-        # Linux1 --------------------------------------------------------------
-        if [[ \${gem_linux1_is_online} ]]; then
-            if [[ \${gem_linux1_root_not_mounted} ]]; then
-                mkdir -p \${gem_fullpath_mnt}/\${gem_linux1_hostname}_root
-                mount -f //\${gem_linux1_hostname}/root \${gem_fullpath_mnt}/\${gem_linux1_hostname}_root
-            fi
-            if [[ \${gem_linux1_home_not_mounted} ]]; then
-                mkdir -p \${gem_fullpath_mnt}/\${gem_linux1_hostname}_\${USER}
-                mount -f //\${gem_linux1_hostname}/\${USER} \${gem_fullpath_mnt}/\${gem_linux1_hostname}_\${USER}
-            fi
-        else
-            echo "\${gem_linux1_hostname} is offline."
-        fi
-
-        # Linux2 --------------------------------------------------------------
-        if [[ ! -z "\${gem_linux2_ip_address}" ]]; then
-           if [[ \${gem_linux2_is_online} ]]; then
-               if [[ \${gem_linux2_root_not_mounted} ]]; then
-                    mkdir -p \${gem_fullpath_mnt}/\${gem_linux2_hostname}_root
-                    mount -f //\${gem_linux2_hostname}/root \${gem_fullpath_mnt}/\${gem_linux2_hostname}_root
-                fi
-                if [[ \${gem_linux2_home_not_mounted} ]]; then
-                    mkdir -p \${gem_fullpath_mnt}/\${gem_linux2_hostname}_\${USER}
-                    mount -f //\${gem_linux2_hostname}/\${USER} \${gem_fullpath_mnt}/\${gem_linux2_hostname}_\${USER}
-                fi
-            else
-                echo "\${gem_linux2_hostname} is offline."
-            fi
-        fi;;
-
-    (\${gem_linux1_hostname}.localdomain)
-
-        # Windows -------------------------------------------------------------
-        if [[ \${gem_windows_is_online} ]]; then
-            if [[ \${gem_windows_root_not_mounted} ]]; then
-                mkdir -p \${gem_fullpath_mnt}/\${gem_windows_hostname}_root
-                sudo mount -t vboxsf -o uid=\${USER},gid=\${USER} \${gem_windows_hostname}_root \${gem_fullpath_mnt}/\${gem_windows_hostname}_root
-            fi
-            if [[ \${gem_windows_home_not_mounted} ]]; then
-                mkdir -p \${gem_fullpath_mnt}/\${gem_windows_hostname}_\${USER}
-                sudo mount -t vboxsf -o uid=\${USER},gid=\${USER} \${gem_windows_hostname}_\${USER} \${gem_fullpath_mnt}/\${gem_windows_hostname}_\${USER}
-            fi
-        else
-            echo "\${gem_windows_hostname} is offline."
-        fi
-
-        # linux2 ---------------------------------------------------------
-        if [[ ! -z "\${gem_linux2_ip_address}" ]]; then
-            if [[ \${gem_linux2_is_online} -eq 1 ]]; then
-                if [[ \${gem_linux2_root_not_mounted} -eq 1 ]]; then
-                    mkdir -p \${gem_fullpath_mnt}/\${gem_linux2_hostname}_root
-                    sudo mount -t cifs -o username=\${USER},password=\${gem_password_linux_user} //\${gem_linux2_ip_address}/root \${gem_fullpath_mnt}/\${gem_linux2_hostname}_root
-                fi
-                if [[ \${gem_linux2_home_not_mounted} -eq 1 ]]; then
-                    mkdir -p \${gem_fullpath_mnt}/\${gem_linux2_hostname}_\${USER}
-                    sudo mount -t cifs -o vers=1.0,username=\${USER},password=\${gem_password_linux_user} //\${gem_linux2_ip_address}/\${USER} \${gem_fullpath_mnt}/\${gem_linux2_hostname}_\${USER}
-                fi
-            else
-                echo "\${gem_linux2_hostname} is offline."
-            fi
-        fi;;
-
-    (\${gem_linux2_hostname}.localdomain)
-
-        # Windows -------------------------------------------------------------
-        if [[ \${gem_windows_is_online} ]]; then
-            if [[ \${gem_windows_root_not_mounted} ]]; then
-                sudo mount -t vboxsf -o uid=\${USER},gid=\${USER} \${gem_windows_hostname}_root \${gem_fullpath_mnt}/\${gem_windows_hostname}_root
-            fi
-            if [[ \${gem_windows_home_not_mounted} ]]; then
-                sudo mount -t vboxsf -o uid=\${USER},gid=\${USER} \${gem_windows_hostname}_\${USER} \${gem_fullpath_mnt}/\${gem_windows_hostname}_\${USER}
-            fi
-        else
-            echo "\${gem_windows_hostname} is offline."
-        fi
-
-        # linux1 ---------------------------------------------------------
-        if [[ ! -z "\${gem_linux1_ip_address}" ]]; then
-            if [[ \${gem_linux1_is_online} -eq 1 ]]; then
-                if [[ \${gem_linux1_root_not_mounted} -eq 1 ]]; then
-                    mkdir -p \${gem_fullpath_mnt}/\${gem_linux1_hostname}_root
-                    sudo mount -t cifs -o username=\${USER},password=\${gem_password_linux_user} //\${gem_linux1_ip_address}/root \${gem_fullpath_mnt}/\${gem_linux1_hostname}_root
-                fi
-                if [[ \${gem_linux1_home_not_mounted} -eq 1 ]]; then
-                    mkdir -p \${gem_fullpath_mnt}/\${gem_linux1_hostname}_\${USER}
-                    sudo mount -t cifs -o vers=1.0,username=\${USER},password=\${gem_password_linux_user} //\${gem_linux1_ip_address}/\${USER} \${gem_fullpath_mnt}/\${gem_linux1_hostname}_\${USER}
-                fi
-            else
-                echo "\${gem_linux1_hostname} is offline."
-            fi
-        fi;;
-
-    *)
-        echo "Error in \$0(\${LINENO}).  Case not handled.  Aborting script." && return
-    esac
-}
-gem_mountall_main
-
-EOF
-chmod u+x ~/gem/local/sbin/mountall
-
-
-
-# To update this from a file you need to escape $:
-
-ESCAPE_FILE=~/gem/local/sbin/mountall
-sed 's/\$/\\$/g' $ESCAPE_FILE > ${ESCAPE_FILE}_temp
-npp ${ESCAPE_FILE}_temp
-
-# Then copy it to this file.
-
-
-
-
-# =============================================================================
-# Create gem_umountall
-# =============================================================================
-
-# NOTE: This is deprecated.
-
-cat << EOF > ~/gem/local/sbin/umountall
-#
-# File: \${HOME}/gem/local/sbin/umountall
-#
-# Unmount all the user-defined drives.
-#
-
-gem_hostname=`echo \${HOSTNAME} | tr '[A-Z]' '[a-z]'`
-gem_windows_hostname=mars
-gem_linux1_hostname=f28v2
-gem_linux2_hostname=
-
-
-function gem_unmount_gem_share_name()
-{
-    gem_share_name=\${1}
-
-    if [ \${gem_hostname} != "\${gem_windows_hostname}" ]; then
-        gem_options_umount="-f"         # Linux-specific settings.
-        gem_sudo="sudo"
-    fi
-
-    gem_counter=0
-    while [ \$((gem_counter++)) -lt 500 ] && [ \$(grep -c \${gem_share_name} /proc/mounts) -ne 0 ]; do
-        \${gem_sudo} umount \${gem_options_umount} \${gem_share_name} > /dev/null 2>&1
-        gem_result=\$?
-        if [ \${gem_result} -eq 32 ]; then
-            if [ \$(expr \${gem_counter} % 100) == 0 ]; then
-                echo "gem_share_name \${gem_share_name} is busy.  Retrying..."
-                sleep 0
-            fi
-        elif [ \${gem_result} -ne 0 ]; then
-            echo "Failed to unmount \${gem_share_name}.  Return code \${gem_result}."
-        else
-            # Successfully umounted.  However, the directory may take a little bit
-            # longer to become non-busy.  rmdir below will occasionally fail. We need to
-            # exit out of the while loop at this point, then spin for rmdir success.
-            rmdir \${gem_share_name}
-#           gem_result=\$?
-#           echo "gem_result=\${gem_result}"
-            echo "Unmounted \${gem_share_name}."
-        fi
-    done
-#   echo "gem_counter = \${gem_counter}"
-    if [ \$(grep -c \${gem_share_name} /proc/mounts) -ne 0 ]; then
-        echo "Failed to umount \${gem_share_name}."
-    fi
-}
-
-function gem_umountall_main()
-{
-    case \${gem_hostname} in
-    (\${gem_windows_hostname})
-        gem_unmount_gem_share_name ~/mnt/\${gem_linux1_hostname}_root
-        gem_unmount_gem_share_name ~/mnt/\${gem_linux1_hostname}_\${USER}
-        gem_unmount_gem_share_name ~/mnt/\${gem_linux2_hostname}_root
-        gem_unmount_gem_share_name ~/mnt/\${gem_linux2_hostname}_\${USER}
-        ;;
-    (\${gem_linux1_hostname}.localdomain)
-        gem_unmount_gem_share_name ~/mnt/\${gem_windows_hostname}_root
-        gem_unmount_gem_share_name ~/mnt/\${gem_windows_hostname}_\${USER}
-        gem_unmount_gem_share_name ~/mnt/\${gem_linux2_hostname}_root
-        gem_unmount_gem_share_name ~/mnt/\${gem_linux2_hostname}_\${USER}
-        ;;
-    (\${gem_linux2_hostname}.localdomain)
-        gem_unmount_gem_share_name ~/mnt/\${gem_windows_hostname}_root
-        gem_unmount_gem_share_name ~/mnt/\${gem_windows_hostname}_\${USER}
-        gem_unmount_gem_share_name ~/mnt/\${gem_linux1_hostname}_root
-        gem_unmount_gem_share_name ~/mnt/\${gem_linux1_hostname}_\${USER}
-        ;;
-    *)
-        echo "\$0(\${LINENO}) Error: Case not handled.  Aborting script." && return
-    esac
-}
-gem_umountall_main
-
-EOF
-chmod u+x ~/gem/local/sbin/umountall
-
-
-
-# To update this from a file you need to escape $:
-
-ESCAPE_FILE=~/gem/local/sbin/umountall
-sed 's/\$/\\$/g' $ESCAPE_FILE > ${ESCAPE_FILE}_temp
-npp ${ESCAPE_FILE}_temp
-
-# Then copy it to this file.
 
 
 
@@ -993,44 +545,6 @@ npp ${ESCAPE_FILE}_temp
 # Visual Studio Code (the one made by twxs.)
 
 
-
-# =============================================================================
-# GNU Development Build Environment
-# =============================================================================
-
-# NOTE: This is deprecated.
-
-Note: If you cloned the remote repo you can skip this step.
-
-All you must do is create the ~/projects directory.  HOWEVER, PLEASE UPDATE
-THIS DOCUMENTATION IF THERE ARE ANY DIFFERENCES WITH THE REPO.
-
-NOTE:
-Make sure our new xx-bit-independant XXX_profile.local works for both 32- and
-64-windows version.
-
-
-*** WINDOWS ***
-
-cat > $GNU_ROOT/local/etc/WIN_profile.local << "EOF"
-
-<insert your updated WIN_profile.local contents here>
-
-EOF
-
-
-*** LINUX ***
-
-!! WATCH OUT FOR EDITER-INSERTED CARRAIGE RETURNS.  THEY MUST BE REMOVED.
-
-cat > $GNU_ROOT/local/etc/LINUX_profile.local << "EOF"
-
-<insert your updated LINUX_profile.local contents here>
-
-EOF
-
-
-Restart the shell.
 
 
 
@@ -1320,6 +834,7 @@ cmake-3.13.2-1
 
 
 
+# *FIX: Deprecated
 # =============================================================================
 # Appendix C: Boost C++ Library
 # =============================================================================
@@ -1342,6 +857,7 @@ sed -e s/gcc/mingw/ project-config.jam > project-config.jam
 
 
 
+# *FIX: Deprecated
 # =============================================================================
 # Appendix C.5: Microsoft Platform SDK
 # =============================================================================
@@ -1352,7 +868,7 @@ sed -e s/gcc/mingw/ project-config.jam > project-config.jam
 
 
 
-
+# *FIX: This doesn't belong in this document.
 # =============================================================================
 # Appendix D: Build XDebug for Debugging PHP Hosted in WAMP Server
 # =============================================================================
@@ -1503,7 +1019,7 @@ TEST:
 	instruction dbgtest.php:
 
 
-
+# *FIX: This doesn't belong in this document.
 # =============================================================================
 # Appendix E: Pacman
 # =============================================================================
@@ -1531,7 +1047,7 @@ Removes the package and those of its dependencies that aren’t needed by any
 other application.
 
 
-
+# *FIX: Deprecated
 # =============================================================================
 # Appendix F: Installing a static pkg-config binary
 # =============================================================================
@@ -1567,7 +1083,7 @@ fi
 pkg-config "$@" | tr -d \\r && $res
 
 EOF
-#
+
 # Make the script executable and point the PKG_CONFIG environment variable to
 # the script:
 # ---------------------------------------------------------
