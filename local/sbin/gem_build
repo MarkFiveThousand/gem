@@ -868,13 +868,22 @@ function gem_build_InitToolchain_x86_64-w64-mingw32
 
 		if [[ ${gem_os} != "MINGW64"* ]]; then	# Building for mingw on cygwin or linux.
 			if [[ ! -d ${gem_fullpath_gcc_libs} ]]; then
-				gem_script_v_Error "gem_build_InitToolchain_x86_64-w64-mingw32(): Library path does not exist: ${gem_fullpath_gcc_libs}.  Did the version number change?"
-echo "not exist"; exit
-else
-echo "Exists."; exit
+				gem_script_v_Msg
+				gem_script_v_Msg
+				gem_script_v_Msg
+				gem_script_v_Msg
+				gem_script_v_Msg
+				gem_script_v_Msg "gem_build_InitToolchain_x86_64-w64-mingw32(): Library path does not exist: ${gem_fullpath_gcc_libs}.  Did the version number change?"
+				gem_script_v_Msg "*FIX: Is this still required now that we have pkg-config working properly?"
+				gem_script_v_Msg
+				gem_script_v_Msg
+				gem_script_v_Msg
+				gem_script_v_Msg
+				gem_script_v_Msg
+			else
+				# *FIX: Is this still required now that we have pkg-config working properly?
+				gem_flags_ld="${gem_flags_ld} -L${gem_fullpath_gcc_libs}"
 			fi
-			# *FIX: Is this still required now that we have pkg-config working properly?
-			gem_flags_ld="${gem_flags_ld} -L${gem_fullpath_gcc_libs}"
 		fi
 
 	elif [[ ${gem_build_script_type} == "meson" ]]; then
