@@ -1,0 +1,373 @@
+#!/bin/bash
+#  ___________                           __________
+# /\   _______\                         /\   ______\
+# \ \  \______/_     ___   ____ ____ ___\ \  \_____/_     ___   ___ ___  ______   ____    ___
+#  \ \  \ /\__  \  /'___`\/\   V    V   \\ \_______  \  /'   `\/\  \\  \/\   __\/' ._`\ /'___`\
+#   \ \  \\/__\  \/\  ___/\ \  \/\  \/\  \\/_______\  \/\  \\  \ \  \\  \ \  \ /\  \__//\  ___/
+#    \ \__________\ \____\ \ \__\ \__\ \__\ /\_________\ \_____/\ \______\ \__\\ \____/\ \____\
+#     \/__________/\/____/  \/__/\/__/\/__/ \/_________/\/____/  \/______/\/__/ \/___/  \/____/
+
+
+_echo_local=0
+function echo_local
+{
+	if [[ ${_echo_local} -ne 0 ]]; then
+		echo "$@"
+	fi
+}
+
+
+
+# Returns the fullpath to the found tool (e.g. CC, CXX, AR, LD, etc.)
+function gem_build_FindCompilerTool
+{
+	local lvalue=$1
+	local tool=$2
+
+	if [[ -z ${lvalue} || -z ${tool}  ]]; then
+		gem_script_v_Error "gem_build_FindCompilerTool() must be called with 2 parameters: an identifier and tool name must be specified as a parameters. E.g. gem_build_FindCompilerTool CXX clang++."
+	fi
+	if [[ -z ${gem_fullpathlist_compiler_exes} ]]; then
+		gem_script_v_Error "gem_fullpathlist_compiler_exes must be set prior to calling gem_build_FindCompilerTool()."
+	fi
+
+	local fileList="llvm-${tool}:${gem_triple}-${tool}:${gem_triple}-gcc-${tool}:${tool}"
+
+	local extensionList=":"
+	if  [[ ${gem_os} == "MINGW64"* || ${gem_os} == "CYGWIN"*  ]]; then
+		extensionList="${extensionList}.exe:"
+	fi
+	local gem_build_FindCompilerTool_found=
+	local gem_ifs_saved=${IFS}
+	IFS=":"
+	for dir in ${gem_fullpathlist_compiler_exes}; do
+		for file in ${fileList}; do
+			if [[ (${gem_use_clang} -eq 0 && ${file} == "llvm"*) ||
+				(${gem_use_clang} -ne 0 && ${file} == *"-gcc-"*) ]]; then
+				continue
+			else
+				for ext in ${extensionList}; do
+
+					local fullpath=${dir}/${file}${ext}
+					if [[ -f ${fullpath} ]]; then
+						gem_build_FindCompilerTool_found=${fullpath}
+						break
+					fi
+				done
+				if [[ ! -z ${gem_build_FindCompilerTool_found} ]]; then
+					break
+				fi
+			fi
+		done
+		if [[ ! -z ${gem_build_FindCompilerTool_found} ]]; then
+			break
+		fi
+	done
+	IFS=${gem_ifs_saved}
+
+	if [[ -z ${gem_build_FindCompilerTool_found} ]]; then
+		gem_script_v_Error "gem_build_FindCompilerTool(): Failed to find tool ${tool}."
+	fi
+	local cmd="export ${lvalue}=${gem_build_FindCompilerTool_found}"
+	eval "${cmd}"
+	if [[ $? != 0 ]]; then
+		gem_script_v_Error "gem_build_FindCompilerTool(): Failed to execute the following assignment: \"${cmd}\""
+	fi
+}
+
+function gem_build_FindCompilerTools
+{
+	if [[ 0 == 1 ]]; then
+		# Cygwin
+		export ADDR2LINE=/usr/bin/addr2line
+		export AR=/usr/bin/llvm-ar
+		export AS=/usr/bin/llvm-as
+		export CC=/usr/bin/clang
+		export CXX=/usr/bin/clang++
+		export DLLTOOL=/usr/bin/llvm-dlltool
+		export LD=/usr/bin/ld
+		export NM=/usr/bin/llvm-nm
+		export OBJCOPY=/usr/bin/llvm-objcopy
+		export OBJDUMP=/usr/bin/llvm-objdump
+		export RANLIB=/usr/bin/llvm-ranlib
+		export READELF=/usr/bin/llvm-readelf
+		export RESCOMP=/usr/bin/windres
+		export STRIP=/usr/bin/llvm-strip
+		return
+	fi
+
+	if [[ ${gem_use_clang} -ne 0 ]]; then
+		gem_build_FindCompilerTool CC clang
+		gem_build_FindCompilerTool CXX clang++
+	else
+		gem_build_FindCompilerTool CC gcc
+		gem_build_FindCompilerTool CXX g++
+	fi
+
+	gem_build_FindCompilerTool ADDR2LINE addr2line
+	gem_build_FindCompilerTool AR ar
+	gem_build_FindCompilerTool AS as
+	gem_build_FindCompilerTool LD ld
+	gem_build_FindCompilerTool NM nm
+	gem_build_FindCompilerTool OBJCOPY objcopy
+	gem_build_FindCompilerTool OBJDUMP objdump
+	gem_build_FindCompilerTool RANLIB ranlib
+	gem_build_FindCompilerTool READELF readelf
+	gem_build_FindCompilerTool STRIP strip
+
+	if [[ ${gem_triple} == "x86_64-w64-mingw32" || ${gem_triple} == "x86_64-pc-cygwin" ]]; then
+		gem_build_FindCompilerTool DLLTOOL dlltool
+		gem_build_FindCompilerTool RESCOMP windres
+	fi
+}
+
+
+# =============================================================================
+# gem_build_FindCompilerHeader()- Search for file $2 in $1 and its children.
+# Sets gem_build_FindCompilerHeader_result with the result.
+#
+# $1- File path to search for $2.
+# $2- Name of the file to be searched for.
+#
+# Returns: The number of directories containing file $2.
+#
+# In an effort to cull undesired locations, directories in which the file has
+# been found will be checked for the presence of a word in colon-separated
+# bad_word_list.  If the path contains a bad work, it is removed from the
+# results.
+# =============================================================================
+function gem_build_FindCompilerHeader
+{
+	# Paths containing these words will be removed from consideration.
+	local bad_word_list="tr1:tr2:boost"
+	local gem_path=${1}
+	local gem_file=${2}	# May contain a partial path.
+
+echo_local "gem_build_FindCompilerHeader ${gem_path} ${gem_file}"
+echo_local "gem_file=$gem_file"
+
+	gem_subpath_file_parent=$(dirname ${gem_file})
+	if [[ ${gem_subpath_file_parent} == "." ]]; then
+		gem_subpath_file_parent=	# No parent directory supplied.
+	fi
+	dirname_gem_file=$(dirname $gem_file)
+echo_local "gem_subpath_file_parent=$gem_subpath_file_parent"
+
+	# find: warning: Unix filenames usually don't contain slashes (though
+	# pathnames do).  That means that '-name ‘bits/c++io.h’' will probably
+	# evaluate to false all the time on this system.
+
+	# Find returns results like:
+	#
+	# ./file_00.c
+	# ./child/file_01.c
+
+	local gem_result_find=$(find ${gem_path} -wholename "*/${gem_file}")
+	if [[ -z ${gem_result_find} ]]; then
+		gem_script_v_Msg "Not found."
+		return 0
+	fi
+	gem_result_find=$(dirname ${gem_result_find})
+
+echo_local "gem_result_find:"
+echo_local "$gem_result_find"
+echo_local
+
+	# Iterate over the diretories where the file was found.  If it's more than
+	# one, hopefully, we can prune the undesirable locations where it was found.
+	local num_good_lines=0
+	gem_build_FindCompilerHeader_result=
+	local line=
+	while IFS= read -r line; do
+		echo_local "    ${line}"
+		# Test if the current line contains any bad words.
+		local bad_word_found=0
+		for gem_word in ${bad_word_list}
+		do
+			# If contains bad word...
+			if [[ ${line} == *"${gem_word}"* ]]; then
+echo_local "        + ${gem_word}"
+				bad_word_found=1
+echo_local
+echo_local "        bad_word_found=$bad_word_found"
+				break
+			else
+echo_local "        - ${gem_word}"
+			fi
+
+		done
+
+echo_local
+		if [[ ${bad_word_found} -ne 0 ]]; then
+			continue	# Found bad word.  Reject this directory.
+		else
+			gem_build_FindCompilerHeader_result=${line}
+			((num_good_lines++))
+echo_local "        num_good_lines=$num_good_lines"
+echo_local "        gem_build_FindCompilerHeader_result=$gem_build_FindCompilerHeader_result"
+echo_local
+		fi
+	done <<< "${gem_result_find}"
+
+	# File not found within directory.
+	if [[ -z ${gem_build_FindCompilerHeader_result} ]]; then
+		return 0
+	fi
+
+	if [[ ${num_good_lines} -gt 1 ]]; then
+		gem_script_v_Error "Found the file: ${gem_file} in more than one location and failed to determine which one to keep."
+		gem_build_FindCompilerHeader_result=
+echo_local
+		return ${num_good_lines}
+	fi
+
+	# All is good.  Now we just have to remove gem_subpath_file_parent from
+	# the end.
+	if [[ ! -z ${gem_subpath_file_parent} ]]; then
+		gem_build_FindCompilerHeader_result=${gem_build_FindCompilerHeader_result%/${gem_subpath_file_parent}}
+	fi
+
+	# The find command includes the searched for file name in the results
+	# output.  We want to keep only the directory.
+	if [[ ! -d ${gem_build_FindCompilerHeader_result} ]]; then
+		echo_local "OH NO!  ${gem_build_FindCompilerHeader_result} is not a directory!"
+
+		gem_build_FindCompilerHeader_result=$(dirname ${gem_build_FindCompilerHeader_result})
+		if [[ ! -d ${gem_build_FindCompilerHeader_result} ]]; then
+			gem_script_v_Error "Still broken."
+		else
+			echo_local "Fixed it!"
+		fi
+	fi
+
+	echo_local "Success!  Found ${gem_file} in ${gem_build_FindCompilerHeader_result}."
+	return 0
+}
+
+# -I <value>
+# Add directory to include search path
+#
+# -isystem <directory>
+# Add directory to SYSTEM include search path
+#
+# -isystem-after <directory>
+# Add directory to end of the SYSTEM include search path
+#
+# -stdlib++-isystem <directory>
+# Use directory as the C++ standard library include path
+#
+# -c-isystem <directory>
+# Add directory to the C SYSTEM include search path
+#
+# -cxx-isystem <directory>
+# Add directory to the C++ SYSTEM include search path
+#
+# -idirafter <value>
+# Add directory to AFTER include search path
+#
+# -isystem <directory>
+# Add directory to SYSTEM include search path
+#
+# -internal-isystem <directory>
+# Add directory to the internal system include search path; these are assumed
+# to not be user-provided and are used to model system and standard headers'
+# paths.
+#
+# -internal-externc-isystem <directory>
+# Add directory to the internal system include search path with implicit extern
+# "C" semantics; these are assumed to not be user-provided and are used to
+# model system and standard headers' paths.
+
+
+
+
+# =============================================================================
+# gem_build_FindCompilerHeaders() - 
+#
+# Recursively searches each dirctory in colon-separated private directory list
+# $gem_fullpathlist_compiler_hdrs for each file in colon-separated private file
+# list $gem_filelist_compiler_hdrs. Directories containing the target header
+# files will be set with the -I include directories flag to gem_flags_cpp.
+# =============================================================================
+function gem_build_FindCompilerHeaders
+{
+#	local gem_filelist_compiler_hdrs="stdio.h:stdbool.h"
+	local gem_filelist_compiler_hdrs="stdbool.h"
+	if [[ gem_is_cplusplus -ne 0 ]]; then
+		local gem_filelist_compiler_hdrs="${gem_filelist_compiler_hdrs}:cstdio:bits/c++io.h"
+	fi
+
+	local gem_ifs_saved=${IFS}
+	IFS=":"
+
+	# For each .h file...
+	for gem_file in ${gem_filelist_compiler_hdrs}
+	do
+		# For each parent search directory...
+		for gem_path in ${gem_fullpathlist_compiler_hdrs}
+		do
+echo_local "--------------------- ${gem_file}: ${gem_path} ---------------------"
+			if [[ ! -d ${gem_path} ]]; then
+				gem_script_v_Error "Directory does not exist: ${gem_path}"
+			fi
+
+			gem_build_FindCompilerHeader ${gem_path} ${gem_file}
+			local gem_result=$?
+			if [[ gem_result -ne 0 ]]; then
+				echo_local "gem_build_FindCompilerHeaders() failed to find ${gem_file}."
+				continue
+			fi
+			gem_fullpath_parent=${gem_build_FindCompilerHeader_result}
+#echo_local "gem_fullpath_parent=$gem_fullpath_parent"
+			if [[ -z ${gem_fullpath_parent} ]]; then
+				gem_script_v_Msg "${gem_path} does not contain ${gem_file}."
+			else
+				if [[ ! -d ${gem_fullpath_parent} ]]; then
+					gem_script_v_Error "Header directory did not exist.  That can happen if the file being searched for was located in more that one location.  The following was output by find: -->${gem_fullpath_parent}<--"
+				fi
+				gem_flags_cpp="${gem_flags_cpp} -isystem ${gem_fullpath_parent}"
+echo_local "${gem_fullpath_parent} contains ${gem_file}."
+			fi
+		done
+	done
+	IFS=${gem_ifs_saved}
+	return 1
+}
+
+function gem_build_FindCompilerLibraries
+{
+	local gem_filelist_compiler_libs="libgcc.a"
+
+#	echo "gem_fullpathlist_gcc_libs =      $gem_fullpathlist_gcc_libs"
+#	echo "gem_fullpathlist_compiler_libs = $gem_fullpathlist_compiler_libs"
+#	exit
+
+	local gem_ifs_saved=${IFS}
+	IFS=":"
+
+	# For each .a file...
+	for gem_file in ${gem_filelist_compiler_libs}
+	do
+		# For each parent search directory...
+		for gem_path in ${gem_fullpathlist_gcc_libs}
+		do
+			if [[ ! -d ${gem_path} ]]; then
+				gem_script_v_Error "gem_build_FindCompilerLibraries(): Directory does not exist: ${gem_path}"
+			fi
+
+			gem_fullpath_parent=$(dirname $(find ${gem_path} -name ${gem_file}))
+			if [[ -z ${gem_fullpath_parent} ]]; then
+				gem_script_v_Msg "${gem_path} does not contain ${gem_file}."
+			else
+				if [[ ! -d ${gem_fullpath_parent} ]]; then
+					gem_script_v_Error "Compiler directory did not exist.  That can happen if the compiler library being searched for was located in more that one location.  The following was output by find: ${gem_fullpath_parent}"
+				fi
+				gem_flags_ld="${gem_flags_ld} -L${gem_fullpath_parent}"
+				gem_script_v_Msg "${gem_fullpath_parent} contains ${gem_file}."
+			fi
+		done
+	done
+	IFS=${gem_ifs_saved}
+	return 1
+}
+

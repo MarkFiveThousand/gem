@@ -1,0 +1,334 @@
+===============================================================================
+Section 1
+
+During a clean install, updating packages was failing.  We began following 
+advice set forth here: https://github.com/appveyor/ci/issues/3513.  We
+downloaded the keyring files from here: http://repo.msys2.org/msys/x86_64.
+We wound up aborting this procedure, as it was constantly failing with 2
+predominant issues: a.) signature from "David Macek <david.macek.0@gmail.com>"
+is unknown trust and, b.) database 'mingw64' is not valid (invalid or corrupted
+database (PGP signature)).  Eventually, we found a work around.  See section 2.
+===============================================================================
+
+Curl was silently failing to retrieve the keyring files due to indirection, so
+I used wget to download the files.
+
+$ wget http://repo.msys2.org/msys/x86_64/msys2-keyring-r21.b39fb11-1-any.pkg.tar.xz
+$ wget http://repo.msys2.org/msys/x86_64/msys2-keyring-r21.b39fb11-1-any.pkg.tar.xz.sig
+
+$ pacman-key --verify msys2-keyring-r21.b39fb11-1-any.pkg.tar.xz.sig
+
+==> Checking msys2-keyring-r21.b39fb11-1-any.pkg.tar.xz.sig... (detached)
+gpg: Signature made Sun, Jun 28, 2020 10:36:14 PM PDT
+gpg:                using DSA key AD351C50AE085775EB59333B5F92EFC1A47D45A1
+gpg: Good signature from "Alexey Pavlov (Alexpux) <alexpux@gmail.com>" [unknown]
+gpg: WARNING: This key is not certified with a trusted signature!
+gpg:          There is no indication that the signature belongs to the owner.
+Primary key fingerprint: AD35 1C50 AE08 5775 EB59  333B 5F92 EFC1 A47D 45A1
+==> ERROR: The signature identified by msys2-keyring-r21.b39fb11-1-any.pkg.tar.xz.sig could not be verified.
+
+
+Continuing on, ignoring error. I issue the following command:
+
+$ pacman -U msys2-keyring-r21.b39fb11-1-any.pkg.tar.xz
+
+error: mingw32: signature from "David Macek <david.macek.0@gmail.com>" is unknown trust
+error: mingw64: signature from "David Macek <david.macek.0@gmail.com>" is unknown trust
+error: msys: signature from "David Macek <david.macek.0@gmail.com>" is unknown trust
+error: database 'mingw32' is not valid (invalid or corrupted database (PGP signature))
+error: database 'mingw64' is not valid (invalid or corrupted database (PGP signature))
+error: database 'msys' is not valid (invalid or corrupted database (PGP signature))
+error: failed to init transaction (unable to lock database)
+error: could not lock database: File exists
+  if you're sure a package manager is not already
+  running, you can remove /var/lib/pacman/db.lck
+
+
+$ rm -f /var/lib/pacman/db.lck
+
+error: mingw32: signature from "David Macek <david.macek.0@gmail.com>" is unknown trust
+error: mingw64: signature from "David Macek <david.macek.0@gmail.com>" is unknown trust
+error: msys: signature from "David Macek <david.macek.0@gmail.com>" is unknown trust
+error: database 'mingw32' is not valid (invalid or corrupted database (PGP signature))
+error: database 'mingw64' is not valid (invalid or corrupted database (PGP signature))
+error: database 'msys' is not valid (invalid or corrupted database (PGP signature))
+loading packages...
+error: 'msys2-keyring-r21.b39fb11-1-any.pkg.tar.xz': invalid or corrupted package (PGP signature)
+
+
+
+$ pacman -U --config <(echo) msys2-keyring-r21.b39fb11-1-any.pkg.tar.xz
+
+loading packages...
+error: 'msys2-keyring-r21.b39fb11-1-any.pkg.tar.xz': invalid or corrupted package (PGP signature)
+
+
+$ rm -r /etc/pacman.d/gnupg/
+
+$ pacman-key --init
+gpg: /etc/pacman.d/gnupg/trustdb.gpg: trustdb created
+gpg: no ultimately trusted keys found
+gpg: starting migration from earlier GnuPG versions
+gpg: can't connect to the agent: IPC connect call failed
+gpg: error: GnuPG agent unusable. Please check that a GnuPG agent can be started.
+gpg: migration aborted
+gpg: starting migration from earlier GnuPG versions
+gpg: can't connect to the agent: IPC connect call failed
+gpg: error: GnuPG agent unusable. Please check that a GnuPG agent can be started.
+gpg: migration aborted
+gpg: Generating pacman keyring master key...
+gpg: can't connect to the agent: IPC connect call failed
+gpg: agent_genkey failed: No agent running
+gpg: key generation failed: No agent running
+gpg: Done
+==> Updating trust database...
+gpg: no need for a trustdb check
+
+
+$ pacman-key --populate msys2
+
+==> Appending keys from msys2.gpg...
+gpg: starting migration from earlier GnuPG versions
+gpg: can't connect to the agent: IPC connect call failed
+gpg: error: GnuPG agent unusable. Please check that a GnuPG agent can be started.
+gpg: migration aborted
+gpg: can't connect to the agent: IPC connect call failed
+gpg: can't connect to the agent: IPC connect call failed
+gpg: can't connect to the agent: IPC connect call failed
+gpg: can't connect to the agent: IPC connect call failed
+gpg: can't connect to the agent: IPC connect call failed
+gpg: can't connect to the agent: IPC connect call failed
+gpg: can't connect to the agent: IPC connect call failed
+gpg: can't connect to the agent: IPC connect call failed
+gpg: can't connect to the agent: IPC connect call failed
+
+gpg: signal Interrupt caught ... exiting
+
+
+===============================================================================
+Section 2
+
+This solution is a work around for downloading the keyrings described in
+Section 1.  For some reason, after competing the first step shown below, all
+the shell commands stopped functioning with a message about using incompatible
+versions of the cygwin DLL.  Simply rebooting resolved this.  I discovered this
+simple solution by searching for and renaming all occurances of cygwin1.dlls to
+_cygwin1.dll, then rebooting.  The shell commands started working!  After
+renaming all my cygwin1.dlls back and rebooting, it still worked.
+===============================================================================
+Source: https://www.programmersought.com/article/36164993268/
+
+pacman-key --init
+
+
+If you get the following...
+
+gpg: starting migration from earlier GnuPG versions
+gpg: can't connect to the agent: IPC connect call failed
+gpg: error: GnuPG agent unusable. Please check that a GnuPG agent can be started.
+gpg: migration aborted
+gpg: starting migration from earlier GnuPG versions
+gpg: can't connect to the agent: IPC connect call failed
+gpg: error: GnuPG agent unusable. Please check that a GnuPG agent can be started.
+gpg: migration aborted
+gpg: Generating pacman keyring master key...
+gpg: can't connect to the agent: IPC connect call failed
+gpg: agent_genkey failed: No agent running
+gpg: key generation failed: No agent running
+gpg: Done
+==> Updating trust database...
+gpg: no need for a trustdb check
+
+... then you need to first launch the gpg-agent (Soruce: https://github.com/msys2/MSYS2-packages/issues/1484):
+
+gpg-agent --daemon
+
+
+
+Then try again:
+
+pacman-key --init
+
+
+This time we successfully get:
+
+gpg: starting migration from earlier GnuPG versions
+gpg: porting secret keys from '/etc/pacman.d/gnupg/secring.gpg' to gpg-agent
+gpg: migration succeeded
+gpg: Generating pacman keyring master key...
+gpg: key 655BB954D4F6F9BA marked as ultimately trusted
+gpg: directory '/etc/pacman.d/gnupg/openpgp-revocs.d' created
+gpg: revocation certificate stored as '/etc/pacman.d/gnupg/openpgp-revocs.d/9AC00D238071A1A91E24D770655BB954D4F6F9BA.rev'
+gpg: Done
+==> Updating trust database...
+gpg: marginals needed: 3  completes needed: 1  trust model: pgp
+gpg: depth: 0  valid:   1  signed:   0  trust: 0-, 0q, 0n, 0m, 0f, 1u
+
+
+pacman-key --populate msys2
+
+... which should output:
+
+==> Appending keys from msys2.gpg...
+==> Locally signing trusted keys in keyring...
+  -> Locally signing key 6E8FEAFF9644F54EED90EEA0790AE56A1D3CFDDC...
+  -> Locally signing key D55E7A6D7CE9BA1587C0ACACF40D263ECA25678A...
+  -> Locally signing key 123D4D51A1793859C2BE916BBBE514E53E0D0813...
+  -> Locally signing key B91BCF3303284BF90CC043CA9F418C233E652008...
+  -> Locally signing key 9DD0D4217D75A33B896159E6DA7EF2ABAEEA755C...
+  -> Locally signing key 69985C5EB351011C78DF7F6D755B8182ACD22879...
+==> Importing owner trust values...
+gpg: setting ownertrust to 4
+gpg: setting ownertrust to 4
+gpg: setting ownertrust to 4
+gpg: setting ownertrust to 4
+gpg: setting ownertrust to 4
+gpg: inserting ownertrust of 4
+==> Disabling revoked keys in keyring...
+  -> Disabling key B19514FB53EB3668471B296E794DCF97F93FC717...
+==> Updating trust database...
+gpg: marginals needed: 3  completes needed: 1  trust model: pgp
+gpg: depth: 0  valid:   1  signed:   6  trust: 0-, 0q, 0n, 0m, 0f, 1u
+gpg: depth: 1  valid:   6  signed:   6  trust: 0-, 0q, 0n, 6m, 0f, 0u
+gpg: depth: 2  valid:   6  signed:   0  trust: 6-, 0q, 0n, 0m, 0f, 0u
+gpg: next trustdb check due at 2021-10-02
+
+
+Finally, you should be able to successfully 
+
+pacman -Syuu
+
+HOWEVER!  I ran into conflicts with different versions of cygwin1.dll now
+causing all shell commands to fail.  Rebooting fixed the problem shown below.
+You probably don't have Cygwin installed, so you likely won't encounter this.
+
+Cygwin version conflicts:
+-------------------------
+
+If pacman -Syuu gives:
+
+:: Synchronizing package databases...
+ mingw32                                813.7 KiB  2.00 MiB/s 00:00 [####################################] 100%
+ mingw32.sig                            438.0   B  0.00   B/s 00:00 [####################################] 100%
+ mingw64                                816.5 KiB   633 KiB/s 00:01 [####################################] 100%
+ mingw64.sig                            438.0   B  0.00   B/s 00:00 [####################################] 100%
+ msys                                   289.6 KiB  1031 KiB/s 00:00 [####################################] 100%
+ msys.sig                               438.0   B  0.00   B/s 00:00 [####################################] 100%
+:: Starting core system upgrade...
+warning: terminate other MSYS2 programs before proceeding
+resolving dependencies...
+looking for conflicting packages...
+
+Packages (6) bash-5.1.004-1  filesystem-2021.01-1  mintty-1~3.4.4-1  msys2-runtime-3.1.7-4  pacman-5.2.2-9
+             pacman-mirrors-20201208-1
+
+Total Download Size:   11.05 MiB
+Total Installed Size:  53.92 MiB
+Net Upgrade Size:      -1.24 MiB
+
+:: Proceed with installation? [Y/n] Y
+:: Retrieving packages...
+ bash-5.1.004-1-x86_64                    2.3 MiB  3.18 MiB/s 00:01 [####################################] 100%
+ filesystem-2021.01-1-x86_64             33.2 KiB  5.40 MiB/s 00:00 [####################################] 100%
+ mintty-1~3.4.4-1-x86_64                767.2 KiB  3.84 MiB/s 00:00 [####################################] 100%
+ msys2-runtime-3.1.7-4-x86_64             2.6 MiB  2.92 MiB/s 00:01 [####################################] 100%
+ pacman-mirrors-20201208-1-any            3.8 KiB  0.00   B/s 00:00 [####################################] 100%
+ pacman-5.2.2-9-x86_64                    5.4 MiB  4.93 MiB/s 00:01 [####################################] 100%
+(6/6) checking keys in keyring                                      [####################################] 100%
+(6/6) checking package integrity                                    [####################################] 100%
+(6/6) loading package files                                         [####################################] 100%
+(6/6) checking for file conflicts                                   [####################################] 100%
+(6/6) checking available disk space                                 [####################################] 100%
+:: Processing package changes...
+(1/6) upgrading bash                                                [####################################] 100%
+(2/6) upgrading filesystem                                          [####################################] 100%
+(3/6) upgrading mintty                                              [####################################] 100%
+(4/6) upgrading msys2-runtime                                       [####################################] 100%
+(5/6) upgrading pacman-mirrors                                      [####################################] 100%
+(6/6) upgrading pacman                                              [####################################] 100%
+:: Running post-transaction hooks...
+(1/1) Updating the info directory file...
+      1 [main] pacman (11052) C:\msys64\usr\bin\pacman.exe: *** fatal error - cygheap base mismatch detected - 0x18034B408/0x180345408.
+This problem is probably due to using incompatible versions of the cygwin DLL.
+Search for cygwin1.dll using the Windows Start->Find/Search facility
+and delete all but the most recent version.  The most recent version *should*
+reside in x:\cygwin\bin, where 'x' is the drive on which you have
+installed the cygwin distribution.  Rebooting is also suggested if you
+are unable to find another cygwin DLL.
+      0 [main] pacman 1510 dofork: child -1 - forked process 11052 died unexpectedly, retry 0, exit code 0xC0000142, errno 11
+error: could not fork a new process (Resource temporarily unavailable)
+:: To complete this update all MSYS2 processes including this terminal will be closed. Confirm to proceed [Y/n]
+
+
+... Notice the complaints about cygwin.
+
+
+I have cygwin1.dll in the following locations:
+
+Ones marked with * have been renamed.
+
+C:\cygwin64\bin
+C:\Users\mhodges\AppData\Local\wsltty\bin
+C:\cygwin64\home\mhodges\gem\local\src\sdl2-2.0.11\build_tests\x86_64-pc-cygwin\release
+C:\cygwin64_old\bin
+C:\Users\mhodges\OneDrive\Source\Projects_Old_C_Code\2002_Crystal Dynamics\tr7\tools
+C:\Users\mhodges\OneDrive\Source\Projects_Old_C_Code\2002_Crystal Dynamics\fun\engine\bin
+
+
+
+===============================================================================
+Section 3
+
+This was the old troubleshooting help.
+===============================================================================
+
+# TROUBLSHOOTING:
+#
+# Database Lock Issues:
+# ---------------------
+# Source:  https://forum.manjaro.org/t/how-to-solve-the-unable-to-lock-database-or-failed-to-synchronize-any-databases-errors/3939
+
+# If you are certain the database is not currently being accessed, you can
+# delete the lock file:
+
+rm -f /var/lib/pacman/db.lck
+
+
+# pacman -Sy Not doing anything.
+# ------------------------------
+# Source: https://github.com/msys2/MSYS2-packages/issues/1298
+#
+# edit /etc/pacman.conf and uncomment the following line:
+# XferCommand = /usr/bin/wget --passive-ftp -c -O %o %u
+#
+# I found the workaround above in this comment:
+# #1022 (comment)
+#
+# However then I ran into another problem when running "pacman -Syu" whereby
+# updating gnupg fails because the gpg-agent cannot connect. The workaround for
+# this other issue is to disable update of the gnupg package by modifying
+# pacman.conf as follows:
+#
+# IgnorePkg = gnupg
+#
+# Of course the above is a temporary workaround!
+
+
+# error: database 'mingw64' is not valid (invalid or corrupted database (PGP signature))
+# --------------------------------------------------------------------------------------
+# Trying: https://bbs.archlinux.org/viewtopic.php?id=142798
+
+
+
+# FURTHER TROUBLSHOOTING:
+#
+# Take look at Detailed MSYS2 install guide for troubleshooting and additional
+# details on how to keep your MSYS2 up-to-date. 
+
+https://sourceforge.net/p/msys2/wiki/MSYS2%20installation/
+
+
+
+
+
+
