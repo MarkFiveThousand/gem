@@ -1693,8 +1693,7 @@ function gem_build_OnCommandLine_Build
 		# specific make file, instead of producing one via a configure script.
 		gem_list_makefile="Makefile:makefile:${gem_fullpath_autotools_makefile}"
 		gem_fullpath_autotools_makefile=
-		gem_script_v_Error "Are we saving IFS correctly here?  Are we sure it's not supposed to be $IFS?  Please test and verify."
-		local gem_ifs_saved=IFS
+		local gem_ifs_saved=${IFS}
 		IFS=":"
 		for makefile in ${gem_list_makefile}; do
 			gem_fullpath_makefile=${gem_fullpath_build}/${makefile}
@@ -1709,9 +1708,7 @@ function gem_build_OnCommandLine_Build
 			gem_script_v_Error "Failed to find the makefile."
 		fi
 
-		gem_script_v_Error "Do we need the -f switch?"
-#		gem_cmd_line_build="make -j${gem_num_jobs} -f ${gem_fullpath_autotools_makefile}"
-		gem_cmd_line_build="make -j${gem_num_jobs} ${gem_fullpath_autotools_makefile}"
+		gem_cmd_line_build="make -j${gem_num_jobs} -f ${gem_fullpath_autotools_makefile}"
 
 		# Append CMAKE_C_FLAGS, CMAKE_CPP_FLAGS, CMAKE_CXX_FLAGS, and
 		# CMAKE_LD_FLAGS or CFLAGS, CPPFLAGS, CXXFLAGS and LDFLAGS.
