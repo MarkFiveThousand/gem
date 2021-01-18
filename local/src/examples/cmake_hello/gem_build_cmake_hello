@@ -9,18 +9,19 @@
 
 
 . gem_script
+. gem_build_validate
 . gem_build
 
 function gem_build_v_SetDefaults
 {
 	gem_build_SetDefaults;
 
-	gem_c_standard="-std=gnu11"	# c90, c99, c11, gnu90, gnu99, gnu11
-	gem_cxx_standard="-std=gnu++11"	# c++98, c++03, c++14, c++17, c++2a, gnu++98, gnu++11, gnu++14, gnu++17
+	gem_c_standard="-std=gnu11"	# c90, c99, c11, c18, c2x, gnu90, gnu99, gnu11, gnu17, gnu2x
+	gem_cxx_standard="-std=gnu++11"	# c++98, c++03, c++11, c++14, c++17, c++2a, c++20, gnu++98, gnu++03, gnu++11, gnu++14, gnu++17, gnu++2a, gnu++20
 
-	gem_use_clang=0
+	gem_use_clang=1
 
-	gem_is_cplusplus=0
+	gem_is_cplusplus=1
 
 	gem_build_script_type="cmake"
 #	gem_build_script_type="autotools"

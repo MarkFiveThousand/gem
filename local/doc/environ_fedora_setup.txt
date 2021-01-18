@@ -9,12 +9,14 @@
 # =============================================================================
 # To Do:
 # =============================================================================
-What is the default path for linux?  In the instructions for setting/getting
-the selinux state, the commands are in the /usr/sbin folder.  That is not in my
-path.  The online documentation shows calling the commands including the path.
-Should we add /usr/sbin to our path?  Is it already there?  In gem_bash_init,
-where we set the path, we should document the default Fedora path.  Update the
-selinux appendix as appropriate.
+# For Mark.  Everyone else may ignore this.
+#
+# What is the default path for linux?  In the instructions for setting/getting
+# the selinux state, the commands are in the /usr/sbin folder.  That is not in my
+# path.  The online documentation shows calling the commands including the path.
+# Should we add /usr/sbin to our path?  Is it already there?  In gem_bash_init,
+# where we set the path, we should document the default Fedora path.  Update the
+# selinux appendix as appropriate.
 
 
 # =============================================================================
@@ -40,7 +42,7 @@ selinux appendix as appropriate.
 # The official documentation appears to be undergoing changes.  The document
 # linked to below is incomplete.
 #
-# https://docs.fedoraproject.org/en-US/fedora/f31/
+# https://docs.fedoraproject.org/en-US/fedora/f32/
 #
 # More complete documentation can be found at the Fedora wiki link below.  Enter
 # terms related to what you're looking for.  Pay attention to the dates on
@@ -61,8 +63,9 @@ selinux appendix as appropriate.
 #
 # Many commands are prefaced with "sudo".  Sudo is short for "super user do".
 # Super user is a user with administrator rights, typically a user named
-# "root".  We'll give our user the right to execute a subset of commands as
-# administrator by adding our user to the /etc/sudoers file.
+# "root", also known as administrator of the computer.  We'll give our user
+# the right to execute a subset of commands as administrator by adding our
+# user to the /etc/sudoers file.
 #
 # A user may also execute commands as administer by temporarily assuming the
 # identiy of root user by entering the "su" command, pressing Enter, followed
@@ -79,7 +82,7 @@ selinux appendix as appropriate.
 # this document.  It is recommended that readers new to Linux keep a
 # reference handy for looking up commands as needed:
 #
-# Bash Resources:
+# Resources:
 #
 # Introduction to bash basics:
 # https://learnxinyminutes.com/docs/bash/
@@ -151,7 +154,7 @@ selinux appendix as appropriate.
 #
 # NOTE: The official documentation of the Fedora download and installation
 # process can be found at:
-# https://docs.fedoraproject.org/en-US/fedora/f30/install-guide/
+# https://docs.fedoraproject.org/en-US/fedora/f32/install-guide/
 # You should skim through it to make yourself aware of the more detailed
 # instructions available.
 
@@ -169,7 +172,7 @@ selinux appendix as appropriate.
 # =============================================================================
 #
 # Use Fedora's Media Writer, as documented at:
-# https://docs.fedoraproject.org/en-US/fedora/f30/install-guide/
+# https://docs.fedoraproject.org/en-US/fedora/f32/install-guide/
 #
 # Proceed to the section of this document titled, Install Fedora Linux.
 
@@ -1637,10 +1640,10 @@ URxvt*internalBorder: true
 
 ! Geometry and font
 urxvt*geometry: 84Ã—24
-urxvt*font: xft:Bitstream\ Vera\ Sans\ Mono:style=roman:pixelsize=13
-!URxvt*boldFont: -xos4-terminus-bold-*-*-*-14-*-*-*-*-*-iso8859-15,xft:terminus:bold:pixelsize:12
-!URxvt*italicFont: xft:Bitstream Vera Sans Mono:italic:autohint=true:pixelsize=12
-!URxvt*boldItalicFont: xft:Bitstream Vera Sans Mono:bold:italic:autohint=true:pixelsize=12
+urxvt*font: xft:Bitstream\ Vera\ Sans\ Mono:style=roman:pixelsize=16
+!URxvt*boldFont: -xos4-terminus-bold-*-*-*-14-*-*-*-*-*-iso8859-15,xft:terminus:bold:pixelsize:16
+!URxvt*italicFont: xft:Bitstream Vera Sans Mono:italic:autohint=true:pixelsize=16
+!URxvt*boldItalicFont: xft:Bitstream Vera Sans Mono:bold:italic:autohint=true:pixelsize=16
 
 URxvt*utmpInhibit: false
 URxvt*urgentOnBell: false
@@ -1653,6 +1656,14 @@ EOF
 
 chmod u+x ~/.Xdefaults
 xrdb -load ~/.Xdefaults
+
+
+# NOTE:
+# Notice the pixelsize setting in ~/.Xdefaults, as shown below.  This is where
+# you change the font size of the terminal, if you're not please with the
+# default setting.
+
+urxvt*font: xft:Bitstream\ Vera\ Sans\ Mono:style=roman:pixelsize=16
 
 
 
