@@ -18,7 +18,6 @@ function echo_local
 
 
 
-# Returns the fullpath to the found tool (e.g. CC, CXX, AR, LD, etc.)
 function gem_build_FindCompilerTool
 {
 	local lvalue=$1
@@ -50,12 +49,16 @@ function gem_build_FindCompilerTool
 
 					local fullpath=${dir}/${file}${ext}
 					if [[ -f ${fullpath} ]]; then
+						# Found it!
 						gem_build_FindCompilerTool_found=${fullpath}
+						if [[ ${gem_triple} == "x86_64-w64-mingw32" || ${gem_triple} == "x86_64-pc-windows-msvc" || ${gem_triple} == "x86_64-pc-cygwin" ]]; then
+							gem_build_FindCompilerTool_found=${gem_build_FindCompilerTool_found}.exe
+						fi
 						break
 					fi
 				done
 				if [[ ! -z ${gem_build_FindCompilerTool_found} ]]; then
-					break
+					break	# Found it!
 				fi
 			fi
 		done
