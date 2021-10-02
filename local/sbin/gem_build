@@ -139,6 +139,7 @@ function gem_build_SetDefaults
 function gem_build_v_DownloadSource { gem_build_DownloadSource ;}
 function gem_build_DownloadSource
 {
+	echo "Fuck" ; exit
 	# Parse gem_filename_url.
 	gem_filename_archive=${gem_filename_url##*/}
 
@@ -402,9 +403,10 @@ ${TEMP_SYSROOT_DIR}/mingw/lib/pkgconfig"
 	# Find the gem include file and libraries.
 	PKG_CONFIG_SYSTEM_INCLUDE_PATH=${PKG_CONFIG_SYSTEM_INCLUDE_PATH}:${gem_fullpath_install}/include
 	PKG_CONFIG_SYSTEM_LIBRARY_PATH=${PKG_CONFIG_SYSTEM_LIBRARY_PATH}:${gem_fullpath_install}/lib
-	PKG_CONFIG_LIBDIR="${PKG_CONFIG_LIBDIR}:\
+	PKG_CONFIG_LIBDIR="\
 ${gem_fullpath_install}/share/pkgconfig:\
-${gem_fullpath_install}/lib/pkgconfig"
+${gem_fullpath_install}/lib/pkgconfig:\
+${PKG_CONFIG_LIBDIR}"
 
 #	echo $(pkg-config --cflags-only-I sdl2) ; echo
 #	echo $(pkg-config --libs-only-L sdl2) ; echo
@@ -1075,6 +1077,15 @@ function gem_build_SetBuildType_common
 {
 	# Define common build flags.
 	if [[ ${gem_build_script_type} == "cmake" ]]; then
+
+
+		# We need to do something like this.
+		#
+		# CMAKE_CXX_STANDARD accepts values 98, 11, 14, 17, and 20 to perform the equivalent of std=gnu++11.
+		# gem_cmake_params="-DCMAKE_CXX_STANDARD=98 ${gem_cmake_params}"
+
+
+
 		noop=0
 	elif [[ ${gem_build_script_type} == "autotools" ]]; then
 

@@ -21,6 +21,12 @@ Uncategorized
 -------------------------------------------------------------------------------
 gem_build
 -------------------------------------------------------------------------------
+* Support various C/C++ standards under cmake with -DCMAKE_CXX_STANDARD=98.
+
+* Verify that all gem_build_... files are using gem_build_v_SetFlags().
+
+* Perform a quick test to see if the compiler outputs "clang: warning: argument unused during compilation: '-mcpu=x86-64' [-Wunused-command-line-argument]"
+  If it does, don't include the option.
 
 * ./gem_build_cmake_hello -host mingw -m -cmdLine -redir does not produce
   output directed to a file.

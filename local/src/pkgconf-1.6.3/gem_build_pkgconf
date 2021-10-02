@@ -104,9 +104,6 @@ function gem_build_v_OnCommandLine_Build
 
 function gem_build_v_OnBuild
 {
-	gem_flags_c="$(gem_build_PkgConfig --cflags zlib) ${gem_flags_c}"
-	gem_flags_ld="$(gem_build_PkgConfig --libs zlib) ${gem_flags_ld}"
-
 	gem_build_v_DebugDumpVars
 	gem_build_OnBuild
 }

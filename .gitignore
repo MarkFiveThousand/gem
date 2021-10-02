@@ -59,11 +59,16 @@ local/src/pkgconf-1.6.3/pkgconf-*.tar.xz
 
 local/src/pugixml-1.10/
 
+
 local/src/sdl2-2.0.11/build
 local/src/sdl2-2.0.11/build_tests
 local/src/sdl2-2.0.11/src
-
 local/src/sdl2-2.0.11/src_old
+
+local/src/sdl2-2.0.14/build
+local/src/sdl2-2.0.14/build_tests
+local/src/sdl2-2.0.14/src
+
 
 local/src/texinfo-*/build
 local/src/texinfo-*/src

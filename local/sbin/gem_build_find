@@ -8,10 +8,10 @@
 #     \/__________/\/____/  \/__/\/__/\/__/ \/_________/\/____/  \/______/\/__/ \/___/  \/____/
 
 
-_echo_local=1
+echo_local_enable=0
 function echo_local
 {
-	if [[ ${_echo_local} -ne 0 ]]; then
+	if [[ ${echo_local_enable} -ne 0 ]]; then
 		echo "$@"
 	fi
 }
@@ -313,7 +313,7 @@ function gem_build_FindCompilerHeaders
 		# For each parent search directory...
 		for gem_path in ${gem_fullpathlist_compiler_hdrs}
 		do
-echo_local "--------------------- ${gem_file}: ${gem_path} ---------------------"
+#echo_local "--------------------- ${gem_file}: ${gem_path} ---------------------"
 			if [[ ! -d ${gem_path} ]]; then
 				gem_script_v_Error "Directory does not exist: ${gem_path}"
 			fi
@@ -333,7 +333,7 @@ echo_local "--------------------- ${gem_file}: ${gem_path} ---------------------
 					gem_script_v_Error "Header directory did not exist.  That can happen if the file being searched for was located in more that one location.  The following was output by find: -->${gem_fullpath_parent}<--"
 				fi
 				gem_flags_cpp="${gem_flags_cpp} -isystem ${gem_fullpath_parent}"
-echo_local "${gem_fullpath_parent} contains ${gem_file}."
+#echo_local "${gem_fullpath_parent} contains ${gem_file}."
 			fi
 		done
 	done
@@ -370,7 +370,7 @@ function gem_build_FindCompilerLibraries
 					gem_script_v_Error "Compiler directory did not exist.  That can happen if the compiler library being searched for was located in more that one location.  The following was output by find: ${gem_fullpath_parent}"
 				fi
 				gem_flags_ld="${gem_flags_ld} -L${gem_fullpath_parent}"
-				gem_script_v_Msg "${gem_fullpath_parent} contains ${gem_file}."
+				echo_local "${gem_fullpath_parent} contains ${gem_file}."
 			fi
 		done
 	done
