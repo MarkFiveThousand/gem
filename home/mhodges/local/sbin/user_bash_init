@@ -10,9 +10,8 @@
 #
 # File: user_bash_init
 #
-# Configure user-specific environment and startup programs.  It is expected
-# that 
-# 
+# Configure user-specific environment and startup programs.
+
 
 function gem_bash_init_Main()
 {
@@ -28,12 +27,6 @@ function gem_bash_init_Main()
     # =========================================================================
     # Path & Environment Variables
     # =========================================================================
-
-    # Add user's sbin directory to the path.
-#    gem_fullpath_user_sbin=${gem_fullpath_gem}/home/${USER}/local/sbin
-#    if [[ -d ${gem_fullpath_user_sbin} ]]; then
-#        PATH="${PATH}:${gem_fullpath_user_sbin}"
-#    fi
 
     # Git command line needs to know which editor you use:
     export EDITOR=code
@@ -76,7 +69,6 @@ function gem_bash_init_Main()
     else
 		echo "ERROR: Build platform not supported: ${gem_os}" ; exit
     fi
-#    export PATH="${PATH}"
 
 
     # =========================================================================

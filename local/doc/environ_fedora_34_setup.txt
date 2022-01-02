@@ -1,0 +1,2106 @@
+#  ___________                           __________
+# /\   _______\                         /\   ______\
+# \ \  \______/_     ___   ____ ____ ___\ \  \_____/_     ___   ___ ___  ______    ___    ___
+#  \ \  \ /\__  \  /'___`\/\   V    V   \\ \_______  \  /'   `\/\  \\  \/\   __\/' ._`\ /'___`\
+#   \ \  \\/__\  \/\  ___/\ \  \/\  \/\  \\/_______\  \/\  \\  \ \  \\  \ \  \ /\  \__//\  ___/
+#    \ \__________\ \____\ \ \__\ \__\ \__\ /\_________\ \_____/\ \______\ \__\\ \____/\ \____\
+#     \/__________/\/____/  \/__/\/__/\/__/ \/_________/\/____/  \/______/\/__/ \/___/  \/____/
+
+# =============================================================================
+# Fedora 34 Installation Notes
+#
+# Install the Fedora operating system in either a standalone box or intall
+# Oracle VirtualBox on Windows, then install Fedore in the virtual machine.
+# =============================================================================
+
+
+
+# =============================================================================
+# To Do
+# =============================================================================
+# For Mark.  Everyone else may ignore this.
+#
+# What is the default path for linux?  In the instructions for setting/getting
+# the selinux state, the commands are in the /usr/sbin folder.  That is not in
+# my path.  The online documentation shows calling the commands including the
+# path.  Should we add /usr/sbin to our path?  Is it already there?  In
+# gem_bash_init, where we set the path, we should document the default Fedora
+# path.  Update the selinux appendix as appropriate.
+
+
+# =============================================================================
+# Next Time
+# =============================================================================
+# At some point during configuration, logging out then back in results in the
+# task bar not showing up upon login.  Rebooting restores the task bar.
+#
+# Determine which change is causing this.
+
+
+# =============================================================================
+# Preface
+# =============================================================================
+#
+# Fedora Linux is an advanced development branch of the commercially used Red
+# Hat Enterprise Linux.  Red Hat first releases leading edge packages into the
+# Fedora development line, then later merges them into Red Hat Enterprise
+# Linux.  Fedora is deemed stable.  Beta releases of Fedora, containing the
+# newest beta package releases, are also available.  We're sticking with the
+# latest stable release of Fedora in this guide.
+#
+# This guide covers installing Fedora Linux, LXQt Edition.  LXQt Edition is
+# geared towards low resource PCs.  We're favoring it for it's light weight and
+# speed.  Other variations of Fedora, called "spins", are also available at
+# https://spins.fedoraproject.org.
+#
+#
+# Official Fedora Documentation:
+# ------------------------------
+# The official documentation appears to be undergoing changes.  The document
+# linked to below is incomplete.
+#
+# https://docs.fedoraproject.org/en-US/fedora/f34/
+#
+# More complete documentation can be found at the Fedora wiki link below.
+# Enter terms related to what you're looking for.  Pay attention to the dates
+# on articles.  Much old material is present-- some still relevant, some not.
+#
+# https://fedoraproject.org/wiki/Special:Categories
+#
+#
+# Using this Document
+# ------------------------------------------------------------
+# NOTE: Some parts of this document are old, and may refer to commands that are
+# now deprecated, though hopefully those have all been removed or updated.
+#
+# *TODO: Move the following block to the terminal installation instructions.
+#
+# Throughout this document lists of commands are given.  They may be copied
+# from this document by selecting the text, copying using ctrl-c, then pasting
+# into a command terminal by middle-clicking in the terminal window.  Double-
+# clicking on text selects a block of text delineated by spaces.
+#
+# Super User Commands
+# -------------------
+#
+# Many commands are prefaced with "sudo".  Sudo is short for "super user do".
+# Super user is a user with administrator rights, typically a user named
+# "root", also known as administrator of the computer.  We'll give our user the
+# right to execute a subset of commands as administrator by adding our user to
+# the /etc/sudoers file.  More on that later.
+#
+# A user may also execute commands as administer by temporarily assuming the
+# identiy of root user by entering the "su" command, pressing Enter, followed
+# by entering the administrator password.  The command "exit" will return the
+# user to their own identity.  Wherever you see "su" within a block of
+# commands, you must enter root's password from the keyboard before proceeding
+# with the commands that follow.
+
+
+# Linux Commands:
+# ---------------
+# *TODO: Provide a basic tutorial for navigating the file system from the
+# command line.
+#
+# It is expected readers of this document will take it upon themselves to learn
+# linux commands on their own, as instruction of such is beyond the scope of
+# this document.  It is recommended that readers new to Linux keep a
+# reference handy for looking up commands as needed:
+#
+# Resources:
+#
+# Introduction to bash basics:
+# https://learnxinyminutes.com/docs/bash/
+#
+# Here's a great bash cheat sheet: https://devhints.io/bash
+#
+# https://www.google.com/search?q=linux+beginner+command+reference
+#
+# http://wiki.bash-hackers.org/
+#
+# http://wiki.bash-hackers.org/syntax/shellvars
+#
+# http://mywiki.wooledge.org/BashGuide
+#
+# https://www.shellcheck.net/
+
+
+
+
+
+
+# =============================================================================
+# Contents:
+# =============================================================================
+# *TODO: Update this TOC.
+#
+# Overview
+# Download Fedora Linux, LXQt Edition
+# Burn a CD Within Fedora
+# Create a bootable USB Within Fedora
+# Create a bootable USB Within Windows
+# Create a Virtual Machine
+# Install Fedora Linux
+# Install VirtualBox Guest Additions
+# Terminal Settings
+# File Manager Settings
+# Set Hostname
+# LXQt Appearance
+# Customize the Window Border
+# Customize Desktop and Login Backgrounds
+# Change the Login Screen Background
+# Change the Bootup Theme (Animation)
+# Sudo
+# Install Packages
+# Change LXQt Clock Time Display to 12 hour rather than 24 hour
+# Configure RXVT Terminal
+# Add Quick Links to Panel
+# File Associations
+# Remove Unwanted Applications and Directories
+# Autostart
+# Install Audio & Video Codecs
+# Install & Configure Oracle Java
+# Configure Git Revision Control
+# Download Gem
+# Update .bashrc to Run Scripts Initializing the Gem Development Environment
+#
+# Appendix A: Repositories
+# Appendix B: Grouplists
+# Appendix C: Firewall Notes
+# Appendix D: SELinux Notes
+# Appendix E: Back Up Files
+# Appendix F: Creating a Disk Partion
+# Appendix G: Disk Usage Notes
+# Appendix H: Group List
+
+
+
+
+
+# =============================================================================
+# Overview                                              Last updated: 9/25/2021
+# =============================================================================
+
+# Sources of Additional Documentation:
+# ------------------------------------
+# The official documentation can be found at:
+# https://docs.fedoraproject.org/en-US/docs/
+#
+# NOTE: The official documentation of the Fedora download and installation
+# process can be found at:
+# https://docs.fedoraproject.org/en-US/fedora/f34/install-guide/
+# You should skim through it to make yourself aware of the more detailed
+# instructions available, however this document alone should be sufficient to
+# get an installation up and running.
+
+# =========================
+# Installation Instructions
+# =========================
+# We support two options for installing fedora linux.
+#
+# Option 1: Installing Fedora in VirtualBox running inside of Windows
+# -------------------------------------------------------------------
+#
+# You do not need a bootable CD/DVD/USB.  VirtualBox can read the .iso file
+# directly as a virtual optical (CD/DVD) ROM drive.
+#
+# Jump to the section titled "Download Fedora Linux, LXQt Edition."  You may
+# proceed with the downloaded .iso file.
+#
+# Option 2: Installing Fedora on a standalone system
+# --------------------------------------------------
+#
+# You will need to create bootable installation media.  We have several options
+# for creating boot media from which to install Fedora.  Jump to the
+# appropriate section further below.
+#
+# a.) Create a bootable CD Within Fedora
+# b.) Create a bootable USB Within Fedora
+# c.) Create a bootable USB Within Windows
+
+
+
+# =============================================================================
+# Download Fedora Linux, LXQt Edition                    Last updated: 6/7/2021
+# =============================================================================
+
+# Navigate to https://spins.fedoraproject.org/en/lxqt/.
+#
+# Scroll down and click "Download Now."  At the next page, click "Download."
+# Your download will begin.  No need to worry about verifying the download
+# after downloading it.  That will be done much more easily during the install
+# process.
+#
+# If you're installing Fedora in a virtual machine, the .iso file you just
+# downloaded will be your bootable media.  Proceed to the section titled
+# "Create a Virtual Machine."
+
+
+# =============================================================================
+# Create a bootable CD Within Fedora              Last updated: Before 6/7/2021
+# =============================================================================
+# NOTE: At the time of upgrading to Fedora 34, these instructions were not
+# reviewed for continued correctness.  Update reviewing, please note the date
+# of last review.
+
+# If you're running Fedora in a standalone device, as opposed to a virtual
+# machine, then jump to the section titled Install Brasero CD Burning
+# Application.  Otherwise, you're running Fedora in a virtual machine.  The
+# next couple of steps must be performed in Oracle VM VirtualBox Manager with
+# the virtual machine *not* running.
+#
+# First, you may need to eject the guest addition CD, that may still be in the
+# virtual CD drive from when we initially installed the currently running
+# version of Fedora.
+
+# In Oracle VM VirtualBox Manager, select your virtual machine in the left
+# pane, then click Settings at the top.  In the left pane click Storage.  In
+# the Storage Devices panel, below Controller: IDE, select the blue circle.  To
+# the far right, under Attributes, where it says "Optical Drive:", click on the
+# blue circle, then Remove Disk from Virtual Drive.
+
+# Now we're going to map the virtual CD drive to the physical one in the host
+# machine.  In the Storage Devices panel, below Controller: IDE, select the
+# blue circle, again.  To the far right, under Attributes, where it says
+# "Optical Drive:", click on the blue circle, then select Host Drive 'D:', or
+# whatever your CD drive is called.  Check the passthrough box.  When checked,
+# the guest is allowed to send ATAPI commands directly to the host-drive which
+# makes it possible to use CD/DVD writers connected to the host inside the VM.
+#
+# Click Ok, then start the VM.
+
+
+# Install Brasero CD Burning Application:
+
+sudo dnf install -y brasero
+
+# Run brasero.  Fedora->Sound & Video->Brasero
+
+# Click Select a disc image to write.  Navigate to your downloaded fedora .iso.
+# Your CD/DVD writer should be listed under Select a disc to write to.  Click
+# Burn.
+
+
+# =============================================================================
+# Create a bootable USB Within Fedora             Last updated: Before 6/7/2021
+# =============================================================================
+# NOTE: At the time of upgrading to Fedora 34, these instructions were not
+# reviewed for continued correctness.  Update reviewing, please note the date
+# of last review.
+
+# We're going to use Fedora's Media Writer tool to create a bootable USB, as
+# documented at:
+#
+# https://docs.fedoraproject.org/en-US/fedora/f32/install-guide/install/Preparing_for_Installation/
+
+
+# If you're not running in a VM, you may skip this step.  On the menu bar
+# choose Devices->USB.  Then select your USB drive.  This is like plugging it
+# into the VM.  It should show up under /run/media/$USER/.
+# E.g.: /run/media/mhodges/6DBE-FA41.
+
+
+# Install Media Writer:
+
+sudo dnf install -y mediawriter
+
+# Run Media Writer:  Fedora->System Tools->Fedora Media Writer
+
+
+# At the top-right, verify that Intel 64bit is selected.  This is most likely
+# the kind of computer you have.
+#
+# If you have already downloaded the LXQt .iso file, click Custom image.
+# Navigate to your downloaded .iso file.
+#
+# If you have *not* yet downloaded the LXQt .iso file, click the three dots at
+# the bottom to display a list of the Fedora Spins available.  Select "Fedora
+# LXQt Desktop 32", then click "Create Live USB..."
+
+# The Write Custom Image dialog should be displayed.  Your USB drive should be
+# visible, or else selectable.  Click Write to Disk.
+
+
+# =============================================================================
+# Create a bootable USB Within Windows            Last updated: Before 6/7/2021
+# =============================================================================
+# NOTE: At the time of upgrading to Fedora 34, these instructions were not
+# reviewed for continued correctness.  Update reviewing, please note the date
+# of last review.
+
+# Download the Fedora Media Writer from https://getfedora.org/en/workstation/download
+#
+# Install and run it.
+#
+# If you have already downloaded the LXQt .iso file, click Custom image.
+# Navigate to your downloaded .iso file.
+#
+# If you have *not* yet downloaded the LXQt .iso file, click the three dots at
+# the bottom to display a list of the Fedora Spins available.  Select "Fedora
+# LXQt Desktop 32", then click "Create Live USB..."
+
+# The Write Custom Image dialog should be displayed.  Your USB drive should be
+# visible, or else selectable.  Click Write to Disk.
+
+
+
+
+
+# =============================================================================
+# Create a Virtual Machine                                Last Updated 6/7/2021
+# =============================================================================
+# If you are installing Fedora on a standalone system, skip ahead to the
+# section titled Install Fedora Linux.
+#
+# VirtualBox, made by Oracle, allows various operating systems to run
+# concurrently within other operating systems using virtualization.  We're
+# going to create a virtual machine to run Fedora Linux inside of Windows.
+#
+# Download and install VirtualBox for Windows Hosts from:
+# https://www.virtualbox.org/wiki/Downloads
+#
+# After installing it, consider pinning a shortcut to
+# C:\Program Files\Oracle\VirtualBox\VirtualBox.exe to the Windows taskbar for
+# easy launching.
+#
+# Launch C:\Program Files\Oracle\VirtualBox\VirtualBox.exe, Oracle VM
+# VirtualBox Manager using the pinned shortcut.
+#
+# Go to Machine->New, to create a new virtual machine.  Assign it a name.  I
+# use "f34v1" for Fedora 34 version 1.  I often will create more than one
+# version for experimental purposes.  Choose a name to your liking.
+#
+# Note the Machine Folder field.  This is where your virtual machine files are
+# stored on your local hard drive.  Among these files is your virtual hard
+# drive, a .vdi file.
+#
+# Choose Type: Linux
+#
+# Choose Version: Fedora (64-bit)
+#
+# Choose a memory size that is in the green region.  I choose half of my actual
+# system memory size.  Memory handed over to your virtual machine while it is
+# running will become unavailable to Windows.  Giving too much memory to your
+# virtual machine will cause Windows to perform very poorly.  The amount of
+# memory allocated can be easily changed later.
+#
+# Under "Hard disk", leave "Create a virtual hard disk now" selected.
+#
+# At any time during this process, you may select the "Guided Mode" button at
+# the bottom for further information about the selections we will be making.
+# This guide is walking you through "Expert Mode".
+#
+# Click "Create."
+
+# Under "Hard disk file type", leave VDI (VirtualBox Disk Image) selected.
+#
+# Under "Storage on physical hard disk", leave "Dynamically allocated"
+# selected.  This permits the virtual hard disk to grow up to the selected
+# size.  It will begin at a minimal size.  I'm specifing a 300 GB hard drive,
+# but the actual starting size will be about 8 GB following a fresh install and
+# update.  The drive will grow up to the specified size.
+#
+# If you're tight on space and you only intend to play with fedora a bit, then
+# creating a 20 GB hard drive may be sufficient.
+#
+# Click "Create."
+
+# In the "Create Virtual Hard Disk" dialog box, choose a hard drive size.
+#
+# I'm creating a 300 GB harddrive for large software projects.  The remainder
+# of this tutorial expects that you've chosen to create a 300 GB virtual hard
+# drive.  You may choose to create a hard drive of a different size.
+#
+# Under Hard disk file type, you should leave VDI (VirtualBox Disk Image)
+# selected.  Under Storage on physical hard disk, leave Dynamically allocated.
+# Even though we're requested a 300 GB drive, the space will be allocated as
+# needed rather than all at once.
+#
+# Click Create.
+
+
+# =============================================================================
+# Configure Our Virtual Machine
+# =============================================================================
+# We will install the Fedora Linux operating system in a moment.  First, we
+# need to change some settings for our virtual machine.  Deep integration of
+# the Fedora Linux operating system with Windows is provided by a system called
+# Guest Additions.
+#
+# In "Oracle VM VirtualBox Manager", with our new virtual machine selected in
+# the left panel, click "Settings" on the tool bar at the top.
+#
+# In the left panel, select "General".  In the right panel, click the
+# "Advanced" tab.  Change "Shared Clipboard" to "Bidirectional".  Change
+# "Drag'n'Drop" to "Bidirectional."
+#
+# In the left panel, select "System".  In the right panel, select the Processor
+# tab.  Notice how many processors will be allocated for the virtual machine.
+# The number available will depend on the number of cores available in the
+# processor running in your actual machine.  Select a value in the green area,
+# keeping in mind, like system RAM, these resources will be exclusively
+# available to the virtual machine, and therefore not to Windows.  As such,
+# allocating too many processors to the virtual machine may adversely affect
+# the performance of your Windows machine.  This setting, like RAM, can be
+# changed at any point while the virtual machine is powered down.
+#
+# In the left panel, select "Display".  In the right panel, click the Screen
+# tab.  Next to "Acceleration", check "Enable 3D Acceleration."  WARNING!  I
+# have run into stability problems with VirtualBox crashing and menus not
+# drawing correctly.  Disabling 3D acceleration fixed these issues.  Enable
+# with caution.
+#
+# In the left panel, select "Storage".  In the right panel, below "Controller:
+# IDE", Click "Empty."  This is how we insert a CD image (.iso file) into the
+# virtual machine's CD/DVD drive.  Click the blue circular icon to the right of
+# "IDE Secondary Device 0."  Select "Choose disk file..."  Navigate to and
+# select your downloaded .iso file.  Mine is named
+# Fedora-LXQt-Live-x86_64-34-1.2.iso.  Yours may have a different version
+# number. Select your file and click Open.  When the dialog box is dismissed,
+# Check the "Live CD/DVD" checkbox.
+#
+# In the left panel, select "Network".  In the right panel, change "Attached
+# to:" to "Bridged Adapter."  "Name:" refers to your network device that you
+# would like to use to connect to your network.  This will likely be your PC's
+# WiFi adapter.
+#
+# Note that while the host PC may be using a wireless WiFi connection, this
+# will be presented to the virtual machine as a wired ethernet connection.
+#
+# In the left panel, select "USB".  In the right panel, select USB 3.0.  Under
+# "USB Device Filters", click the second rightmost blue icon (the one with the
+# green plus).  If you have any USB devices that you would like to be visible
+# to Fedora (other than your keyboard or mouse), select them.  I select my
+# android phone here for software development within the fedora environment.
+# You likely have nothing to enable, here.
+#
+# Click "OK"
+
+
+# =============================================================================
+# Configure Optional File Sharing between Windows and Linux
+#
+# *TODO: Move this section into gem\local\doc\environ_network.txt.
+#
+# Note, if you're just installing Fedora to play around with it, you don't need
+# to share hard drives between Windows and Linux.  However, when you begin
+# doing any substantial work in Linux, you will likely want to come back here
+# to enable easy file sharing between linux and Windows.
+# =============================================================================
+#
+# We're going to notify Oracle VirtualBox VM Manager of which Windows folders
+# we would like to share with Fedora. If, at this point, you're not sure which
+# folders to share, that's fine.  You don't need to share any folders at this
+# time.  You can skip this section. We can share folders at any point in the
+# future.
+#
+# Open settings for your virtual machine in Oracle VirtualBox VM Manager.  In
+# the left panel, select "Shared Folders".  In the right panel, click the
+# blue folder icon (the one with the green plus).  Under "Folder Path:", select
+# "Other..."  Select a folder that you would like to make available/share with
+# Fedora.
+#
+# As I have multiple development environments available (i.e. windows, fedora,
+# msys, & cygwin), I share my user /home/$USER folder between each.  I create
+# the following shared folders:
+#
+# In this section, you'll need to know the host name of your Windows pc.  To
+# find out what your pc's host name is, open a Windows command prompt by
+# entering the following into the search box below the Windows start menu,
+# "cmd".  When the command terminal opens, enter the "hostname" command.  My
+# host name is "mars".  Anywhere you see "mars" in the below commands, you'll
+# need to replace with your own pc's host name.
+#
+# Do not check the Read-only or Auto-mount boxes.
+#
+# Folder Path: C:\
+# Folder Name: mars_root
+# Mount point: /home/mhodges/gem/home/mhodges/mnt/mars_root
+#
+# Folder Path: C:\msys64\home\mhodges
+# Folder Name: mars_msys64_mhodges
+# Mount point: /home/mhodges/gem/home/mhodges/mnt/mars_msys64_mhodges
+#
+# Folder Path: C:\cygwin64\home\mhodges
+# Folder Name: mars_cygwin_mhodges
+# Mount point: /home/mhodges/gem/home/mhodges/mnt/mars_cygwin_mhodges
+#
+# Note: These folders will not be available until we later install Guest
+# Additions.
+#
+# Click "OK."
+
+# Now your virtual machine is configured with the Fedora installation .iso file
+# (disk) inserted into the virtual optical drive.  We're ready boot the virtual
+# machine and install Fedora.  Advance to the section titled First Boot to
+# Install the Fedora OS.
+
+
+
+# =============================================================================
+# First Boot to Install the Fedora OS
+# =============================================================================
+#
+# Now your virtual machine is ready to be run!
+#
+# NOTE: This section is for the very first time you are booting Fedora.  If you
+# have already inserted the .iso disk file into the virtual optical drive, then
+# you will be presented with a different menu when you boot.  If this is the
+# case, skip to the section titled Install Fedora Linux.
+#
+# The name of your new virtual machine should be shown in the left panel in
+# Oracle VM VirtualBox Manager.  Mine shows as, "f34v1."
+#
+# Select it then click "Start", on the menu bar at the top.
+#
+# Upon first launch, you may see the "Select start-up disk" dialog box with the
+# following text:
+#
+# "Please select a virtual optical disk file or a physical optical drive
+# containing a disk to start your new virtual machine from.
+#
+# The disk should be suitable for starting a computer from and should contain
+# the operating system you with to install on the virtual machine if you want
+# to do that now.  The disk will be ejected from the virtual drive
+# automatically next time you switch the virtual machine off, but you can also
+# do this yourself if needed using the Devices menu."
+#
+# Click "Cancel."
+#
+#
+# Get Ready!  You're going to have to take action quickly!
+#
+# The start up screen will show for about 2 seconds displaying the message
+# "Press F12 to select boot device" near the lower right corner.  It's very
+# easy to miss.  If you take no action, the message, "FATAL: No bootable medium
+# found! System halted."  This almost certainly did/will happen on your first
+# try.
+#
+# To try again, reboot the virtual device.  On the file menu, go to
+# Machine->Reset.  This time, Press F12 before the start up screen disappears.
+# You get about 2 seconds!  You may have to try a couple times.
+#
+# This will leave you at a screen where you must select where you bootable
+# media is.
+# =============================================================================
+
+
+
+
+# =============================================================================
+# Closing a Virtual Machine
+# =============================================================================
+# When you close the VirtulBox window without properly shutting down the
+# operating system, you are presented with the "Close Virtual Machine" dialog
+# box.  Select "Power off the machine", then "OK."
+#
+# A virtual machine's entire internal state can be saved at any time.  This
+# includes the complete state of memory and the hard drive.  This can consume
+# an enormous amount of hard disk space, but can be useful if you need to
+# restore your machine to an earlier state.  Doing so is beyond the scope of
+# this lesson, and is not applicable to our needs at this point.  Keep in mind,
+# once we get the operating system installed we should always favor a proper
+# operating system shutdown, and never kill VirtualBox by simply closing the
+# window.  To do so, is like unplugging your computer while it's running and
+# can corrupt the hard drive.
+
+
+
+
+
+# =============================================================================
+# Install Fedora Linux
+# =============================================================================
+#
+# *TODO: Update for installing directly to device, rather than in Virtual Box.
+#
+# Note: The LXQt version of Fedora, being the low resource version, initially
+# looks rather ugly.  We will be updating many user interface elements.  It
+# will look and feel much different and more comfortable than the current
+# default configuration.
+
+# Before we embark upon the following steps, it's important to remember that we
+# are configuring a machine that we defined with the VirtualBox Manager.  If we
+# are unsatisfied with anything that we're about to attempt, that is fine.  You
+# may reattempt installing the operating system as many times as you like.
+# Simply exit back out the the Oracle VM VirtualBox Manager, then delete the
+# virtual machine you just created, and start over again.  Be aware that the
+# virtual machine's files, including the harddrive are stored under
+# C:\Users\mhodges\VirtualBox VMs, for user mhodges.  Of course, you will
+# replace mhodges with your own Windows login.
+
+# Boot from the installation .iso file.  You may have to press f12 to change
+# the boot device to CD/DVD or USB.  You should see a short menu with an option
+# to "Test this media & start Fedora-LXQt-Live 34"  Press enter to test the
+# media and run the installer.
+# 
+# When the desktop shows up, you may safely ignore any messages about power
+# management.  You may also see a message similar to the following:
+
+# "VirtualBox Guest Additions update available!  Your virtual machine is
+# currently running the Guest Additions version 6.1.18.  Since you are running
+# a version of Guest Additions provided by the operating system you installed
+# in the virtual machine we recommend that you update it to at least version
+# 6.1.26 using that system's update features, or alternatively that you remove
+# this version and then install the Oracle Guest Additions package using the
+# install option from the Devices menu.  Please consult the documentation for
+# the operating system you are running to find out how to update or remove the
+# current Gyest Additions package."
+#
+# We will address guest additions in a moment.
+#
+#  1.) When the desktop shows up, double-click the "Install to Hard Drive"
+#      icon.  A message box will appear displaying the message, "This file
+#      'Install to Hard Drive' seems to be a desktop entry.  What do you want
+#      to do with it?"  Click Execute.  It may take several seconds for the
+#      installer, called Anaconda Installer, to launch.
+#
+#  2.) Click "Continue" to move past the Language selection menu.
+#
+#  3.) Click "Time & Date."  Verify the Time & Date are set correctly for your
+#      time zone.  At the upper left corner, click "Done."
+#
+#  4.) Click on "Installation Destination."
+#
+#  5.) Near the bottom of the Installation Destination screen, under "Storage
+#      Configuration", select Custom.  Near the top of the screen, verify the
+#      drive that you would like to install to is checked, then click Done at
+#      the top.
+#
+#  6.) This step won't apply to most people.  If you previously had Fedora
+#      installed on this hard drive, which is likely not the case, select all
+#      previous Fedora partitions, then delete (-) button at the bottom.
+#
+#      NOTE: When I click Done, at the bottom of the screen I get the message,
+#      "Error checking storage configuration.  Click for details or press Done
+#      again to continue." Clicking for details gives the message, "Failed to
+#      find a suitable stage1 device: EFI System Partition cannot be of type
+#      ext4.; EFI system Partition must be mounted on one of /boot/efi.; EFI
+#      System Partition cannot be of type lvmpv."  This may have been a result
+#      of installing on an already partitioned drive.  If you run into this,
+#      at the Installation Destination screen, for Storage Configuration,
+#      select Advanced Custom (Blivet-GUI).  Delete any preexisting
+#      partitions, then switch back to Custom
+#
+#  7.) You should now be in the Manual Paritioning screen.  Under "New Fedora
+#      34 Installation", and under "New mount points will use the following
+#      partitioning scheme:", choose LVM.
+
+#  8.) Click the "Click here to create them automatically" link above the
+#      previous one.
+#
+#  9.) The "fedora_localhost-live" prefix is uncomfortably long, so we are
+#      going to shorten it to just "fedora."  To the right, under "Volume
+#      Group:" and "fedora_localhost-live", click the "Modify" button and
+#      rename it to simply "fedora". Click Save.
+
+# 10.) Adjust Volume Sizes
+#
+#      If you just want to play around with Linux and don't intend to
+#      do hardcore software development, then you don't need to change the
+#      size of volumes as described below at all.
+#
+#      *TODO: Instruct what to click on in this above case.  Just click Done,
+#             then Accept Changes?
+
+#      For our purposes here, we may consider a volume to be a special file
+#      folder.  We're going to distribute our hard drive space among two
+#      volumes, one for operating system files and another for our user files.
+#      Keeping the two spaces separate allows higher security settings to be
+#      set for the operating system files.
+
+#      The storage sizes we are about to set here assume that you earlier
+#      created a virtual hard disk of the same size that I did, 300 GB.  It's
+#      okay to enter sizes that you feel are more appropriate to your needs.
+#      If you have a hard drive larger than 300 GB, then you would likely
+#      allocate your additional space to your /home volume for your own usage.
+#
+#      Applications that need to be installed and accessible to all users would
+#      appropriately be installed at the SYSTEM or operating system level in
+#      fedora-root, or / in the file tree, where operating system files go,
+#      rather than at the user level.
+#
+#      We will instal our software development applications in the /home/$USER/
+#      folder.
+#
+#      Your user will be granted super user privileges. This means you will be
+#      able to perform many system administration operations by assuming
+#      identity "super user".  More about that later.
+#
+#      Notice, almost the entire 300 GiB space has automatically been
+#      allocated.  In the lower left, I see TOTAL SPACE 300 GiB and AVAILABLE
+#      SPACE 1023 KiB.  There's always going to be a little space available
+#      that cannot actually be used for various reasons.  While allocating
+#      space we want to keep this number as small as possible.
+
+#      In the upper left, the space is shown to be divided into a DATA portion
+#      and a SYSTEM portion.  The DATA portion will contain all your user home
+#      directory and files.  That's where we do all our work.  The SYSTEM
+#      portion contains the operation system files.  That's where we are about
+#      to install the operating system.  These are located topmost in the file
+#      tree, at the root file path /.
+
+#      Our files located in /home/$USER/ reside within or under the root
+#      folder.  We will give our user privleges to freely modify files within
+#      their /home/$USER/ folder.
+#
+#      The SYSTEM portion also contains additional storage media, like the
+#      fedora install media we booted from.
+#
+#      The hard disk that we renamed "fedora" from "fedora_localhost-live", has
+#      been divided into 3 sections called volumes.  These are named 1.)
+#      fedora-home, located in folder /home, under which your personal files
+#      will reside in /home/$USER, 2.) fedora-root, located in the topmost
+#      folder /, where the operating system files will be installed, and 3.)
+#      sda1 located in /boot is the .iso file/CD/DVD/USB drive you inserted and
+#      booted from to install Fedora, assuming you have notyet removed it.
+#
+#      The way you booted this time is unusual because we are booting from an
+#      alternate media to install the OS onto the hard drive.  Typical boots
+#      will be from the OS we are about to install onto the hard drive.  Sda1,
+#      sda2, sdb1, or sdb2 is the internal name of the .iso file/CD/DVD/USB
+#      drive you inserted and booted from this time.  These drives are located
+#      and accessible in the file tree.  These folders where drives are mounted
+#      are called mount points (E.g. /, /home, and /boot).
+#
+#      In the left pane, click "fedora-root."  In the right pane, change
+#      "Desired Capacity" from "70 GiB", or whatever yours is, to "20 GiB".
+#      This shrinks the amount of space available to the OS.  However, in our
+#      configuration we want to install most applications in the DATA
+#      /home/$USER portion, so we're shifting 50 GiB of available space from
+#      the OS to ourselves.  This will leave about 8-9 GB to install additional
+#      packages beyond our minimal set of OS packages.
+#
+#      If you know you are going to be installing additional packages to be
+#      used by the operating system, or to be available to all users it would
+#      be appropriate to allocate more of your available hard drive space here.
+#      For our case, we are not describing an installation for a multi-user
+#      system, so we're shifting free space from the OS to our own user
+#      account.
+
+#      In the left pane, click "fedora-home".
+
+#      Notice, whatever space you made available by shrinking the fedora-root
+#      volume, will show up as available in the pink box titled "AVAILABLE
+#      SPACE".  Mine shows 50 GiB because I shrunk my fedora-root partition
+#      from 70 GiB to 20 GiB.
+
+#      In the right pane, under "Desired Capacity", increase the size to
+#      consume the space we made available when we shrank the fedora-root
+#      partition.  I changed mine from 229 GiB to 279 GiB.  To update all the
+#      values, after changing the "Desired Capacity", click another partion
+#      (e.g. fedora-root), then back to fedora-home to update "AVAILABLE
+#      SPACE."
+
+#      I was able to grow my fedora-home to 279 GiB on a 300 GiB VM, and
+#      over 800 GiB on a dedicated installation.  Allocate as much "AVAILABLE
+#      SPACE" to fedora-home as you can.  I had 1023 KiB remaining that I was
+#      unable to allocate to any partition.  Click the "Done" button at the
+#      upper left.
+
+#      In the "Summary of Changes" dialog box, click "Accept Changes."  You
+#      will be returned to the "Installation Summary" screen.
+#
+# 11.) Click "Root Password." Set a root password, then click "Done."  You will
+#      be returned to the "Installation Summary" screen.
+#
+# 12.) In the "Installation Summary" screen, click "User Creation".  Enter your
+#      first and last name.  A user name will be generated.  You may change it
+#      if you prefer to have a different user name.
+#
+#      Do not check "Make this user administrator."
+#
+#      NOTE: On our Mingw and Cygwin shells on Windows, the user name will be
+#      your Windows user name.  My user name on Fedora linux is mhodges.  For
+#      consistancy across build paltforms, I changed my Windows user name to
+#      mhodges.
+#
+#      Enter a password, then click "Done."
+#
+# 13.) After returning to the "Installation Summary" screen, click "Begin
+#      Installation."  When configuration is complete, click "Finish
+#      Installation."
+#
+#      To shutdown Fedora click the blue icon in the lower left corner of the
+#      desktop.  This is the equivalent of the Windows start menu.  
+#
+#      NOTE: As of Fedora 32, this icon is black, like the background.  Instead
+#      of clicking on a blue icon, click the black space to the left of the
+#      "1  2".
+#
+#      Click "Leave", then "Shutdown."  Click "Yes" to agree to shutdown.
+#      We'll use the following notation to indicate this and similar menu
+#      selections:
+#
+#      Fedora->Leave->Shutdown.
+#
+# 14.) VirtualBox only: Before we reboot, we need to remove the installation
+#      .iso (disk) in the virtual machine's optical drive.  Return to Oracle VM
+#      VirtualBox Manager.  In the left pane, select your virtual machine.
+#      Click the "Settings" button on the top.
+#
+# 15.) VirtualBox only: In the left pane of the settings menu, click "Storage."
+#      In the right pane, under "Storage Devices" and "Controller: IDE", click
+#      "Fedora-LXQt-Live-x86_64-34-1.2.iso", or your similar .iso file name.
+#
+# 16.) VirtualBox only: To the far right, under "Attributes" and to the right
+#      of "Optical Drive:", click the blue disk icon, then click "Remove Disk
+#      from Virtual Drive."  Click "OK."
+#
+# 17.) On the button bar at the top of the window, click Start to boot your
+#      virtual machine, then log in. 
+
+# VirtualBox only: 
+#
+# 18.) NOTE: Fedora is connecting to the network via a virtual "wired
+#      connection".  However, it is using the host's connection, which may or
+#      may not be wired. In any event, Fedora should obtain an internet
+#      connection through your host pc.
+#
+#      Navigating the linux desktop with the current small window, is most
+#      easily done by maximizing each application wndow and using alt-tab to
+#      cycle between each one.
+#
+#      After we update the operating system, we are going to install VirtualBox
+#      Guest Additions.  Guest Additions will allow tighter integration between
+#      the Windows and Linux operating systems.  That will enable us to share
+#      files, copy and paste between Windows and Linux applications, and make
+#      the Linux desktop resize along with the VirtualBox window.
+
+# 19.) Until that is done, you'll have to either type in the below commands, or
+#      else email this document to yourself on Linux so you can copy and paste
+#      them into the terminal.  I do the latter.  NOTE: This will likely only
+#      be necessary if you are installing fedora on a standalone device.  If
+#      you are installing fedora on Windows in a virtual machine, then you will
+#      likely just have this file open in another window for copying a pasting
+#      commands.
+
+
+#          Install Firefox.  To open a command prompt/terminal window, go to
+#          Fedora->System Tools->QTerminal, or type ctrl-alt-t.  Enter the "su"
+#          command below to become super user (i.e. root/administrator),
+#          followed by root's password.  Then enter the following command:
+#
+#          (Remember, you can copy the line from this document, and paste it
+#          into the terminal windows using the middle mouse button.)
+#
+#          dnf install -y firefox
+#
+#          Run Firefox: Fedora->Internext->Firefox.  This may be a good time to
+#          set your Firefox preferences.  In ssettings, I choose "Restore
+#          previous session" and "Ctrl+Tab cycles through tabs in recently used
+#          order."
+#
+#          Log into your email.  email this document to yourself, so you have
+#          it on the new Fedora installation.  When that is done, you can copy
+#          commands from this document and paste them into the terminal window
+#          to save a lot of typing.
+
+
+#      While viewing this document in the default text editor, Enki, you may
+#      find it easier to view by turning off line wrapping.  I get an error
+#      dialog displaying when I open the following menu.  It's safe to ignore
+#      and click throught it.
+#
+#      a.) Settings->Settings.  In the left panels, click Editor->Long Lines,
+#          and uncheck "Wrap long lines".
+#
+#      b.) In the left panel click, Editor->Font.  In the right panel click
+#          "Change font...".  Select 10 under "Change size", then click "OK"
+
+# 20.) Speed up the dnf package manager by allowing for parallel downloads.
+
+su
+
+echo "max_parallel_downloads=10" >> /etc/dnf/dnf.conf
+exit
+
+
+# 21.) Many updates have likely been released since the downloaded .iso
+#      installation disk was created, so we'll now update the OS.  Open a
+#      command prompt terminal window.  Go to Fedora->System Tools->QTerminal.
+#      Enter the "su" command below to become super user (i.e. root/
+#      administrator), followed by root's password.
+
+#       NOTE: After entering root's password, you may copy the below lines to
+#             the clipboard using ctrl-c, then paste them into the terminal
+#             window using ctrl- shift-v or by clicking the middle mouse
+#             button.  Later we will be installing a different terminal to
+#             replace QTerminal with a more user-friendly one.
+
+su
+# Enter root/administrator password.
+
+
+dnf -y update
+dnf -y update kernel*
+dnf -y install kernel-devel* elfutils-libelf-devel
+
+# Restart Fedora:
+#
+# Fedora->Leave->Reboot
+
+
+
+
+
+# How much hard drive space is being used?  Let's find out.  Open a terminal
+# and enter the below command:
+#
+# Fedora->System Tools->QTerminal
+
+df
+
+# I get the below output (I made a 300 GB virtual hard drive):
+
+
+#
+# Filesystem              1K-blocks    Used Available Use% Mounted on
+# devtmpfs                  2003088       0   2003088   0% /dev
+# tmpfs                     2018652       0   2018652   0% /dev/shm
+# tmpfs                     2018652    1008   2017644   1% /run
+# tmpfs                     2018652       0   2018652   0% /sys/fs/cgroup
+# /dev/mapper/fedora-root  20511312 5452948  13993404  29% /
+# tmpfs                     2018652      20   2018632   1% /tmp
+# /dev/sda1                  999320  189348    741160  21% /boot
+# /dev/mapper/fedora-home 282802744  112384 268255032   1% /home
+# tmpfs                      403728      12    403716   1% /run/user/1000
+#
+# The entries of interest are:
+#
+# /dev/mapper/fedora-root      This is where the operating system and installed
+#                              applications are stored.
+#
+# /dev/mapper/fedora-home      This is our personal hard drive space.  As
+#                              software we create and files we store are kept
+#                              here, we have allocated the greatest amount of
+#                              space here.
+
+# We selected a virtual hard drive (.vdi file) that will dynamically grow up to
+# the maximum size we specified when we create the virtual machine.  Currently,
+# Linux reports we have used a total of 5,452,948 1K-blocks, or about 5 GB.
+# That's a small footprint for a modern operating system with minimal
+# applications installed.
+
+# Now let's see how much space Windows says we're using.  In Windows, navigate
+# to: C:\Users\<Windows user name>\VirtualBox VMs\<your virtualbox machine
+# name>
+#
+# Mine is here:
+#
+# C:\Users\mhodges\VirtualBox VMs\f34v1
+#
+# Windows shows our virtual hard drive (mine: f30v1.vdi) is actually occupying
+# 8 GB in Windows.  Note: If you want to back up your virtual machine's hard
+# drive, this is the file to store.
+#
+# Next, we're going to make the virtual machine a more comfortable place to
+# work.
+
+
+
+# =============================================================================
+# Install VirtualBox Guest Additions
+# =============================================================================
+# Source: https://www.virtualbox.org/manual/ch04.html#guestadd-intro
+#
+# VirtualBox Guest Additions allow tighter integration between the Windows and
+# Linux operating systems.  This will enable us to share files, copy and paste
+# between Windows and Linux applications, make the Linux desktop resize along
+# with the VirtualBox window and more.  See the link above for more details.
+#
+#  1.) The beauty of an open source operating system is we are going to run a
+#      script that will compile the changes into the Fedora operating system
+#      kernel.
+#
+#      Click on "Devices" on the Oracle VM VirtualBox menu bar at the very top.
+#      At the bottom of the menu, select "Insert Guest Additions CD image..."
+#      This will insert the virtual CD into the virtual CD drive.  When the
+#      "Removable medium is inserted" dialog appears, click "Open in file
+#      manager", then click "OK."  The file manager (Fedora->Accessories->
+#      PCMandFM-Qt File Manager) will open.
+#
+#      If you have previously inserted the Guest Additions CD and you need to
+#      launch the installation script again, find on the bar at the bottom-
+#      right of the Fedora desktop a button to the left of the volume icon.
+#      Hover the mouse over it to display the message "Removable media/ devices
+#      manager."  Left-clicking it displays a message similar to
+#      "VBox_GA_6.0.12."  Click the message to open the Guest Additions CD
+#      again.
+#
+#  2.) Find and double click autorun.sh.  When the "Execute file" dialog
+#      appears, click "Execute in Terminal"  Enter root administrator's
+#      password.  NOTE: The terminal window that opens is ugly, and will be
+#      replaced shortly.
+#
+#      ALTERNATIVELY: If you are updating guest additions, the shell may not
+#      execute properly.  I may not have changed the terminal program within
+#      the os properly.  I need to look into that.  That's okay.  Do the
+#      following:
+#
+#      a.) Open a terminal
+#      b.) Become super user: su
+#      c.) cd /run/media/${USER}
+#      d.) cd into the guest additions directory.  It's named something similar
+#          to: VBox_GAs_6.0.14   You can type "VBox_GAs_" then press tab to
+#          complete the file name.
+#      e.) Run: ./VBoxLinuxAdditions.run
+#
+#
+#      When prompted, "Do you wish to continue? [yes/no], type y, then enter.
+#
+#      When the kernel has been rebuilt, complete the installation by pressing
+#      enter to close the terminal.  Close all currently running applications
+#      and restart to run the new kernel.
+#
+#      Fedora->Leave->Reboot
+
+# After logging in, verify Guest Additions are working by resizing the window.
+# The desktop should resize accordingly.
+#
+# If you earlier reduced the font size in the text editor, enki, you may want to
+# return it to size 12 for easier viewing.
+#
+#  3.) On the bar at the bottom-right of the Fedora desktop there's a button to
+#      the left of the volume icon.  Hover the mouse over it to display the
+#      message "Removable media/devices manager."  Left-clicking it displays
+#      a message similar to "VBox_GA_6.0.14."  To the right is the eject
+#      triangle.  Click the triangle to eject the Guest Additions CD.
+#
+# Next, we will continue to make the linux environment more comfortable.
+
+
+
+
+
+
+
+# =============================================================================
+# Terminal Settings
+# =============================================================================
+# We're going to change the text colors in the terminal window.  Open a
+# terminal window:
+#
+# Fedora->System Tools->QTerminal
+#
+# Copy and paste (ctrl-shift-v) the following in the terminal window:
+
+cp ~/.bashrc ~/.bashrc.bak
+cat << EOF >> ~/.bashrc
+
+function gem_colors()
+{
+    alias ls='ls -al --color=auto'
+    alias code='/usr/bin/code --user-data-dir=${HOME}/.config/Code/'
+    export LS_COLORS="rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=01;05;37;41:su=37;41:sg=30;43:ca=30;41:tw=3;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*xz=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.jpg=01;35:*.jpeg=01;35:*.gif=01;35:*.bmp=1;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.axv=01;35:*.anx=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=01;36:*.au=01;36:*.flac=01;36:*.mid=01;36:*.midi=01;36:*.mka=01;36:*.mp3=01;36:*.mpc=01;36:*.ogg=01;36:*.ra=01;36:*.wav=01;36:*.axa=01;36:*.oga=1;36:*.spx=01;36:*.xspf=01;36:"
+    export PS1="\[\$(tput bold)\]\[\$(tput setaf 1)\][\[\$(tput setaf 3)\]\u\[\$(tput setaf 2)\]@\[\$(tput setaf 4)\]\h \[\$(tput setaf 5)\]\W\[\$(tput setaf 1)\]]\[\$(tput setaf 7)\]\\\$ \[\$(tput sgr0)\]"
+}
+gem_colors  # Call it.
+EOF
+
+
+# Define it again for root.  Login as root.  Note: You must use "su -", not
+# just "su":
+
+su -
+
+# Paste the above commands again.  This time we're updating root's
+# ~/.bashrc.
+
+# After we clone the gem repo we'll come back and update root's ~/.bashrc.
+
+# Return to your user identity.
+exit
+
+# To see the changes, close QTerminal, then open it again.
+
+
+
+
+
+# =============================================================================
+# File Manager Settings
+# =============================================================================
+# Open the file manager from the Fedora start menu.
+#
+# Fedora->Accessories->PCManFM-Qt File Manager
+#
+# In the left panel, change "Lists" to "Directory tree."
+#
+# Open Edit->Preferences. In the left pane, click Behavior.  In the right pane,
+# change "Default view mode:" from "Icon View" to "Detailed List View."
+#
+# In the left pane, click Advanced.  In the right pane, set Terminal emulator:
+# urxvt NOTE: We haven't installed urxvt terminal program yet, but we're going to.
+#
+# Click Ok.
+#
+# To change the path shown at the top from buttons to the location (like
+# Windows) select View->Path Bar->Location
+#
+# By default hidden "dot files" (files with names then begin with a period) are
+# not shown by PCManFM-Qt File Manager.  Leave it that way for cleaner
+# navigation.  When you need to view hidden dot files you can toggle their
+# display with View->Show Hidden.
+#
+# Close PCManFM-Qt File Manager
+
+
+
+
+# =============================================================================
+# Sudo
+# =============================================================================
+#
+# SUDO- Super User Do
+#
+# The following changes will allow our user to run commands as root
+# i.e. super user.
+
+su
+
+
+cat > temp << EOF
+
+Defaults:${USER}    !authenticate
+${USER} ALL=(root) NOPASSWD: /bin/dnf, /bin/mount, /bin/umount, /usr/sbin/reboot, /usr/sbin/shutdown, /bin/systemctl, /bin/rpm, /bin/touch, /bin/cat, /bin/chown, /bin/chmod, /bin/chgrp, /usr/sbin/alternatives, /bin/wget, /bin/sh, /usr/sbin/setenforce
+
+EOF
+cat temp >> /etc/sudoers
+rm -f temp
+
+# Have a look at the changes we made to /etc/sudoers.
+cat /etc/sudoers
+
+
+# Reboot Fedora
+# Fedora->Leave->Reboot
+
+
+
+
+
+# ================================================================================= 
+# Set Hostname
+# ================================================================================= 
+#
+# Set gem_fedora_hostname to your desired name for your system.  I have multiple
+# installations, so chose f34v1 for my 1st installation of Fedora 34.
+
+# NOTE: The .localdomain suffix is required in the hostname file.  This makes
+# it a fully qualified domain name (FQDM).  When it shows up in windows, it
+# only shows the first portion.  If you leave off the .localdomain suffix Windows
+# will not be able to see the linux machine on the network.
+
+# To view your current hostname, run the hostname command.  The default
+# hostname is "fedora".  It shows up under "Transient hostname."
+
+hostnamectl
+
+# Become root to make the change.
+su
+
+
+# In /etc/hostname we're going to replace localhost.localdomain with
+# ${gem_hostname}.localdomain.  Change the f34v1 below to whatever you would
+# like your computer name to appear as on the network.
+
+gem_fedora_hostname=f34v1
+
+hostnamectl set-hostname ${gem_fedora_hostname}
+
+# Verify the hostname has changed:
+
+hostnamectl
+
+# Reboot to make the change take effect.
+
+
+
+
+
+# =============================================================================
+# LXQt Appearance
+# =============================================================================
+#
+# NOTE: At some point the icons for dnfdragora-updater and Removable
+#       media/devices manager disappear.  Is changing the icons here
+#       responsible?
+#
+# LXQt allows the appearance of font, icons, and colors to be changed.
+#
+# Open Fedora->Accessories->PCManFM-Qt File Manager so we can view the changes
+# as we apply them.
+#
+# Open: Fedora->Preferences->Appearance.
+#
+# I like:
+#
+#     Widget Style->Qt Style: Fusion
+#     Icons Theme: Adwaita (The Only One)
+#     LXQt Theme: Fedora-lxqt
+#     Font->Point size: 10
+#     Cursor->Breeze Light
+#
+# Click "Apply."  Notice how the file manager appearance has changed.
+#
+# Close the "LXQT Appearance Configuration" window.
+
+
+# Additional window settings are also available:
+#
+# Fedora->Preferences->LXQt settings->Openbox Settings.
+#
+# I like Theme->Clearlooks-3.4
+#
+# Select Desktops->Number of desktops: 1
+#
+# Browse through the options shown in the left panel to familiarize yourself
+# with the available settings.
+#
+# Click "Close."
+
+
+# How do we log in as root and set root's theme settings?  This is not critical
+# but if you run applications after su-ing as root without doing this you'll be
+# back to the default LXQT themes and icons.
+#
+# To check:
+#
+# a.) Open a terminal, su -, run pcmanfm-qt, note the appearance of the
+#     icons in the pcmanfm-qt application.
+# b.) Open a second terminal window.  As current user, run pcmanfm-qt, note
+#     the appearance of the icons in the pcmanfm-qt application.
+#
+# Notice the icon themes do not match.  *FIX: We need to figure out how to
+# update root's desktop icon theme from the command line.  We currently set
+# it in Fedora->Preferences->Appearance->Icons Theme: Adwaita (The Only
+# One)
+
+
+# Disable the "Leave" confirmation dialog.  Open Fedora->Preferences->
+# Session Settings.  In the left panel select Basic Settings.  In the
+# right panel, under Leave Session uncheck Ask for confirmation to leave
+# session.
+
+
+
+
+# =============================================================================
+# Customize the Window Theme and Border Thickness
+# =============================================================================
+# Source: http://openbox.org/wiki/Help:Themes
+#         https://www.addictivetips.com/ubuntu-linux-tips/install-openbox-themes-on-linux/
+#
+# NOTE: To resize any window you can alt-right-click and drag.
+# 
+# I chose Theme->Clearlooks-3.4.  Change gem_name_theme, below, if you chose a
+# different theme.  I suggest not making any changes if this is your first time
+# through.
+#
+# Open a terminal window:
+#
+# Fedora->System Tools->QTerminal
+#
+# Paste the following commands into the terminal window:
+
+
+
+gem_name_theme=Clearlooks-3.4
+
+# Make a local copy of the theme for our user:
+mkdir -p ~/.themes
+gem_fullpath_theme_src=/usr/share/themes/${gem_name_theme}
+cp -r ${gem_fullpath_theme_src} ~/.themes
+cd ~/.themes/${gem_name_theme}/openbox-3
+cp themerc themerc.bak
+
+
+# If you mess up your local themerc file you can restore it from the back up
+# we just made by doing the following:
+
+gem_name_theme=Clearlooks-3.4
+cd ~/.themes/${gem_name_theme}/openbox-3
+y | cp themerc.bak themerc
+
+
+
+# Border Widths
+sed -i "s|border.width: 1|border.width: 6|g" themerc
+sed -i "s|window.handle.width: 4|window.handle.width: 0|g" themerc
+
+# window.active.border.color:          The border whose width we just set.
+# window.active.title.bg.color:        Top/beginning of the gradient.
+# window.active.title.bg.colorTo:      Bottom/end of the gradient.
+# window.active.title.bg.border.color: Skinny rectangle around gradient.
+# window.active.title.separator.color: Border-width rectangle below the gradient.
+
+# Set Awesome window Colors!
+
+# Active Window
+sed -i "s|### Window active|### Window active\nwindow.active.border.color: #40576d|g" themerc
+
+#sed -i "s|window.active.title.bg.color: #589bda|window.active.title.bg.color: #3c7cb7|g" themerc
+sed -i "s|window.active.title.bg.color: #589bda|window.active.title.bg.color: #2895e5|g" themerc
+sed -i "s|window.active.title.bg.colorTo: #3c7cb7|window.active.title.bg.colorTo: #00112a|g" themerc
+sed -i "s|window.active.title.bg.border.color: #7cb6ec|window.active.title.bg.border.color: #ff00ff|g" themerc
+sed -i "s|window.active.title.separator.color: #334c62|window.active.title.separator.color: #313742|g" themerc
+
+# Inactive Window
+sed -i "s|Flat Border Gradient Vertical|raised Border Gradient|g" themerc
+sed -i "s|window.inactive.border.color: #3d3a37|window.inactive.border.color: #593139|g" themerc
+sed -i "s|window.inactive.label.text.color: #000000|window.inactive.label.text.color: #fff0d5|g" themerc
+sed -i "s|window.inactive.title.bg.border.color: #efece6|window.inactive.title.bg.color: #ffff00|g" themerc
+sed -i "s|window.inactive.title.bg.color: #efece6|window.inactive.title.bg.color: #e31674|g" themerc
+sed -i "s|window.inactive.title.bg.colorTo: #d9d2c7|window.inactive.title.bg.colorTo: #09002a|g" themerc
+sed -i "s|window.inactive.title.separator.color: #9a8e7c|window.inactive.title.separator.color: #381f24|g" themerc
+
+
+
+# Logout, then back in to make the changes take effect.
+#
+# Fedora->Leave->Logout
+
+
+
+
+# =============================================================================
+# Change the Bootup Theme (Animation)
+# =============================================================================
+# Source: https://fedoramagazine.org/howto-change-the-plymouth-theme/
+#
+# This is completely superfulous, but entertaining and doesn't slow the boot
+# process.
+
+su
+
+dnf -y install plymouth-theme-spinfinity
+
+# It may take several seconds to set it...
+plymouth-set-default-theme spinfinity -R
+
+# Exit back to our user's identity
+exit
+
+# Reboot to see the bootup animation:
+Fedora->Leave->Reboot
+
+
+
+
+# =============================================================================
+# Install Packages
+# =============================================================================
+
+# FIX: Holding off on these for now.  So far, it seems we no longer require
+# them.
+# sudo dnf -y install policycoreutils-gui and system-*
+
+
+# Install System Utilities
+# ------------------------
+# rxvt-unicode is a nicer terminal.
+# samba allows us to share files with other computers on our local network.
+
+sudo dnf -y install rxvt-unicode samba xclip xarchiver wine fping
+sudo dnf -y groupinstall "Administration Tools"
+
+
+# Set rxvt as the default terminal for LXQt.  Open Fedora->Preferences->
+# Session Settings.
+#
+# In the left panel select Default Applications.  In the right panel set
+# Terminal Emulation to /usr/bin/urxvt.
+
+
+
+
+# Install Google Chrome
+# ---------------------
+# Add repositories for Google Chrome.
+sudo dnf -y install fedora-workstation-repositories
+sudo dnf config-manager --set-enabled google-chrome
+sudo dnf -y install google-chrome-stable
+
+
+
+# Install Firefox
+# ---------------
+# This step is not necessary.  Firefox is already installed by default.
+# sudo dnf -y install firefox
+
+
+
+
+# Install Gimp Image Editor
+# -------------------------
+sudo dnf -y install gimp
+
+# Open non-gimp images with lightweight LXImage.
+
+gem_path_src=/usr/share/applications
+gem_path_dst=${HOME}/.local/share/applications
+
+mkdir -p ${gem_path_dst}
+if [[ -f ${gem_path_dst}/mimeapps.list ]]; then
+	cp ${gem_path_dst}/mimeapps.list ${gem_path_dst}/mimeapps.list.bak
+fi
+cp ${gem_path_src}/mimeapps.list ${gem_path_dst}
+
+sed -i "s|org.gnome.eog.desktop|lximage-qt.desktop|g" ${gem_path_dst}/mimeapps.list
+
+# Side note: Google Chrome puts it's mimeapp.list in ${HOME}/.config.
+
+
+
+
+
+# Install VLC Video Player
+# ------------------------
+# Source: https://www.videolan.org/vlc/download-fedora.html
+sudo dnf -y install https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
+sudo dnf -y install https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
+sudo dnf -y install vlc
+
+
+
+
+
+# =============================================================================
+# Change LXQt Clock Time Display to 12 hour rather than 24 hour
+# =============================================================================
+# Note: The settings are stored in ~/.config/lxqt/panel.conf.
+#
+# Right click on the clock and select Configure "World clock."  In the Display
+# format tab, under the Time and Format Check Use 12-hour format.
+
+
+
+
+
+# =============================================================================
+# Configure RXVT Terminal
+# =============================================================================
+# Source: http://www.askapache.com/linux/rxvt-xresources.html
+# 
+# See if you already have a ~/.Xdefaults file.  The following will append these
+# settings to it.
+
+
+# Back up ~/.Xdefaults before we change it.
+if [[ ! -f ~/.Xdefaults.bak ]]; then
+	cp ~/.Xdefaults ~/.Xdefaults.bak
+fi
+
+
+cat << EOF >> ~/.Xdefaults
+
+! This messes up the prompt.  Why?
+!URxvt*termName: screen-256color
+URxvt*loginShell: true
+
+! Change default colors
+urxvt*foreground: #aaaaaa
+urxvt*background: #101010
+! black + red
+urxvt*color0:      #000000
+urxvt*color1:      #BF0000
+! green + yellow
+urxvt*color2:      #00BF00
+urxvt*color3:      #BFBF00
+! blue + magenta
+urxvt*color4:      #0000BF
+urxvt*color5:      #BF00BF
+! cyan + white
+urxvt*color6:      #00BFBF
+urxvt*color7:      #BFBFBF
+! bright-black + bright-red
+urxvt*color8:      #404040
+urxvt*color9:      #FF4040
+! bright-green + bright-yellow
+urxvt*color10:     #40FF40
+urxvt*color11:     #FFFF40
+! bright-blue + bright-magenta
+urxvt*color12:     #6060FF
+urxvt*color13:     #FF40FF
+! bright-cyan + bright-white
+urxvt*color14:     #40FFFF
+urxvt*color15:     #FFFFFF
+
+! Scrollbar
+urxvt*scrollBar: true
+urxvt*scrollBar_right: true
+URxvt*scrollColor: #777777
+URxvt*scrollstyle: plain
+URxvt*thickness: 20
+URxvt*scrollBar_floating: false
+URxvt*scrollTtyKeypress: true
+URxvt*scrollTtyOutput: false
+URxvt*scrollWithBuffer: true
+URxvt*secondaryScreen: true
+URxvt*secondaryScroll: true
+URxvt*skipScroll: false
+
+! Window
+urxvt*borderLess: false
+urxvt*fading: 25
+urxvt*transparent: false
+urxvt*shading: 50
+URxvt*saveLines: 65535
+URxvt*buffered: true
+URxvt*hold: false
+URxvt*internalBorder: true
+
+! Geometry and font
+urxvt*geometry: 84x24
+urxvt*font: xft:Bitstream\ Vera\ Sans\ Mono:style=roman:pixelsize=15
+!URxvt*boldFont: -xos4-terminus-bold-*-*-*-14-*-*-*-*-*-iso8859-15,xft:terminus:bold:pixelsize:15
+!URxvt*italicFont: xft:Bitstream Vera Sans Mono:italic:autohint=true:pixelsize=15
+!URxvt*boldItalicFont: xft:Bitstream Vera Sans Mono:bold:italic:autohint=true:pixelsize=15
+
+URxvt*utmpInhibit: false
+URxvt*urgentOnBell: false
+URxvt*visualBell: false
+URxvt*mapAlert: true
+URxvt*mouseWheelScrollPage: true
+URxvt*colorUL: yellow
+URxvt*underlineColor: yellow
+EOF
+
+chmod u+x ~/.Xdefaults
+
+
+
+# Change the ctrl-alt-t desktop shortcut from QTerminal to rxvt.
+#
+# Fedora->Preferences->Shortcut Keys
+#
+# Scroll down to "Control+Alt+T, QTerminal."  Click "Modify."  Change
+# Description: "QTerminal" to Description: "urxvt".  Change Command:
+# "qterminal" to Command: "urxvt".  Click "OK"
+
+
+# Su, then repeat the process for root.
+
+
+
+
+# =============================================================================
+# Add Quick Links to Panel
+# =============================================================================
+# The panel is like the Windows taskbar at the bottom of the desktop.  We're
+# going to modify panel.conf to add shortcuts to the terminal, file manager,
+# Google Chrome, and MS VSCode.
+
+
+gem_fullpath_panel_conf=~/.config/lxqt/panel.conf
+
+# Back up the original panel.conf, if a .bak file doesn't already exist.
+if [[ ! -f ${gem_fullpath_panel_conf}.bak ]]; then
+    cp -f ${gem_fullpath_panel_conf} ${gem_fullpath_panel_conf}.bak
+fi
+# To restore:
+# cp -f ${gem_fullpath_panel_conf}.bak ${gem_fullpath_panel_conf}
+
+sed -i ':a;N;$!ba;s|\[quicklaunch]\nalignment=Left|\[quicklaunch]\nalignment=Left\napps\\1\\desktop=/usr/share/applications/rxvt-unicode.desktop\napps\\2\\desktop=/usr/share/applications/pcmanfm-qt.desktop\napps\\3\\desktop=/usr/share/applications/google-chrome.desktop\napps\\4\\desktop=/usr/share/applications/code.desktop\napps\\size=4|g' ${gem_fullpath_panel_conf}
+
+# To reload our modified panel script we're going to logout, then back in.
+# Fedora->Leave->Reboot
+
+
+# *TODO: Remove the desktop button to the left.
+
+
+
+
+
+
+# TODO: Skip this section.  It needs to be updated for Fedora 30+.
+# =============================================================================
+# File Associations
+# =============================================================================
+# 
+# To change file association manually: Fedora->Preferences->File Associations.
+# 
+# VIEW DEFAULT APPLICATIONS:
+# 
+# Don't modify the following files by hand, but you can view them.
+#
+# View a list of all *.desktop files.
+# 
+# ls /usr/share/applications
+# ls /usr/share/applications/*.desktop
+# 
+# View the *system* default file associations.  They are stored in these .list
+# files.
+# ls /usr/share/applications/*.list
+# 
+# Have a look at one of the .list files:
+# cat /usr/share/applications/mimeapps.list
+# (...or else one shown by the previous command.)
+# 
+# 
+# View *your* file associations.  This almost certainly will not be present, as
+# you probably have not yet customized any.
+#
+# cat ~/.local/share/applications/mimeapps.list
+# 
+# 
+# MODIFY DEFAULT APPLICATION ASSIGNMENTS FROM THE COMMAND LINE:
+# 
+# xdg-mime interface is how we modify file associations.
+# Man page:   http://linux.die.net/man/1/xdg-mime
+# 
+# Find the mimetype of any file (Will return "text/plain" for text files):
+# xdg-mime query filetype <filename>
+# 
+# The 1st part is your mimetype.  If there is a 2nd part after a semicolon,
+# ignore that.  Let's suppose the type is text/plain.
+# 
+# What application open files of mimetype text/plain?:
+# xdg-mime query default text/plain
+# 
+# To associate text/plain with notepadqq application, verify that you have
+# leafpad.desktop in the /usr/share/applications folder.
+# su
+# cd /usr/share/applications
+# ls
+# 
+# May give an error, but still work.  See below.
+
+exit    # Run as user mhodges.
+xdg-mime default notepadqq.desktop text/plain
+
+su	# Now do the same for root.
+
+xdg-mime default notepadqq.desktop text/plain
+exit
+
+# FOLLOWING ERROR MAY BE IGNORED:
+# touch: cannot touch â€˜/root/.local/share/applications/mimeapps.listâ€™: No such file or directory
+# /usr/bin/xdg-mime: line 827: /root/.local/share/applications/mimeapps.list.new: No such file or directory
+# 
+# You may want to re-open this document by double-clicking on the icon on the
+# desktop, just to verify that the correct association has successfully been
+# established.
+
+
+
+
+
+
+# =============================================================================
+# Remove Unwanted Applications and Directories
+# =============================================================================
+
+# I'm not going to use these.  You may leave them, if you intend to use them.
+rm -rf ~/Music ~/Public ~/Templates
+
+su
+
+# Remove unwanted applications.
+sudo dnf remove -y qterminal falkon transmission-qt lxqt-about enki dosbox-staging 
+
+# These are links to our installed applications.
+ls /usr/share/applications/*.desktop
+
+# Remove WineMine game.
+rm -f /usr/lib/wine/i386-windows/winemine.exe
+rm -f /usr/lib64/wine/x86_64-windows/winemine.exe
+rm -f /usr/share/icons/hicolor/scalable/apps/winemine.svg
+rm -f /usr/share/man/man1/winemine.1.gz
+rm -f /usr/share/applications/wine-winemine.desktop
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# =============================================================================
+# Appendix A: Repositories
+# =============================================================================
+# A repository, or repo, is a web server hosting software packages. In addition
+# to the repos hosted by Fedora, others are hosted by third parties sharing
+# their own packages.
+
+
+# =============================================================================
+# Appendix B: Groups
+# =============================================================================
+# A group is a collection of related packages.  To see the list of
+# available groups:
+
+sudo dnf group list
+
+# ... will produce output similar to:
+
+Last metadata expiration check: 0:53:01 ago on Sat 21 Sep 2019 08:42:56 AM PDT.
+Available Environment Groups:
+   Fedora Custom Operating System
+   Minimal Install
+   Fedora Server Edition
+   Fedora Workstation
+   Fedora Cloud Server
+   KDE Plasma Workspaces
+   Xfce Desktop
+   LXDE Desktop
+   LXQt Desktop
+   Cinnamon Desktop
+   MATE Desktop
+   Sugar Desktop Environment
+   Development and Creative Workstation
+   Web Server
+   Infrastructure Server
+   Basic Desktop
+Installed Groups:
+   C Development Tools and Libraries
+   Development Tools
+   Fonts
+   Hardware Support
+Available Groups:
+   3D Printing
+   Administration Tools
+   Ansible node
+   Audio Production
+   Authoring and Publishing
+   Books and Guides
+   Cloud Infrastructure
+   Cloud Management Tools
+   Compiz
+   Container Management
+   D Development Tools and Libraries
+   Design Suite
+   Domain Membership
+   Fedora Eclipse
+   Editors
+   Educational Software
+   Electronic Lab
+   Engineering and Scientific
+   FreeIPA Server
+   Headless Management
+   LibreOffice
+   MATE Applications
+   Medical Applications
+   Milkymist
+   Network Servers
+   Office/Productivity
+   Python Classroom
+   Python Science
+   Robotics
+   RPM Development Tools
+   Security Lab
+   Text-based Internet
+   Window Managers
+   GNOME Desktop Environment
+   Graphical Internet
+   KDE (K Desktop Environment)
+   Games and Entertainment
+   Sound and Video
+   System Tools
+
+
+
+# =============================================================================
+# Appendix C: Firewall Notes
+# =============================================================================
+# NOTE: These operations can also be performed for the services app in the
+# Administration system menu. Enable & disable are permanent.  Start & stop are
+# temporary.
+
+# Disable firewalld:
+# ------------------
+systemctl disable firewalld
+systemctl stop firewalld
+
+
+# Enable firewalld:
+# -----------------
+systemctl enable firewalld
+systemctl start firewalld
+
+
+# Check if firewalld is running:
+# ------------------------------
+systemctl status firewalld
+
+
+
+# =============================================================================
+# Appendix D: SELinux Notes
+# =============================================================================
+# Source: https://docs.fedoraproject.org/en-US/Fedora/13/html/Security-Enhanced_Linux/sect-Security-Enhanced_Linux-Working_with_SELinux-Enabling_and_Disabling_SELinux.html
+#
+# NOTE: When systems run with SELinux in permissive or disabled mode, users
+# have permission to label files incorrectly. Also, files created while SELinux
+# is disabled are not labeled. This causes problems when changing to enforcing
+# mode. To prevent incorrectly labeled and unlabeled files from causing
+# problems, file systems are automatically relabeled when changing from
+# disabled mode to permissive or enforcing mode. 
+
+
+# View the current SELinus label for a given directory:
+# ----------------------------------------------------
+ls -ldZ /path/to/directory
+
+
+# Check if selinux is enabled:
+# ----------------------------
+/usr/sbin/getenforce
+
+
+# Enable selinux:
+# ---------------
+/usr/sbin/setenforce 1
+
+
+# Disable selinux:
+# ----------------
+/usr/sbin/setenforce 0
+
+
+
+# =============================================================================
+# Appendix E: Back Up Files
+# =============================================================================
+#
+# In addition to your home directory, below are some directories and files you
+# may want to consider backing up.  Which are relavent depends on which
+# packages you have installed, configured, and use.
+#
+# Back up the MySQL (mariadb) databases.  The mysqldump command can be used to
+# export a database to a MySql script text file.  The script can later be fed
+# back into MySql to restore the databases.  See the gem_archive scripts for
+# usage examples.
+#
+# Samba configuration file:
+#
+# * /etc/samba/smb.conf
+#
+# Web development configuration files:
+#
+# * /etc/php.ini
+# * /etc/httpd/conf/httpd.conf
+# * /var/www/html/
+# * /var/www/ftp/
+
+
+# =============================================================================
+# Appendix F: Creating a Disk Partion
+# =============================================================================
+#
+# Source: https://docs.fedoraproject.org/en-US/quick-docs/creating-a-disk-partition-in-linux/
+
+# List your partitions:
+
+parted -l
+
+# ... shows my 2TB drive as:
+
+Disk /dev/sdb: 2000GB
+
+# Create one large partition on /dev/sdb:
+
+parted -a optimal /dev/sdb mklabel
+
+... (parted) mklabel                                                          
+... New disk label type? gpt                                                  
+Warning: The existing disk label on /dev/sdh will be destroyed and all data on this disk will be lost. Do you
+want to continue?
+Yes/No? yes
+(parted) mkpart primary ext4 0% 100% << as the folks in this thread suggested
+
+mkfs.ext4 /dev/sdh1
+/dev/sdh1 alignment is offset by 512 bytes.
+This may result in very poor performance, (re)-partitioning suggested.
+
+
+# =============================================================================
+# Appendix G: Disk Usage Notes
+# =============================================================================
+#
+# After a fresh install of Fedora, update and installation of Guest Additions
+# disk usage is as follows:
+#
+# Filesystem              1K-blocks       Used Available Use% Mounted on
+# devtmpfs                  4066036          0   4066036   0% /dev
+# tmpfs                     4082468        184   4082284   1% /dev/shm
+# tmpfs                     4082468       1012   4081456   1% /run
+# tmpfs                     4082468          0   4082468   0% /sys/fs/cgroup
+# /dev/mapper/fedora-root  20511312    4834800  14611552  25% /
+# tmpfs                     4082468          8   4082460   1% /tmp
+# /dev/sda1                  999320     189500    741008  21% /boot
+# /dev/mapper/fedora-home 278735876      75584 264431608   1% /home
+# tmpfs                      816492         12    816480   1% /run/user/1000
+# -----------------------------------------------------------------------------
+# TOTAL:                321,458,908  5,101,100
+
+# After installing:
+#
+# sudo dnf -y install google-chrome-stable rxvt-unicode samba gimp
+#
+# Filesystem              1K-blocks    Used Available Use% Mounted on
+# devtmpfs                  4066036       0   4066036   0% /dev
+# tmpfs                     4082468   20376   4062092   1% /dev/shm
+# tmpfs                     4082468    1016   4081452   1% /run
+# tmpfs                     4082468       0   4082468   0% /sys/fs/cgroup
+# /dev/mapper/fedora-root  20511312 5559304  13887048  29% /
+# tmpfs                     4082468       8   4082460   1% /tmp
+# /dev/sda1                  999320  189500    741008  21% /boot
+# /dev/mapper/fedora-home 278735876  137848 264369344   1% /home
+# tmpfs                      816492      12    816480   1% /run/user/1000
+
+# After installing:
+#
+# sudo dnf -y install https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
+# sudo dnf -y install vlc
+#
+# Filesystem              1K-blocks    Used Available Use% Mounted on
+# devtmpfs                  4066036       0   4066036   0% /dev
+# tmpfs                     4082468   10292   4072176   1% /dev/shm
+# tmpfs                     4082468    1016   4081452   1% /run
+# tmpfs                     4082468       0   4082468   0% /sys/fs/cgroup
+# /dev/mapper/fedora-root  20511312 6027448  13418904  31% /
+# tmpfs                     4082468       8   4082460   1% /tmp
+# /dev/sda1                  999320  189500    741008  21% /boot
+# /dev/mapper/fedora-home 278735876  139656 264367536   1% /home
+# tmpfs                      816492      12    816480   1% /run/user/1000
+
+# After installing:
+#
+# sudo dnf -y install kdiff3 *mercurial* 
+# sudo dnf -y install swig fping python3-matplotlib cmake cmake-gui llvm clang mingw64-gcc mingw64-gcc-c++ git perl meson
+# sudo dnf -y groupinstall "Development Tools" "Development Libraries" "X Software Development" "C Development Tools and Libraries"
+#
+# Filesystem              1K-blocks    Used Available Use% Mounted on
+# devtmpfs                  4066036       0   4066036   0% /dev
+# tmpfs                     4082468   55636   4026832   2% /dev/shm
+# tmpfs                     4082468    1020   4081448   1% /run
+# tmpfs                     4082468       0   4082468   0% /sys/fs/cgroup
+# /dev/mapper/fedora-root  20511312 7256556  12189796  38% /
+# tmpfs                     4082468       8   4082460   1% /tmp
+# /dev/sda1                  999320  189500    741008  21% /boot
+# /dev/mapper/fedora-home 278735876  175876 264331316   1% /home
+# tmpfs                      816492      12    816480   1% /run/user/1000
+
+# After installing:
+#
+# sudo dnf -y groupinstall "Administration Tools"
+#
+# Filesystem              1K-blocks    Used Available Use% Mounted on
+# devtmpfs                  4066036       0   4066036   0% /dev
+# tmpfs                     4082468   57748   4024720   2% /dev/shm
+# tmpfs                     4082468    1012   4081456   1% /run
+# tmpfs                     4082468       0   4082468   0% /sys/fs/cgroup
+# /dev/mapper/fedora-root  20511312 7293316  12153036  38% /
+# tmpfs                     4082468       8   4082460   1% /tmp
+# /dev/sda1                  999320  189500    741008  21% /boot
+# /dev/mapper/fedora-home 278735876  189096 264318096   1% /home
+# tmpfs                      816492      12    816480   1% /run/user/1000
+
+# After installing:
+#
+# sudo dnf -y install mariadb mariadb-server php php-common php-pecl-apc php-cli php-pear php-pdo php-pgsql php-pecl-memcache php-pecl-memcached php-gd php-mbstring php-mcrypt php-xml php-devel phpmyadmin
+#
+# Filesystem              1K-blocks    Used Available Use% Mounted on
+# devtmpfs                  4066036       0   4066036   0% /dev
+# tmpfs                     4082468  124032   3958436   4% /dev/shm
+# tmpfs                     4082468    1012   4081456   1% /run
+# tmpfs                     4082468       0   4082468   0% /sys/fs/cgroup
+# /dev/mapper/fedora-root  20511312 7608352  11838000  40% /
+# tmpfs                     4082468       8   4082460   1% /tmp
+# /dev/sda1                  999320  189500    741008  21% /boot
+# /dev/mapper/fedora-home 278735876  197528 264309664   1% /home
+# tmpfs                      816492      12    816480   1% /run/user/1000
+
+
+
+# =============================================================================
+# Appendix H: Group List- Last Updated on Fedora 30, 2019/09/25
+# =============================================================================
+Available Environment Groups:
+   Fedora Custom Operating System
+   Minimal Install
+   Fedora Server Edition
+   Fedora Workstation
+   Fedora Cloud Server
+   KDE Plasma Workspaces
+   Xfce Desktop
+   LXDE Desktop
+   LXQt Desktop
+   Cinnamon Desktop
+   MATE Desktop
+   Sugar Desktop Environment
+   Deepin Desktop
+   Development and Creative Workstation
+   Web Server
+   Infrastructure Server
+   Basic Desktop
+Available Groups:
+   Neuron Modelling Simulators
+   3D Printing
+   Administration Tools
+   Audio Production
+   Authoring and Publishing
+   Books and Guides
+   C Development Tools and Libraries
+   Cloud Infrastructure
+   Cloud Management Tools
+   Compiz
+   Container Management
+   D Development Tools and Libraries
+   Design Suite
+   Development Tools
+   Domain Membership
+   Fedora Eclipse
+   Editors
+   Educational Software
+   Electronic Lab
+   Engineering and Scientific
+   FreeIPA Server
+   Games and Entertainment
+   Headless Management
+   LibreOffice
+   MATE Applications
+   Medical Applications
+   Milkymist
+   Network Servers
+   Office/Productivity
+   Python Classroom
+   Python Science
+   Robotics
+   RPM Development Tools
+   Security Lab
+   Sound and Video
+   System Tools
+   Text-based Internet
+   Window Managers
+
+# =============================================================================
+# Appendix I: NVidia Drivers- Last Updated on Fedora 34, 2021/10/02
+# =============================================================================
+
+# *FIX: I'm just still gathering information here.  I have not attempted to
+# install any NVidia-specific drivers yet.
+
+# If you have a Nvidia card, run Xorg and the following:
+
+# modinfo -F version nvidia
+# sudo dnf update -y # and reboot if you are not on the latest kernel
+# sudo dnf install -y akmod-nvidia # rhel/centos users can use kmod-nvidia instead
+# sudo dnf install -y xorg-x11-drv-nvidia-cuda #optional for cuda/nvdec/nvenc support
+# sudo dnf install -y xorg-x11-drv-nvidia-cuda-libs
+# sudo dnf install -y vdpauinfo libva-vdpau-driver libva-utils
+# sudo dnf install -y vulkan
+# modinfo -F version nvidia

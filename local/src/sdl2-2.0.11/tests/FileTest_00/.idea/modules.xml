@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="ProjectModuleManager">
-    <modules>
-      <module fileurl="file://$PROJECT_DIR$/build/Android/Debug/Debug.iml" filepath="$PROJECT_DIR$/build/Android/Debug/Debug.iml" />
-      <module fileurl="file://$PROJECT_DIR$/build/Android/Debug/jni/SDL/android-project/android-project.iml" filepath="$PROJECT_DIR$/build/Android/Debug/jni/SDL/android-project/android-project.iml" />
-    </modules>
-  </component>
-</project>

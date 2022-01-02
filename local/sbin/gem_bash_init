@@ -44,10 +44,15 @@ function gem_bash_init_Main()
     # than /bin.  It's not clear if this is going have other side effects.
     # -4/16/2019.
 
-
-
     # *FIX: gem_bash_init should not be overriding the client's PATH!
 #    export PATH="/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin"
+
+	# Use the shared .pylintrc in gem/home/mhodges.  Generated using:
+	# pylint --generate-rcfile > ${gem_fullpath_gem}/local/config/.pylintrc
+	# Source: https://pylint.pycqa.org/en/latest/user_guide/run.html
+
+	PYLINTRC=${gem_fullpath_gem}/local/config/.pylint.rc
+
 
     # =========================================================================
     # Gem
@@ -57,7 +62,7 @@ function gem_bash_init_Main()
     export PATH=${gem_fullpath_gem}/local/sbin:${PATH}
 
     # Determine the OS we are building on.  Allow our build tools to be found
-	# prior to installed tools.
+	# prior to installing the tools.
     if [[ ${gem_uname_machine} == "x86_64" ]]; then
         if [[ ${gem_os} == "Linux" ]]; then
 
