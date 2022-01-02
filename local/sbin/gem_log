@@ -1,0 +1,498 @@
+#!/bin/bash
+#  ___________                           __________
+# /\   _______\                         /\   ______\
+# \ \  \______/_     ___   ____ ____ ___\ \  \_____/_     ___   ___ ___  ______    ___    ___
+#  \ \  \ /\__  \  /'___`\/\   V    V   \\ \_______  \  /'   `\/\  \\  \/\   __\/' ._`\ /'___`\
+#   \ \  \\/__\  \/\  ___/\ \  \/\  \/\  \\/_______\  \/\  \\  \ \  \\  \ \  \ /\  \__//\  ___/
+#    \ \__________\ \____\ \ \__\ \__\ \__\ /\_________\ \_____/\ \______\ \__\\ \____/\ \____\
+#     \/__________/\/____/  \/__/\/__/\/__/ \/_________/\/____/  \/______/\/__/ \/___/  \/____/
+
+
+[[ -n ${gem_log_included} ]] && exit
+export gem_log_included=1
+
+export gem_log_isInitialized=0
+export gem_log_path_log=${0}_log.html
+export gem_log_fileIsHtml=1
+export gem_log_eol="\n"
+if [[ $gem_log_fileIsHtml -ne 0 ]]; then
+	gem_log_eol="<br/>\n"
+fi
+
+
+# Source: https://unix.stackexchange.com/questions/269077/tput-setaf-color-table-how-to-determine-color-codes
+#
+# shellcheck disable=SC2034
+export GEM_COLOR_BLACK="\e[38;5;0m"			# $(tput setaf 0)
+# shellcheck disable=SC2034
+export GEM_COLOR_RED="\e[38;5;1m"				# $(tput setaf 1)
+# shellcheck disable=SC2034
+export GEM_COLOR_GREEN="\e[38;5;2m"			# $(tput setaf 2)
+# shellcheck disable=SC2034
+export GEM_COLOR_YELLOW="\e[38;5;3m"			# $(tput setaf 3)
+# shellcheck disable=SC2034
+export GEM_COLOR_BLUE="\e[38;5;4m"				# $(tput setaf 4)
+# shellcheck disable=SC2034
+export GEM_COLOR_MAGENTA="\e[38;5;5m"			# $(tput setaf 5)
+# shellcheck disable=SC2034
+export GEM_COLOR_CYAN="\e[38;5;6m"				# $(tput setaf 6)
+# shellcheck disable=SC2034
+export GEM_COLOR_WHITE="\e[38;5;7m"			# $(tput setaf 7)
+# shellcheck disable=SC2034
+export GEM_COLOR_BRIGHT_BLACK="\e[38;5;8m"		# $(tput setaf 8)
+# shellcheck disable=SC2034
+export GEM_COLOR_BRIGHT_RED="\e[38;5;9m"		# $(tput setaf 9)
+# shellcheck disable=SC2034
+export GEM_COLOR_BRIGHT_GREEN="\e[38;5;10m"	# $(tput setaf 10)
+# shellcheck disable=SC2034
+export GEM_COLOR_BRIGHT_YELLOW="\e[38;5;11m"	# $(tput setaf 11)
+# shellcheck disable=SC2034
+export GEM_COLOR_BRIGHT_BLUE="\e[38;5;12m"		# $(tput setaf 12)
+# shellcheck disable=SC2034
+export GEM_COLOR_BRIGHT_MAGENTA="\e[38;5;13m"	# $(tput setaf 13)
+# shellcheck disable=SC2034
+export GEM_COLOR_BRIGHT_CYAN="\e[38;5;14m"		# $(tput setaf 14)
+# shellcheck disable=SC2034
+export GEM_COLOR_BRIGHT_WHITE="\e[38;5;15m"	# $(tput setaf 15)
+# shellcheck disable=SC2034
+export GEM_COLOR_NONE="\033[0m"				# $(tput sgr0)
+
+
+# ==============================================================================
+# gem_log_Init()- gem_log_Init must be called from the main shell, and not from
+# a subshell, as would likely occur during command substitution.  The reason is
+# that global variables would only be initizlied in the sub shell and not for
+# the calling shell.  This causes problems since some operations are only
+# supposed to occur once per run (E.g.  deleting the log file.)
+# ==============================================================================
+function gem_log_Init
+{
+	local gem_process_id_parent=$$
+#	local gem_process_id_this=$BASHPID
+
+ 	if [[ ${gem_log_isInitialized} -ne 0 ]]; then printf "%b\n" "gem_log_Init(): Log is already initialized." >> "${gem_log_path_log}"; return 1; fi
+
+	
+	if ! gem_process_id_file=$(gem_log_p_FileHeaderRead) || [[ ${gem_process_id_file} -ne "${gem_process_id_parent}" ]]; then
+
+		# ... delete the log file leftover from last time.
+		if [[ -f ${gem_log_path_log} ]] && ! rm "${gem_log_path_log}"; then printf "%b\n" "gem_log_Init(): Failed to delete the log file." >> "${gem_log_path_log}"; return 1; fi
+
+		# *FIX: Only create the log if it's in the enabled state.
+		if ! gem_log_p_FileHeaderWrite; then printf "%b\n" "gem_log_Init(): Failed to log file header." >> "${gem_log_path_log}"; return 1; fi
+	fi
+
+	# shellcheck disable=SC2034
+	gem_log_consoleEnable_stack_0="true"
+	gem_log_consoleEnable_stackSize=1
+	gem_log_consoleEnable_buffer=""
+
+	# shellcheck disable=SC2034
+	gem_log_fileEnable_stack_0="true"
+	gem_log_fileEnable_stackSize=1
+	gem_log_fileEnable_buffer=""
+
+	gem_log_isInitialized=1
+	return 0
+}
+
+# ==============================================================================
+# gem_log_Clean()- 
+# ==============================================================================
+function gem_log_Clean
+{
+	gem_log_consoleEnable_buffer=""
+	gem_log_fileEnable_buffer=""
+
+	gem_log_isInitialized=0
+	return 0
+}
+
+# ==============================================================================
+# gem_log_FileStampRead()-
+# ==============================================================================
+function gem_log_p_FileHeaderRead
+{
+	if [[ ! -f "${gem_log_path_log}" ]]; then return 1; fi
+
+	local gem_string_line
+	read -r gem_string_line < "${gem_log_path_log}"
+
+	if [[ ! ${gem_string_line} =~ \<gem_log_process_id=([1-9]+[0-9]*)\/\> ]]; then return 1; fi
+
+	echo "${BASH_REMATCH[1]}"
+	return 0
+}
+
+# ==============================================================================
+# gem_log_FileStampWrite()- 
+# ==============================================================================
+function gem_log_p_FileHeaderWrite
+{
+	local gem_process_id_parent=$$
+	if [[ -f ${gem_log_path_log} ]]; then
+		printf "<gem_log_process_id=%u/>\n$(cat "${gem_log_path_log}")" ${gem_process_id_parent} >> "${gem_log_path_log}"
+	else
+		printf "<gem_log_process_id=%u/>\n" ${gem_process_id_parent} >> "${gem_log_path_log}"
+	fi
+	if [[ ${gem_log_fileIsHtml} -ne 0 ]]; then
+		printf "<html><body>\n" >> "${gem_log_path_log}"
+	fi
+	return 0
+}
+
+# ==============================================================================
+# gem_log_Callstack()- Outputs the current callstack.
+#
+# Usage: gem_log_Callstack
+# ==============================================================================
+function gem_log_Callstack
+{
+	printf "%b\n" "Callstack:\n" >> "${gem_log_path_log}"
+
+	local depth=${#FUNCNAME[@]}
+	for ((i=depth-1; i>0; i--)); do
+		local func="${FUNCNAME[$i-1]}"
+		if [[ ${func} == *"gem_log_v_Debug"* ]]; then
+			break
+		fi
+
+		local indent
+		indent=$(printf '%*s' $((depth-i)) '')
+		local src="${BASH_SOURCE[$((i-1))]}"
+		local line="${BASH_LINENO[$((i-1))]}"
+		printf "%b\n" "${indent}${src}(${line}): ${func}()" >> "${gem_log_path_log}"
+	done
+	return 0
+}
+
+# ==============================================================================
+# gem_log_p_ConsoleEnablePeek()- Private peek function echos the top of the
+# stack.
+# ==============================================================================
+function gem_log_p_ConsoleEnablePeek
+{
+	eval "echo \$gem_log_consoleEnable_stack_$((gem_log_consoleEnable_stackSize-1))"
+	return $?
+}
+
+# ==============================================================================
+# gem_log_v_ConsoleEnablePeek()- Echos the current message enable mode.
+#
+# Usage: value=$(gem_log_v_ConsoleEnablePeek)
+# ==============================================================================
+function gem_log_v_ConsoleEnablePeek { gem_log_ConsoleEnablePeek; return $? ; }
+function gem_log_ConsoleEnablePeek
+{
+	if [[ ${gem_log_isInitialized} -eq 0 ]] && ! gem_log_Init; then printf "%b\n" "gem_log_ConsoleEnablePeek(): gem_log_Init() failed." >> "${gem_log_path_log}"; return 1; fi
+
+	if ! gem_log_p_ConsoleEnablePeek; then printf "%b\n" "gem_log_ConsoleEnablePeek(): gem_log_p_ConsoleEnablePeek() failed." >> "${gem_log_path_log}"; return 1; fi
+	return 0
+}
+
+# ==============================================================================
+# gem_log_p_ConsoleEnableBufferFlush()- Private function dumps the contents of
+# the msg bufffer to stdout.
+# ==============================================================================
+function gem_log_p_ConsoleEnableBufferFlush
+{
+	# Restoring enabled state.  Output messages queued while disabled.
+	# Peek the log must state.  Avoid calling gem_log_v_ConsoleEnablePeek() which
+	# may wind up recursively calling gem_log_StringToFile().  if !
+	local isEnabled
+	if ! isEnabled=$(eval "echo \$gem_log_consoleEnable_stack_$((gem_log_consoleEnable_stackSize-1))"); then printf "%b\n" "gem_log_p_ConsoleEnableBufferFlush(): Eval() failed." >> "${gem_log_path_log}"; return 1; fi
+	if [[ ${isEnabled} == "true" ]]; then
+		printf "%b" "${gem_log_consoleEnable_buffer}"
+		gem_log_consoleEnable_buffer=""
+	fi
+	return 0
+}
+
+# ==============================================================================
+# gem_log_p_ConsoleEnablePush()- Private push function.  $1 is the value to be
+# pushed.
+# ==============================================================================
+function gem_log_p_ConsoleEnablePush
+{
+	# Push to the top of the enable stack.
+	if ! eval "gem_log_consoleEnable_stack_${gem_log_consoleEnable_stackSize}=${1}"; then printf "%b\n" "gem_log_p_ConsoleEnablePush(): Eval() failed." >> "${gem_log_path_log}"; return 1; fi
+	((gem_log_consoleEnable_stackSize++))
+
+	if ! gem_log_p_ConsoleEnableBufferFlush; then printf "%b\n" "gem_log_p_ConsoleEnablePush(): gem_log_p_ConsoleEnableBufferFlush() failed." >> "${gem_log_path_log}"; return 1; fi
+	return 0
+}
+
+# ==============================================================================
+# gem_log_ConsoleEnablePush()- 
+# ==============================================================================
+function gem_log_v_ConsoleEnablePush { gem_log_ConsoleEnablePush "$@"; return $? ; }
+function gem_log_ConsoleEnablePush
+{
+	if [[ ${gem_log_isInitialized} -eq 0 ]] && ! gem_log_Init; then printf "%b\n" "gem_log_ConsoleEnablePush()): gem_log_Init() failed." >> "${gem_log_path_log}"; return 1; fi
+
+	local value=${1}
+	# Validate the parameters.
+	if [[ $# -gt 1 ]]; then printf "%b\n" "gem_log_ConsoleEnablePush() only takes 1 argument, not $#.  Usage: gem_log_ConsoleEnablePush myValue." >> "${gem_log_path_log}"; return 1; fi
+	if [[ $value != "true" && $value != "false" ]]; then printf "%b\n" "ERROR: gem_log_ConsoleEnablePush() only accepts true or false as a parameter." >> "${gem_log_path_log}"; return 1; fi
+
+#	echo "Pushed[$gem_log_consoleEnable_stackSize]=\"$1\""
+	if ! gem_log_p_ConsoleEnablePush "${value}"; then printf "%b\n" "gem_log_ConsoleEnablePush(): gem_log_p_ConsoleEnablePush() failed: ." >> "${gem_log_path_log}"; return 1; fi
+	return 0
+}
+
+# ==============================================================================
+# gem_log_p_ConsoleEnablePop()- Private pop function.
+# ==============================================================================
+function gem_log_p_ConsoleEnablePop
+{
+	((gem_log_consoleEnable_stackSize--))
+	if ! unset echo "gem_log_consoleEnable_stack_$gem_log_consoleEnable_stackSize"; then printf "%b\n" "gem_log_p_ConsoleEnablePop(): unset() failed." >> "${gem_log_path_log}"; return 1; fi
+
+	if ! gem_log_p_ConsoleEnableBufferFlush; then printf "%b\n" "gem_log_p_ConsoleEnablePop(): gem_log_p_ConsoleEnableBufferFlush() failed." >> "${gem_log_path_log}"; return 1; fi
+	return 0
+}
+
+# ==============================================================================
+# gem_log_v_ConsoleEnablePop()
+#
+# Usage: gem_log_ConsoleEnable myString
+# ==============================================================================
+function gem_log_v_ConsoleEnablePop { gem_log_ConsoleEnablePop; return $?; }
+function gem_log_ConsoleEnablePop
+{
+	if [[ ${gem_log_isInitialized} -eq 0 ]] && ! gem_log_Init; then printf "%b\n" "gem_log_ConsoleEnablePop(): gem_log_Init() failed." >> "${gem_log_path_log}"; return 1; fi
+
+	if [[ ${gem_log_consoleEnable_stackSize} -le 1 ]]; then printf "%b\n" "ERROR: gem_log_ConsoleEnablePop(): Unable to pop from empty stack." >> "${gem_log_path_log}"; return 1; fi
+
+	if ! gem_log_p_ConsoleEnablePop; then printf "%b\n" "gem_log_ConsoleEnablePop(): gem_log_p_ConsoleEnablePop() failed." >> "${gem_log_path_log}"; return 1; fi
+	return 0
+}
+
+# ==============================================================================
+# gem_log_p_FileEnablePeek()- Private peek function does no error checking or
+# outputting, besides echoing the top of the stack.
+# ==============================================================================
+function gem_log_p_FileEnablePeek
+{
+	if ! eval "echo \$gem_log_fileEnable_stack_$((gem_log_fileEnable_stackSize-1))"; then printf "%b\n" "gem_log_p_FileEnablePeek(): Eval() failed." >> "${gem_log_path_log}"; return 1; fi
+	return 0
+}
+
+# ==============================================================================
+# gem_log_v_FileEnablePeek()- Echos the current log enable mode.
+#
+# Usage: value=$(gem_log_v_FileEnablePeek)
+# ==============================================================================
+function gem_log_v_FileEnablePeek { gem_log_FileEnablePeek; return $? ; }
+function gem_log_FileEnablePeek
+{
+	if [[ ${gem_log_isInitialized} -eq 0 ]] && ! gem_log_Init; then printf "%b\n" "gem_log_FileEnablePeek(): gem_log_Init() failed." >> "${gem_log_path_log}"; return 1; fi
+
+	if ! gem_log_p_FileEnablePeek; then printf "%b\n" "gem_log_FileEnablePeek(): gem_log_p_FileEnablePeek() failed." >> "${gem_log_path_log}"; return 1; fi
+	return 0
+}
+
+# ==============================================================================
+# gem_log_p_FileEnableBufferFlush()- Private function dumps the contents of the
+# msg bufffer to stdout.
+# ==============================================================================
+function gem_log_p_FileEnableBufferFlush
+{
+	# Restoring enabled state.  Output messages queued while disabled.  Peek the
+	# log must state directly to avoid calling gem_log_v_FileEnablePeek() which
+	# may wind up recursively calling gem_log_StringToFile().
+	local isEnabled
+	if ! isEnabled=$(eval "echo \$gem_log_fileEnable_stack_$((gem_log_fileEnable_stackSize-1))"); then printf "%b\n" "gem_log_p_FileEnableBufferFlush(): Eval() failed." >> "${gem_log_path_log}"; return 1; fi
+	if [[ ${isEnabled} == "true" ]]; then
+		# gem_log_v_StringToFile() has already added html enoding.
+		printf "%b" "${gem_log_fileEnable_buffer}" >> "${gem_log_path_log}"
+		gem_log_fileEnable_buffer=""
+	fi
+	return 0
+}
+
+# ==============================================================================
+# gem_log_p_FileEnablePush()- Private push function does no error checking or
+# outputting. $1 is the value to be pushed.
+# ==============================================================================
+function gem_log_p_FileEnablePush
+{
+	# Push to the top of the enable stack.
+	if ! eval "gem_log_fileEnable_stack_${gem_log_fileEnable_stackSize}=${1}"; then printf "%b\n" "gem_log_p_FileEnablePush(): Eval() failed." >> "${gem_log_path_log}"; return 1; fi
+	((gem_log_fileEnable_stackSize++))
+
+	if ! gem_log_p_FileEnableBufferFlush; then printf "%b\n" "gem_log_p_FileEnablePush(): gem_log_p_FileEnableBufferFlush() failed." >> "${gem_log_path_log}"; return 1; fi
+	return 0
+}
+
+# ==============================================================================
+# gem_log_FileEnablePush()- 
+# ==============================================================================
+function gem_log_v_FileEnablePush { gem_log_FileEnablePush "$@"; return $? ; }
+function gem_log_FileEnablePush
+{
+	if [[ ${gem_log_isInitialized} -eq 0 ]] && ! gem_log_Init; then printf "%b\n" "gem_log_FileEnablePush(): gem_log_Init() failed." >> "${gem_log_path_log}"; return 1; fi
+
+	local value=${1}
+	# Validate the parameters.
+	if [[ $# -gt 1 ]]; then printf "%b\n" "gem_log_FileEnablePush() only takes 1 argument, not $#.  Usage: gem_log_FileEnablePush myValue." >> "${gem_log_path_log}"; return 1; fi
+	if [[ $value != "true" && $value != "false" ]]; then printf "%b\n" "ERROR: gem_log_FileEnablePush() only accepts true or false as a parameter." >> "${gem_log_path_log}"; return 1; fi
+
+#	echo "Pushed[$gem_log_fileEnable_stackSize]=\"$1\""
+	return 0
+}
+
+# ==============================================================================
+# gem_log_p_FileEnablePop()- Private pop function does no error checking or
+# outputting.
+# ==============================================================================
+function gem_log_p_FileEnablePop
+{
+	((gem_log_fileEnable_stackSize--))
+	if ! unset echo "gem_log_fileEnable_stack_$gem_log_fileEnable_stackSize"; then printf "%b\n" "gem_log_p_FileEnablePop(): unset() failed." >> "${gem_log_path_log}"; return 1; fi
+
+	if ! gem_log_p_FileEnableBufferFlush; then printf "%b\n" "ERROR: gem_log_p_FileEnablePop(): gem_log_p_FileEnableBufferFlush() failed." >> "${gem_log_path_log}"; return 1; fi
+	return 0
+}
+
+# ==============================================================================
+# gem_log_v_FileEnablePop()
+#
+# Usage: gem_log_FileEnable
+# ==============================================================================
+function gem_log_v_FileEnablePop { gem_log_FileEnablePop; return $?; }
+function gem_log_FileEnablePop
+{
+	if [[ ${gem_log_isInitialized} -eq 0 ]] && ! gem_log_Init; then printf "%b\n" "gem_log_FileEnablePop(): gem_log_Init() failed." >> "${gem_log_path_log}"; return 1; fi
+
+	if [[ ${gem_log_fileEnable_stackSize} -le 1 ]]; then printf "%b\n" "ERROR: gem_log_FileEnablePop(): Unable to pop from empty stack." >> "${gem_log_path_log}"; return 1; fi
+
+	if ! gem_log_p_FileEnablePop; then printf "%b\n" "gem_log_FileEnablePop(): gem_log_p_FileEnablePop() failed." >> "${gem_log_path_log}"; return 1; fi
+	return 0
+}
+
+# ==============================================================================
+# gem_log_v_StringToStdout()- Outputs the given arguments to stdout.  The
+# arguments are treated as a single string.
+# ==============================================================================
+function gem_log_v_StringToStdout { gem_log_StringToStdout "$@"; return $? ; }
+function gem_log_StringToStdout
+{
+	# *FIX: Should we be writing directly to the log file here?
+	if [[ ${gem_log_isInitialized} -eq 0 ]] && ! gem_log_Init; then printf "%b\n" "gem_log_StringToStdout(): gem_log_Init() failed.${gem_log_eol}" >> "${gem_log_path_log}"; return 1; fi
+
+	# Peek the log must state.  Avoid calling gem_log_v_FileEnablePeek() which
+	# may wind up recursively calling gem_log_StringToFile().  if !
+	local isEnabled
+	if ! isEnabled=$(eval "echo \$gem_log_consoleEnable_stack_$((gem_log_consoleEnable_stackSize-1))"); then printf "%b\n" "gem_log_StringToStdout(): Eval() failed." >> "${gem_log_path_log}"; return 1; fi
+	if [[ ${isEnabled} == "true" ]]; then
+		printf "%b\n" "$@"
+	else
+		gem_log_consoleEnable_buffer+="$*\n"
+	fi
+
+	return 0
+}
+
+# ==============================================================================
+# gem_log_v_StringToStdout()- Outputs the given arguments to stdout.  The
+# arguments are treated as a single string.
+# ==============================================================================
+function gem_log_v_StringToStderr { gem_log_StringToStderr "$@"; return $? ; }
+function gem_log_StringToStderr
+{
+	# *FIX: Should we be writing directly to the log file here?
+	if [[ ${gem_log_isInitialized} -eq 0 ]] && ! gem_log_Init; then printf "%b\n" "gem_log_StringToStderr(): gem_log_Init() failed.${gem_log_eol}" >> "${gem_log_path_log}"; return 1; fi
+
+	printf "%b\n" "${GEM_COLOR_BRIGHT_RED}${*}${GEM_COLOR_NONE}" 1>&2
+
+	return 0
+}
+
+# ==============================================================================
+# gem_log_v_StringToFile()- Outputs the given arguments to the log file.  The
+# arguments are treated as a single string.
+# ==============================================================================
+function gem_log_v_StringToFile { gem_log_StringToFile "$@"; return $? ; }
+function gem_log_StringToFile
+{
+	# *FIX: Should we be writing directly to the log file here?
+	if [[ ${gem_log_isInitialized} -eq 0 ]] && ! gem_log_Init; then printf "%b\n" "gem_log_StringToFile(): gem_log_Init() failed.${gem_log_eol}" >> "${gem_log_path_log}"; return 1; fi
+
+	# Remove terminal color escape sequences (i.e. GEM_COLOR_BLUE.)
+	local regex='\\e\[38;5;[0-9]+m'
+	local sedStr="s/$regex//g"
+	local newStr
+	if ! newStr=$(sed -E "$sedStr" <<< "$*"); then printf "%b\n" "gem_log_StringToFile(): sed() failed.${gem_log_eol}" >> "${gem_log_path_log}"; return 1; fi
+
+	# Remove terminal no-color escape sequence (i.e. GEM_COLOR_NONE.)
+	regex='\\033\[0m'
+	sedStr="s/$regex//g"
+	if ! newStr=$(sed -E "$sedStr" <<< "$newStr"); then printf "%b\n" "gem_log_StringToFile(): sed() failed.${gem_log_eol}" >> "${gem_log_path_log}"; return 1; fi
+
+	# Replace line breaks and tabs with html equivalents.
+	newStr="${newStr//\\n/<br/>\\n}"
+	newStr="${newStr//\\t/&emsp;&emsp;}"
+
+	# Peek the log enable state.  Avoid calling gem_log_v_FileEnablePeek() which may wind up recursively calling gem_log_StringToFile().
+	local isEnabled
+	if ! isEnabled=$(eval "echo \$gem_log_fileEnable_stack_$((gem_log_fileEnable_stackSize-1))"); then printf "%b\n" "gem_log_StringToFile(): Eval() failed." >> "${gem_log_path_log}"; return 1; fi
+	if [[ ${isEnabled} == "true" ]]; then
+		printf "%b" "${newStr}${gem_log_eol}" >> "${gem_log_path_log}"
+	else
+		gem_log_fileEnable_buffer+="${newStr}${gem_log_eol}"
+	fi
+ 	return 0
+}
+
+# ==============================================================================
+# gem_log_Msg()- Outputs the given arguments to stdout.  The arguments are
+# treated as a single string.
+# ==============================================================================
+function gem_log_v_Msg { gem_log_Msg "$@"; return $? ; }
+function gem_log_Msg
+{
+	if [[ ${gem_log_isInitialized} -eq 0 ]] && ! gem_log_Init; then printf "%b\n" "gem_log_Msg(): gem_log_Init() failed." >> "${gem_log_path_log}"; return 1; fi
+
+	local gem_result_1
+	gem_log_v_StringToStdout "$@"; gem_result_1=$?
+	if [[ ${gem_result_1} -ne 0 ]]; then printf "%b\n" "gem_log_Msg(): gem_log_v_StringToStdout() failed." >> "${gem_log_path_log}"; return 1; fi
+
+	local gem_result_2
+	gem_log_v_StringToFile "$@"; gem_result_2=$?
+	if [[ ${gem_result_2} -ne 0 ]]; then printf "%b\n" "gem_log_Msg(): gem_log_v_StringToFile() failed." >> "${gem_log_path_log}"; return 1; fi
+
+	return $(( gem_result_1 | gem_result_2 ))
+}
+
+# ==============================================================================
+# gem_log_v_Debug()- 
+# ==============================================================================
+function gem_log_v_Debug { gem_log_Debug "$@"; return $? ; }
+function gem_log_Debug
+{
+	if [[ ${gem_log_isInitialized} -eq 0 ]] && ! gem_log_Init; then printf "%b\n" "gem_log_Debug(): gem_log_Init() failed." >> "${gem_log_path_log}"; return 1; fi
+
+	local gem_result_1
+	gem_log_v_StringToStderr "$@"; gem_result_1=$?
+	if [[ ${gem_result_1} -ne 0 ]]; then printf "%b\n" "gem_log_Debug(): gem_log_v_StringToStderr() failed." >> "${gem_log_path_log}"; return 1; fi
+
+	local gem_result_2
+	gem_log_v_StringToFile "$@"; gem_result_2=$?
+	if [[ ${gem_result_2} -ne 0 ]]; then printf "%b\n" "gem_log_Debug(): gem_log_v_StringToFile() failed." >> "${gem_log_path_log}"; return 1; fi
+
+	return $(( gem_result_1 | gem_result_2 ))
+}
+
+# ==============================================================================
+# gem_log_v_Alert()- 
+# ==============================================================================
+function gem_log_v_Alert { gem_log_Alert "$@"; return $? ; }
+function gem_log_Alert
+{
+	if [[ ${gem_log_isInitialized} -eq 0 ]] && ! gem_log_Init; then printf "%b\n" "gem_log_Alert(): gem_log_Init() failed." >> "${gem_log_path_log}"; return 1; fi
+
+	gem_log_v_Msg "${GEM_COLOR_BRIGHT_RED}${*}${GEM_COLOR_NONE}"
+	return 0
+}
+

@@ -8,7 +8,9 @@
 #     \/__________/\/____/  \/__/\/__/\/__/ \/_________/\/____/  \/______/\/__/ \/___/  \/____/
 
 
+# shellcheck source=/home/mhodges/gem/local/sbin/gem_script
 . gem_script
+. gem_array
 . gem_build_validate
 . gem_build_find
 . gem_build
@@ -66,12 +68,12 @@ function gem_build_v_OnConfigure
 	if [[ ${gem_host} == "cygwin" ]]; then
 
 		# Don't define WIDECHAR for Cygwin.
-		sed -i 's/defined(_WIN32) || defined(__CYGWIN__)/defined(_WIN32)/g' ${gem_fullpath_src}/gzguts.h
+		sed -i 's/defined(_WIN32) || defined(__CYGWIN__)/defined(_WIN32)/g' "${gem_fullpath_src}"/gzguts.h
 
 		# It would be preferable to tell cmake to define GCC_WINDRES for the
 		# resource compiler, but I haven't had any luck at that, so we'll just
 		# edit the resource file instead.
-		sed -i ':a;N;$!ba;s|#ifdef GCC_WINDRES\nVS_VERSION_INFO		VERSIONINFO\n#else\nVS_VERSION_INFO		VERSIONINFO	MOVEABLE IMPURE LOADONCALL DISCARDABLE\n#endif|VS_VERSION_INFO		VERSIONINFO|g'  ${gem_fullpath_src}/win32/zlib1.rc
+		sed -i ':a;N;$!ba;s|#ifdef GCC_WINDRES\nVS_VERSION_INFO		VERSIONINFO\n#else\nVS_VERSION_INFO		VERSIONINFO	MOVEABLE IMPURE LOADONCALL DISCARDABLE\n#endif|VS_VERSION_INFO		VERSIONINFO|g'  "${gem_fullpath_src}"/win32/zlib1.rc
 	fi
 
 	if [[ ${gem_lib_type} == "shared" ]]; then
@@ -98,7 +100,7 @@ function gem_build_v_OnInstall
 	gem_build_OnInstall
 
 	if [[ ${gem_host} == "mingw" ]]; then
-		gem_script_ln -sf ${gem_fullpath_install}/lib/libzlibstatic.a ${gem_fullpath_install}/lib/libz.a
+		gem_script_ln -sf "${gem_fullpath_install}"/lib/libzlibstatic.a "${gem_fullpath_install}"/lib/libz.a
 	fi
 }
 
@@ -107,43 +109,43 @@ function gem_build_v_OnUninstall
 	# gem_build_OnUninstall
 	if [[ ${gem_host} == "linux" ]]; then
 
-		gem_script_rm -f ${gem_fullpath_install}/lib/libz.a
-		gem_script_rm -f ${gem_fullpath_install}/lib/libz.so
-		gem_script_rm -f ${gem_fullpath_install}/lib/libz.so.1
-		gem_script_rm -f ${gem_fullpath_install}/lib/libz.so.1.2.11
+		gem_script_rm -f "${gem_fullpath_install}"/lib/libz.a
+		gem_script_rm -f "${gem_fullpath_install}"/lib/libz.so
+		gem_script_rm -f "${gem_fullpath_install}"/lib/libz.so.1
+		gem_script_rm -f "${gem_fullpath_install}"/lib/libz.so.1.2.11
 
 	elif [[ ${gem_host} == *"android"* ]]; then
 
-		gem_script_rm -f ${gem_fullpath_install}/lib/libz.a
-		gem_script_rm -f ${gem_fullpath_install}/lib/libz.so
+		gem_script_rm -f "${gem_fullpath_install}"/lib/libz.a
+		gem_script_rm -f "${gem_fullpath_install}"/lib/libz.so
 
 	elif [[ ${gem_host} == "mingw" ]]; then
 
-		gem_script_rm -f ${gem_fullpath_install}/bin/libzlib.dll
-		gem_script_rm -f ${gem_fullpath_install}/bin/libzlib1.dll
-		gem_script_rm -f ${gem_fullpath_install}/lib/libzlib.dll.a
-		gem_script_rm -f ${gem_fullpath_install}/lib/libzlibstatic.a
-		gem_script_rm -f ${gem_fullpath_install}/lib/libz.a
+		gem_script_rm -f "${gem_fullpath_install}"/bin/libzlib.dll
+		gem_script_rm -f "${gem_fullpath_install}"/bin/libzlib1.dll
+		gem_script_rm -f "${gem_fullpath_install}"/lib/libzlib.dll.a
+		gem_script_rm -f "${gem_fullpath_install}"/lib/libzlibstatic.a
+		gem_script_rm -f "${gem_fullpath_install}"/lib/libz.a
 
 	elif [[ ${gem_host} == "cygwin" ]]; then
 
-		gem_script_rm -f ${gem_fullpath_install}/bin/cygz-1.dll
-		gem_script_rm -f ${gem_fullpath_install}/lib/libz.a
-		gem_script_rm -f ${gem_fullpath_install}/lib/libz.dll.a
+		gem_script_rm -f "${gem_fullpath_install}"/bin/cygz-1.dll
+		gem_script_rm -f "${gem_fullpath_install}"/lib/libz.a
+		gem_script_rm -f "${gem_fullpath_install}"/lib/libz.dll.a
 	fi
 
-	gem_script_rm -f ${gem_fullpath_install}/include/zconf.h
-	gem_script_rm -f ${gem_fullpath_install}/include/zlib.h
-	gem_script_rm -f ${gem_fullpath_install}/share/man/man3/zlib.3
-	gem_script_rm -f ${gem_fullpath_install}/share/pkgconfig/zlib.pc
+	gem_script_rm -f "${gem_fullpath_install}"/include/zconf.h
+	gem_script_rm -f "${gem_fullpath_install}"/include/zlib.h
+	gem_script_rm -f "${gem_fullpath_install}"/share/man/man3/zlib.3
+	gem_script_rm -f "${gem_fullpath_install}"/share/pkgconfig/zlib.pc
 
-	gem_script_rmdir_IfEmpty ${gem_fullpath_install}/bin
-	gem_script_rmdir_IfEmpty ${gem_fullpath_install}/include
-	gem_script_rmdir_IfEmpty ${gem_fullpath_install}/lib
-	gem_script_rmdir_IfEmpty ${gem_fullpath_install}/share/man/man3
-	gem_script_rmdir_IfEmpty ${gem_fullpath_install}/share/man
-	gem_script_rmdir_IfEmpty ${gem_fullpath_install}/share/pkgconfig
-	gem_script_rmdir_IfEmpty ${gem_fullpath_install}/share
+	gem_script_rmdir_IfEmpty "${gem_fullpath_install}"/bin
+	gem_script_rmdir_IfEmpty "${gem_fullpath_install}"/include
+	gem_script_rmdir_IfEmpty "${gem_fullpath_install}"/lib
+	gem_script_rmdir_IfEmpty "${gem_fullpath_install}"/share/man/man3
+	gem_script_rmdir_IfEmpty "${gem_fullpath_install}"/share/man
+	gem_script_rmdir_IfEmpty "${gem_fullpath_install}"/share/pkgconfig
+	gem_script_rmdir_IfEmpty "${gem_fullpath_install}"/share
 }
 
 function gem_build_v_OnClean
@@ -157,14 +159,21 @@ function gem_build_v_OnClean
 # =============================================================================
 function gem_script_v_OnArg
 {
-	arg=$(echo ${1} | tr '[A-Z]' '[a-z]')	# Lowercase args.
+	local gem_return=0
+	local num_args_handled_here=0
+
+	local arg=${1}
 	case ${arg} in
-		*)	gem_build_OnArg "$@" ; return $?
+	*)	local globals;
+		globals=$(gem_build_OnArg "${arg}"); gem_script_GlobalsLoad "${globals}"; gem_return=$?
 	esac
+	((gem_script_OnArg_num_handled += num_args_handled_here))
+	gem_script_GlobalsSave
+	return ${gem_return}
 }
 
 function gem_script_v_Main
 {
 	gem_build_Main "$@"
 }
-gem_script_v_Main $@
+gem_script_v_Main "$@"

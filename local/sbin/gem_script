@@ -7,89 +7,106 @@
 #    \ \__________\ \____\ \ \__\ \__\ \__\ /\_________\ \_____/\ \______\ \__\\ \____/\ \____\
 #     \/__________/\/____/  \/__/\/__/\/__/ \/_________/\/____/  \/______/\/__/ \/___/  \/____/
 
-
-function gem_script_Callstack
-{
-	gem_script_v_Msg "Callstack:\n"
-
-	local depth=${#FUNCNAME[@]}
-	for ((i=depth-1; i>0; i--)); do
-		local func="${FUNCNAME[$i-1]}"
-		if [[ ${func} == *"gem_v_Error"* || ${func} == *"gem_script_v_Error"* ]]; then
-			break
-		fi
-		local indent=$(printf '%*s' $((depth-i)) '')
-		local src="${BASH_SOURCE[$((i-1))]}"
-		local line="${BASH_LINENO[$((i-1))]}"
-		gem_script_v_Msg "${indent}${src}(${line}): ${func}()"
-	done
-}
-
-# gem_script_v_Print()- Outputs the given arguments to stdout.  Treats the arguments
-# as a single string.
+# ==============================================================================
+# gem_script_PythonModule()- Calls a Python function.  Parameter 1 is the module
+# containing the function to be called.  Parameter 2 must be the name of the
+# python function.  Parameter 3 must be a single string containing all the
+# arguments separated by commas.  This string will serve as the parameter list
+# for the Python call, and as such should be formatted the way parameters are
+# specified in Python.
 #
-# *FIX: Does not automatically append a \n newline.  Maybe this link can help:
+# Example usage:
 #
-# https://wiki.bash-hackers.org/scripting/posparams#mass_usage
-
-function gem_v_Print { gem_script_Error "gem_v_Print() has been renamed.";}
-function gem_script_v_Print { gem_script_Print "$@";}
-function gem_script_Print
-{
-	if [[ ${gem_script_option_quiet_mode} -eq 0 ]]; then
-		printf "%b" "$@"
-	fi
-}
-
-function gem_v_Msg { gem_script_Error "gem_v_Msg() has been renamed.";}
-function gem_script_v_Msg { gem_script_Msg "$@";}
-function gem_script_Msg
-{
-	if [[ ${gem_script_option_quiet_mode} -eq 0 ]]; then
-		printf "%b\n" "$@"
-	fi
-}
-
-function gem_v_Msg_NotQuiet { gem_script_Error "gem_v_Msg_NotQuiet() has been renamed.";}
-function gem_script_v_Msg_NotQuiet { gem_script_Msg_NotQuiet "$@";}
-function gem_script_Msg_NotQuiet
-{
-	printf "%b\n" "$@"
-}
-
-function gem_v_ExitMsg { gem_script_Error "gem_v_ExitMsg() has been renamed.";}
-function gem_script_v_ExitMsg { gem_script_ExitMsg "$@";}
-function gem_script_ExitMsg
-{
-    if [[ ! -z $@ ]]; then
-		gem_script_v_Msg_NotQuiet "$@"
-	fi
-	exit 1
-}
-
-function gem_v_Error { gem_script_Error "gem_v_Error() has been renamed.";}
-function gem_script_v_Error { gem_script_Error "$@";}
-function gem_script_Error
-{
-	gem_script_v_Msg_NotQuiet ""
-	gem_script_Callstack
-	gem_script_v_Msg_NotQuiet "\nERROR: $@\n"
-	exit 1
-}
-
-function gem_v_ExitHelp { gem_script_Error "gem_v_ExitHelp() has been renamed.";}
-function gem_script_v_ExitHelp { gem_script_ExitHelp "$@";}
-function gem_script_ExitHelp
-{
-    if [[ ! -z $@ ]]; then
-        gem_script_v_ExitMsg "\n$@\n\n"
-    fi
-	exit 0
-}
-
-# Trims the whitespace from the head and tail of a string.
+#    gem_script_PythonModule MyModule MyFunction "\"Hello\", 1024"
 #
-# Source: https://unix.stackexchange.com/questions/476455/how-to-remove-leading-and-trailing-spaces-from-a-shell-variable
+# ==============================================================================
+function gem_script_PythonModule
+{
+	local module=${1};
+	local func=${2};
+	local params=${3};
+
+	local cmd="python -c \"import sys;sys.path.insert(0,\\\"${gem_fullpath_gem}/local/sbin\\\");from ${module} import ${func}; gem_result=${func}(${params}); sys.exit(gem_result);\""
+	echo ${cmd}
+	eval ${cmd}; gem_result=$?
+	if [[ ${gem_result} -ne 0 ]] ; then
+		gem_script_Debug "The Python intrepreter failed to call the requested python function."
+		return 1
+	fi
+	return ${gem_result}
+}
+
+# ==============================================================================
+# gem_script_Python()- Calls a Python function.  Parameter 1 must be the name of
+# the python function.  Parameter 2 must be a single string containing all the
+# arguments separated by commas.  This string will serve as the parameter list
+# for the Python call, and as such should be formatted the way parameters are
+# specified in Python.
+#
+# Example usage:
+#
+#    gem_script_Python MyFunction "\"Hello\", 1024"
+#
+# ==============================================================================
+function gem_script_Python
+{
+	local func=${1};
+	local params=${2};
+	local params_escaped=${params//\"/\\\"}
+
+	gem_script_PythonModule gem_script "${func}" "${params_escaped}"
+	return $?
+}
+
+gem_script_Python Foo "\"Hello there!\""
+
+
+
+
+[[ -n ${gem_script_included} ]] && exit
+export gem_script_included=1
+
+. gem_log
+
+export gem_script_globals_delimiter="<GEM>"
+export gem_script_globals_var_list
+export gem_script_OnArg_num_handled_there
+
+# ==============================================================================
+# gem_script_String_IsWholeNumber()- Echos true if $1 is a whole number.
+# ==============================================================================
+function gem_script_String_IsWholeNumber
+{
+	if [[ ${1} =~ ^[0-9]+$ ]] ; then
+		echo "true"
+	else
+		echo "false"
+	fi
+	return 1
+}
+
+# ==============================================================================
+# gem_script_String_IsIdentifier()- Echos true if $1 is a C-style identifier
+# containing underscore, numerical digits, and both case letters, otherwise
+# false.
+# ==============================================================================
+function gem_script_String_IsIdentifier
+{
+	if [[ ${1} =~ ^[_a-zA-Z]+[_a-zA-Z0-9]*$ ]] ; then
+		echo "true"
+	else
+		echo "false"
+	fi
+	return 1
+}
+
+# ==============================================================================
+# gem_script_String_Trim()- Trims the whitespace from the head and tail of a
+# string.
+#
+# Source:
+# https://unix.stackexchange.com/questions/476455/how-to-remove-leading-and-trailing-spaces-from-a-shell-variable
+# ==============================================================================
 function gem_script_String_Trim
 {
 	local var=$1
@@ -103,57 +120,72 @@ function gem_script_String_Trim
 	printf '%s\n' "$trim"
 
     (( extglobWasOff )) && shopt -u extglob # If 'extglob' was off before, turn it back off.
+	return 0
 }
 
-# Removes any characters following, and including, #.
+# ==============================================================================
+# gem_script_String_StripComments()- Removes any characters following, and
+# including, #.
+# ==============================================================================
 function gem_script_String_StripComments
 {
 	local str=${1}
-	printf "%s" ${str%%#*}
+	printf "%s" "${str%%#*}"
+	return $?
 }
 
-# Returns 1 if a space-separated list, $1, contains the indicated string, $2.
+# ==============================================================================
+# Returns 1 if a space-separated list, $1, contains the indicated string $2.
+#
+# *TODO: Correct the logic to work like typical return values.  I.e. 0 means
+# success, and 1 non-zero means failure.
+# ==============================================================================
 function gem_script_ListContains
 {
 	haystack=${1}
 	needle=${2}
 
 	local gem_ifs_saved=${IFS}
-	local gem_found=0
+	local gem_found="false"
 	IFS=" "
 	for item in ${haystack}; do
 
-		if [[ ${item} == ${needle} ]]; then
-			gem_found=1
+		if [[ ${item} == "${needle}" ]]; then
+			gem_found="true"
 			break
 		fi
 	done
 	IFS=${gem_ifs_saved}
-	return ${gem_found}
+	echo ${gem_found}
+	return 0
 }
 
-# Receives as parameters a copy of the parameters that were passed to our file
-# system wrappers gem_build_validate_cd, ... etc.  We would like to restrict these
+# ==============================================================================
+# gem_script_ValidatePaths()- Receives as parameters a copy of the
+# parameters that were passed to our file system wrappers gem_script_cd and
+# related family of functions, ... etc.  We would like to restrict these
 # functions from working outside the gem file heirarchy for safety purposes.
 #
-# Every argument that realpath successfully converts is expected to be a 
-# file path and, therefore, must contain "/gem/".
-function gem_script_ValidateFileParams
+# Every argument that realpath successfully converts is expected to be a file
+# path and, therefore, must contain "/gem/".
+# ==============================================================================
+function gem_script_ValidatePaths
 {
-#	local gem_counter=0
-	for arg in "$@"
-	{
-		local gem_absolute_path=$(realpath "${arg}" 2>/dev/null)	# Expand relative paths.
-		local gem_result=$?
-		if [[ ${gem_result} -eq 0 && -f $gem_absolute_path ]]; then
-			if [[ ${gem_absolute_path} != *"/gem/"* && ${arg} != *"/gem/"* ]]; then
-				gem_script_v_Error "gem_script_ValidateFileParams() Refusing to perform file operations outside of /gem/ file tree: ${arg}"
-                return 1
-#			else
-#				((gem_counter++))
+	if [[ $# -lt 1 ]]; then
+		gem_result="false"
+	else
+		gem_result="true"
+		for arg in "$@"
+		{
+			local gem_absolute_path
+			# Expand relative paths.
+			if ! gem_absolute_path=$(realpath "${arg}" 2>/dev/null); then gem_log_v_Debug "gem_script_ValidatePaths(): realpath failed."; gem_result="false"; break
+			# Must be under gem file tree, for safety.
+			elif [[ ${gem_absolute_path} != *"/gem/"* && ${arg} != *"/gem/"* ]]; then gem_log_v_Debug "gem_script_ValidatePaths(): Refusing to perform file operations outside of gem file tree: Attempted to access file: ${arg}"; gem_result="false"; break
 			fi
-		fi
-	}
+		}
+	fi
+	echo ${gem_result}
 	return 0
 }
 
@@ -181,167 +213,327 @@ function gem_script_ValidateFileParams
 #	return ${gem_counter}
 #}
 
+
+
+
+
+
+# ==============================================================================
+#
+# Safe Shell commands
+#
+# The following functions are safe alternatives to common bash shell commands.
+# The file domain is limited to the gem/ file tree.
+#
+# *TODO: Manage the return values of all these.
+# ==============================================================================
 function gem_script_cd
 {
-	gem_script_ValidateFileParams ${@}
+	local gem_result
+	if ! gem_result=$(gem_script_ValidatePaths "${@}"); then gem_log_v_Debug "gem_script_cd(): gem_script_ValidatePaths() failed."; return 1; fi
+	if [[ ${gem_result} == "false" ]]; then gem_log_v_Debug "gem_script_cd(): Invalid arguments provided."; return 1; fi
 
-	local gem_cmd_line="cd ${@}"
-	${gem_cmd_line}
-	local gem_result=$?
-	if [[ ${gem_result} -ne 0 ]]; then
-		gem_script_v_Error "gem_script_cd failed to change to directory. Error code: ${gem_result}, Command line: ${gem_cmd_line}."
-	fi
+	local gem_cmd_line="cd ${*}"
+
+	local gem_cmd_output
+	gem_cmd_output=$(${gem_cmd_line} 2>&1); gem_cmd_result=$? 
+	if [[ ${gem_cmd_result} -ne 0 ]]; then gem_log_v_Debug "gem_script_cd(): Failed to change to directory.\n\tCommand line line:   ${gem_cmd_line}.\n\tError code:     ${gem_cmd_result}\n\tCommand output: ${gem_cmd_output}"; return 1; fi
+
+	return 0
 }
 
 function gem_script_cp
 {
-	gem_script_ValidateFileParams ${@}
+	local gem_result
+	if ! gem_result=$(gem_script_ValidatePaths "${@}"); then gem_log_v_Debug "gem_script_cp(): gem_script_ValidatePaths() failed."; return 1; fi
+	if [[ ${gem_result} == "false" ]]; then gem_log_v_Debug "gem_script_cp(): Invalid arguments provided."; return 1; fi
 
-	local gem_cmd_line="cp ${@}"
-	${gem_cmd_line}
-	local gem_result=$?
-	if [[ ${gem_result} -ne 0 ]]; then
-		gem_script_v_Error "gem_script_cp failed to copy file(s).  Error code: ${gem_result}, Command line: ${gem_cmd_line}."
-	fi
+	local gem_cmd_line="cp ${*}"
+
+	local gem_cmd_output
+	gem_cmd_output=$(${gem_cmd_line} 2>&1); gem_cmd_result=$? 
+	if [[ ${gem_cmd_result} -ne 0 ]]; then gem_log_v_Debug "gem_script_cp(): Failed to copy file(s).\n\tCommand line:   ${gem_cmd_line}.\n\tError code:     ${gem_cmd_result}\n\tCommand output: ${gem_cmd_output}"; return 1; fi
+
+	return 0
 }
 
 function gem_script_ln
 {
 	# ln creates a link to the first file from the second.
-	gem_script_ValidateFileParams ${@}
+	local gem_result
+	if ! gem_result=$(gem_script_ValidatePaths "${@}"); then gem_log_v_Debug "gem_script_ln(): gem_script_ValidatePaths() failed."; return 1; fi
+	if [[ ${gem_result} == "false" ]]; then gem_log_v_Debug "gem_script_ln(): Invalid arguments provided."; return 1; fi
 
-	local gem_cmd_line="ln -f ${@}"
-	${gem_cmd_line}
-	local gem_result=$?
-	if [[ ${gem_result} -ne 0 ]]; then
-		gem_script_v_Error "gem_script_ln failed to create a symbolic link.  Error code: ${gem_result}, Command line: ${gem_cmd_line}."
-	fi
+	local gem_cmd_line="ln -f ${*}"
+
+	local gem_cmd_output
+	gem_cmd_output=$(${gem_cmd_line} 2>&1); gem_cmd_result=$? 
+	if [[ ${gem_cmd_result} -ne 0 ]]; then gem_log_v_Debug "gem_script_ln (): Failed to create a symbolic link.\n\tCommand line:   ${gem_cmd_line}.\n\tError code:     ${gem_cmd_result}\n\tCommand output: ${gem_cmd_output}"; return 1; fi
+
+	return 0
 }
 
 function gem_script_mv
 {
-	gem_script_ValidateFileParams ${@}
+	local gem_result
+	if ! gem_result=$(gem_script_ValidatePaths "${@}"); then gem_log_v_Debug "gem_script_mv(): gem_script_ValidatePaths() failed."; return 1; fi
+	if [[ ${gem_result} == "false" ]]; then gem_log_v_Debug "gem_script_mv(): Invalid arguments provided."; return 1; fi
 
-	local gem_cmd_line="mv ${@}"
-	${gem_cmd_line}
-	local gem_result=$?
-	if [[ ${gem_result} -ne 0 ]]; then
-		gem_script_v_Error "gem_script_mv failed to move file(s).  Error code: ${gem_result}, Command line: ${gem_cmd_line}."
-	fi
+	local gem_cmd_line="mv ${*}"
+
+	local gem_cmd_output
+	gem_cmd_output=$(${gem_cmd_line} 2>&1); gem_cmd_result=$? 
+	if [[ ${gem_cmd_result} -ne 0 ]]; then gem_log_v_Debug "gem_script_mv failed to move file(s).\n\tCommand line:   ${gem_cmd_line}.\n\tError code:     ${gem_cmd_result}\n\tCommand output: ${gem_cmd_output}"; return 1; fi
+
+	return 0
 }
 
 function gem_script_rm
 {
-	gem_script_ValidateFileParams ${@}
+	local gem_result
+	if ! gem_result=$(gem_script_ValidatePaths "${@}"); then gem_log_v_Debug "gem_script_rm(): gem_script_ValidatePaths() failed."; return 1; fi
+	if [[ ${gem_result} == "false" ]]; then gem_log_v_Debug "gem_script_rm(): Invalid arguments provided."; return 1; fi
 
-	local gem_cmd_line="rm ${@}"
-	eval ${gem_cmd_line}
-	local gem_result=$?
-	if [[ ${gem_result} -ne 0 ]]; then
-		gem_script_v_Error "Result=${gem_result}"
-		gem_script_v_Error "gem_script_rm failed to remove file(s).  Command line \"${gem_cmd_line}\"."
-	fi
+	local gem_cmd_line="rm ${*}"
+
+	local gem_cmd_output
+	gem_cmd_output=$(${gem_cmd_line} 2>&1); gem_cmd_result=$? 
+	if [[ ${gem_cmd_result} -ne 0 ]]; then gem_log_v_Debug "gem_script_rm(): Failed to remove file(s).\n\tCommand line:   ${gem_cmd_line}.\n\tError code:     ${gem_cmd_result}\n\tCommand output: ${gem_cmd_output}"; return 1; fi
+
+	return 0
 }
 
 function gem_script_mkdir
 {
-	gem_script_ValidateFileParams ${@}
+	local gem_result
+	if ! gem_result=$(gem_script_ValidatePaths "${@}"); then gem_log_v_Debug "gem_script_mkdir(): gem_script_ValidatePaths() failed."; return 1; fi
+	if [[ ${gem_result} == "false" ]]; then gem_log_v_Debug "gem_script_mkdir(): Invalid arguments provided."; return 1; fi
 
-	local gem_cmd_line="mkdir ${@}"
-	eval ${gem_cmd_line}
-	local gem_result=$?
-	if [[ ${gem_result} -ne 0 ]]; then
-		gem_script_v_Error "gem_script_mkdir failed to create directory.  Command line \"${gem_cmd_line}\"."
-	fi
+	local gem_cmd_line="mkdir ${*}"
+
+	local gem_cmd_output
+	gem_cmd_output=$(${gem_cmd_line} 2>&1); gem_cmd_result=$? 
+	if [[ ${gem_cmd_result} -ne 0 ]]; then gem_log_v_Debug "gem_script_mkdir failed to create directory.\n\tCommand line:   ${gem_cmd_line}.\n\tError code:     ${gem_cmd_result}\n\tCommand output: ${gem_cmd_output}"; return 1; fi
+
+	return 0
 }
 
 function gem_script_rmdir
 {
-	gem_script_ValidateFileParams ${@}
+	local gem_result
+	if ! gem_result=$(gem_script_ValidatePaths "${@}"); then gem_log_v_Debug "gem_script_rmdir(): gem_script_ValidatePaths() failed."; return 1; fi
+	if [[ ${gem_result} == "false" ]]; then gem_log_v_Debug "gem_script_rmdir(): Invalid arguments provided."; return 1; fi
 
-	local gem_cmd_line="rmdir ${@}"
-	eval ${gem_cmd_line}
-	local gem_result=$?
-	if [[ ${gem_result} -ne 0 ]]; then
-		gem_script_v_Error "gem_script_rmdir failed to remove directory.  Command line \"${gem_cmd_line}\"."
-	fi
+	local gem_cmd_line="rmdir ${*}"
+
+	local gem_cmd_output
+	gem_cmd_output=$(${gem_cmd_line} 2>&1); gem_cmd_result=$? 
+	if [[ ${gem_cmd_result} -ne 0 ]]; then gem_log_v_Debug "gem_script_rmdir() failed to remove directory.\n\tCommand line:   ${gem_cmd_line}.\n\tError code:     ${gem_cmd_result}\n\tCommand output: ${gem_cmd_output}"; return 1; fi
+
+	return 0
 }
 
-# Returns 1 if the directory parameter is a directory.
+
+# Echos "true" if the directory parameter is a directory.  Echos "false",
+# otherwise.
 function gem_script_DirExists
 {
 	local gem_path=${1}
-	if [[ ! -z ${gem_path} && -d ${gem_path} ]]; then
-		return 1
+	if [[ -n ${gem_path} && -d ${gem_path} ]]; then
+		echo "true"
+	else
+		echo "false"
 	fi
 	return 0
 }
 
-# Returns 1 if the directory parameter is not a valid directory, or the
-# directory does exist and is empty.
+# Echos "true" if the directory parameter is not a valid directory, or the
+# directory does exist and is empty.  Echos "false", otherwise.
 function gem_script_DirIsEmpty
 {
 	local gem_path=${1}
+	local gem_dir_exists
 
-	gem_script_DirExists ${gem_path}
-	local gem_dir_exists=$?
-	if [[ ${gem_dir_exists} -ne 0 && ! $(ls -A ${gem_path}) ]]; then
-		return 1
+	if ! gem_dir_exists=$(gem_script_DirExists "${gem_path}"); then gem_log_v_Debug "ERROR: gem_script_DirIsEmpty(): gem_script_DirExists() failed."; return 1; fi
+	if [[ ${gem_dir_exists} == "true" && ! $(ls -A "${gem_path}") ]]; then
+		echo "true"
+	else
+		echo "false"
 	fi
 	return 0
 }
 
 function gem_script_rmdir_IfEmpty
 {
-	gem_script_ValidateFileParams ${@}
-	local gem_path=${1}
+	local gem_result
+	if ! gem_result=$(gem_script_ValidatePaths "${@}"); then gem_log_v_Debug "ERROR: gem_script_rmdir_IfEmpty(): gem_script_ValidatePaths() failed."; return 1; fi
 
-	gem_script_DirIsEmpty ${gem_path}
-	local gem_dir_is_empty=$?
-	if [[ ${gem_dir_is_empty} -ne 0 ]]; then
-		gem_script_rmdir ${gem_path}
-		local gem_result=$?
-		if [[ ${gem_result} -ne 0 ]]; then
-			gem_script_v_Error "gem_script_rmdir_IfEmpty failed to remove directory: ${gem_path}"
-		fi
-	fi
+	local gem_path=${1}
+	local gem_dir_is_empty
+	if ! gem_dir_is_empty=$(gem_script_DirIsEmpty "${gem_path}"); then gem_log_v_Debug "ERROR: gem_script_rmdir_IfEmpty(): gem_script_DirIsEmpty() failed."; return 1; fi
+
+	if [[ ${gem_dir_is_empty} == "true" ]] && ! gem_script_rmdir "${gem_path}"; then gem_log_v_Debug "gem_script_rmdir_IfEmpty(): gem_script_rmdir() failed to remove directory: ${gem_path}"; return 1; fi
+
+	return 0
 }
 
+# ==============================================================================
+# gem_script_GlobalsDeclare()- 
+# ==============================================================================
+function gem_script_GlobalsDeclare
+{
+	if [[ -n ${gem_script_globals_var_list} ]]; then
+		gem_script_globals_var_list="${gem_script_globals_var_list},"
+	fi
+	gem_script_globals_var_list="${gem_script_globals_var_list}${1}"
+
+	local gem_ifs_saved=${IFS}
+	IFS=","
+	for var in ${1}; do
+		eval "export $var"
+	done
+	IFS=${gem_ifs_saved}
+
+	return 0
+}
+
+# ==============================================================================
+# gem_script_GlobalsSave()- Echos a delmited list of key value pairs.
+#
+# A string with gem_script_globals_delimiter=<GEM> would be formed:
+#
+# aaaa<GEM>1111<GEM>bbbb<GEM>2222<GEM>
+#
+# ==============================================================================
+function gem_script_GlobalsSave
+{
+	local gem_ifs_saved=${IFS}
+	IFS=","
+	local vars=""
+	for var in ${gem_script_globals_var_list}; do
+		vars="${vars}${var}${gem_script_globals_delimiter}${!var}${gem_script_globals_delimiter}"
+	done
+	IFS=${gem_ifs_saved}
+	echo "${vars}"
+	return 0
+}
+
+# ==============================================================================
+# gem_script_GlobalsLoad()- Reads a delmited list of key value pairs from
+# string $1.
+#
+# A string with gem_script_globals_delimiter=<GEM> would be formed:
+#
+# aaaa<GEM>1111<GEM>bbbb<GEM>2222<GEM>
+#
+# ==============================================================================
+function gem_script_GlobalsLoad
+{
+	local str=${1}
+	while [[ $str ]]; do
+		lvalue="${str%%"$gem_script_globals_delimiter"*}"
+		str=${str#*"$gem_script_globals_delimiter"}
+		rvalue=${str%%"$gem_script_globals_delimiter"*}
+		eval "${lvalue}=${rvalue}"
+		str=${str#*"$gem_script_globals_delimiter"}
+	done
+	return 0
+}
+
+function gem_script_v_PrintHelp { gem_script_PrintHelp "$@"; return $? ; }
+function gem_script_PrintHelp
+{
+	if [[ $# -gt 1 ]]; then
+		gem_log_v_Msg "\n${*}\n\n"
+	fi
+	return 0
+}
+
+# ==============================================================================
+# gem_script_v_Init()- 
+#
+# ==============================================================================
+function gem_script_v_Init { gem_script_Init "$@"; return $?; }
+function gem_script_Init
+{
+	gem_script_GlobalsDeclare "gem_script_OnArg_num_handled"
+
+	if ! gem_log_Init; then gem_log_v_Debug "gem_script_Main(): gem_log_Init() failed."; return 1; fi
+
+	return 0
+}
+
+# ==============================================================================
+# gem_script_v_Clean()- 
+#
+# ==============================================================================
+function gem_script_v_Clean { gem_script_Clean "$@"; return $?; }
+function gem_script_Clean
+{
+	gem_log_Clean
+	return $?
+}
+
+# ==============================================================================
 # gem_script_v_OnArg()- Processes recognized arguments, and returns the number
 # of arguments processed.
-function gem_v_OnArg { gem_script_Error "gem_v_OnArg() has been renamed.";}
-function gem_script_v_OnArg { gem_script_OnArg "$@";}
-function gem_script_OnArg
+#
+# We not currently handling any arguments here, but derrived scripts should
+# always call gem_script_v_OnArg() in case we handle arguments in the future.
+# ==============================================================================
+function gem_script_v_OnArg
 {
-#echo "+++ gem_script::gem_script_OnArg()"
+	local gem_return=0
+	local num_args_handled_here=0
 
 	local arg=${1}
-	case ${arg} in
-	-q) gem_script_option_quiet_mode=1
-		return 1 ;;
-	*)	gem_script_v_ExitMsg "ERROR: gem_script_OnArg: Caught unhandled script argument: ${arg}."
-	esac
+	local globals;
+	globals=$(gem_script_OnArg "${arg}"); gem_result_OnArg=$?; gem_script_GlobalsLoad "${globals}"
+	echo $((num_args_handled_here + gem_script_OnArg_num_handled_there))
+	gem_script_GlobalsSave
+	return ${gem_result_OnArg}
 }
 
-function gem_v_Main { gem_script_Error "gem_v_Main() has been renamed.";}
-function gem_script_v_Main { gem_script_Main "$@";}
+function gem_script_OnArg
+{
+	local gem_return=0
+	gem_script_OnArg_num_handled=0
+#	local arg=${1}
+#	case ${arg} in
+#	*)
+#	esac
+	gem_script_GlobalsSave
+	return ${gem_return}
+}
+
+# ==============================================================================
+# gem_script_v_Main()
+# ==============================================================================
+function gem_script_v_Main { gem_script_Main "$@"; return $? ; }
 function gem_script_Main
 {
-#echo "+++ gem_script::gem_script_Main()"
+	# echo "+++ gem_script::gem_script_Main()"
+	local gem_result_OnArg
 
-	gem_script_option_quiet_mode=0
-
-	while [[ $# > 0 ]]
+	while [[ $# -gt 0 ]]
 	do
-		args=$(echo $@ | tr '[A-Z]' '[a-z]')	# Lowercase the argument.
-		gem_script_v_OnArg $args
-		local num_args_handled=$?
-		if [[ ${num_args_handled} > 0 ]]; then
-			for (( i=0; i<${num_args_handled}; i++ )) do shift ; done
-		else
-			gem_script_v_ExitHelp "ERROR: gem_script_Main encountered an unrecognized argument: ${1}"
-		fi
-	done
-}
+		arg=$(echo "${@}" | tr '[:upper:]' '[:lower:]')	# Lowercase the argument.
 
+		if ! gem_log_v_ConsoleEnablePush false; then gem_log_v_Debug "gem_script_Main(): gem_log_v_ConsoleEnablePush() failed."; return 1; fi
+
+		gem_script_OnArg_num_handled=0
+		local globals;
+		globals=$(gem_script_v_OnArg "${arg}"); gem_result_OnArg=$?; gem_script_GlobalsLoad "${globals}";
+
+		if ! gem_log_v_ConsoleEnablePop; then gem_log_v_Msg "gem_script_Main(): gem_log_v_ConsoleEnablePop() failed."; return 1; fi
+
+		if [[ ${gem_result_OnArg} -ne 0 ]]; then gem_log_v_Msg "gem_script_Main(): gem_script_v_OnArg() failed."; return 1; fi
+
+		if [[ ${gem_script_OnArg_num_handled} -eq 0 ]]; then gem_log_v_Msg "ERROR: gem_script_Main() encountered an unrecognized argument: ${1}"; return 1; fi
+
+		for (( i=0; i < gem_script_OnArg_num_handled; i++ )) do shift ; done
+	done
+
+	return 0
+}
 

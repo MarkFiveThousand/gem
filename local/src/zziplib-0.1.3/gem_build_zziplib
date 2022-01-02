@@ -133,10 +133,14 @@ function gem_build_v_Cmd_Clean
 # =============================================================================
 function gem_script_v_OnArg
 {
-	arg=$(echo ${1} | tr '[A-Z]' '[a-z]')	# Lowercase args.
-	case ${arg} in
-		*)	gem_build_OnArg "$@" ;	return $?
+	local gem_return=0
+	local num_args_handled=1
+	case ${1} in
+	*)	num_args_handled=$(gem_build_OnArg "$@")
+		gem_return=$?
 	esac
+	echo ${num_args_handled}
+	return ${gem_return}
 }
 
 function gem_script_v_Main

@@ -8,6 +8,10 @@
 #     \/__________/\/____/  \/__/\/__/\/__/ \/_________/\/____/  \/______/\/__/ \/___/  \/____/
 
 
+[[ -n ${gem_build_included} ]] && exit
+export gem_build_included=1
+
+
 # ANDROID: This appears the be very important:
 # https://android.googlesource.com/platform/ndk/+/master/docs/BuildSystemMaintainers.md
 #
@@ -62,116 +66,109 @@
 #   http://landinghub.visualstudio.com/visual-cpp-build-tools (it's the file
 #   visualcppbuildtools_full.exe).
 
-function gem_script_v_ExitHelp { gem_build_ExitHelp "$@";}
-function gem_build_ExitHelp
+function gem_script_v_PrintHelp { gem_build_PrintHelp "$@"; return $? ; }
+function gem_build_PrintHelp
 {
-	gem_script_v_Msg "============================================================================="
-	gem_script_v_Msg "IMPORTANT: This script must be located in the parent of the source tree."
-	gem_script_v_Msg
-	gem_script_v_Msg "FILE STRUCTURE:"
-	gem_script_v_Msg ""
-	gem_script_v_Msg "    EXAMPLE:"
-	gem_script_v_Msg "        my_project/       Parent of source tree.  This build script must be here."
-	gem_script_v_Msg "            bin/          Install location"
-	gem_script_v_Msg "            build/        Object files"
-	gem_script_v_Msg "            lib/          Library files"
-	gem_script_v_Msg "            src/          Source tree"
-	gem_script_v_Msg
-	gem_script_v_Msg "Usage: $(basename ${0}) <build type> <host> <commands>"
-	gem_script_v_Msg
-	gem_script_v_Msg "Commands:"
-	gem_script_v_Msg
-	gem_script_v_Msg "  -m           Configure or cmake"
-	gem_script_v_Msg "  -b           Build"
-	gem_script_v_Msg "  -c           Clean"
-	gem_script_v_Msg "  -ch          Run ./configure --help."
-	gem_script_v_Msg "  -d           Download the source."
-	gem_script_v_Msg "  -scrub       Uninstall and delete all build files."
-	gem_script_v_Msg "  -help, -h    Display this help message."
-	gem_script_v_Msg "  -i           Install"
-	gem_script_v_Msg "  -u           Uninstall"
-	gem_script_v_Msg "  -q           Quiet Mode"
-	gem_script_v_Msg "  -r           Run"
-	gem_script_v_Msg "  -p           Build CPack installer. This option is only available when using cmake."
-	gem_script_v_Msg "  -redir       Redirect output to a file."
-	gem_script_v_Msg "  -cmdline     Do not perform operations or output any text other than the command line.  Implies -q: Quiet Mode."
-	gem_script_v_Msg "  -diag        Contrast clean configure versus configure with our params."
-	gem_script_v_Msg
-	gem_script_v_Msg "Host:"
-	gem_script_v_Msg
-	gem_script_v_Msg "  -host        {x86_64-pc-linux-gnu | x86_64-pc-cygwin | x86_64-w64-mingw32 |"
-	gem_script_v_Msg "                x86_64-pc-windows-msvc | x86_64-linux-android |"
-	gem_script_v_Msg "                armv7a-linux-androideabi | aarch64-linux-android}"
-	gem_script_v_Msg
-	gem_script_v_Msg "Build type:"
-	gem_script_v_Msg
-	gem_script_v_Msg "  -type        {debug | release | relwithdebinfo}"
-	gem_script_v_Msg
-	gem_script_v_Msg "Library type:"
-	gem_script_v_Msg
-	gem_script_v_Msg "  -libtype        {static | shared}"
-	gem_script_v_Msg
-	gem_script_v_Msg "Install directory:"
-	gem_script_v_Msg
-	gem_script_v_Msg "  -install     Directory in which to install."
-	gem_script_v_Msg "               Default: ${gem_fullpath_install}"
-	gem_script_v_Msg "Android:"
-	gem_script_v_Msg
-	gem_script_v_Msg "  -android-api        Android api."
-	gem_script_v_Msg "                      Default: ${gem_android_api_level}"
-	gem_script_v_Msg
-	gem_script_v_Msg "Examples of common usage:"
-	gem_script_v_Msg
-	gem_script_v_Msg "    \$ ./$(basename ${0}) -host x86_64-pc-linux-gnu -type debug -c -m -b -i"
-	gem_script_v_Msg "    \$ ./$(basename ${0}) -host aarch64-linux-android -type release -m"
-	gem_script_v_Msg "    \$ ./$(basename ${0}) -host x86_64-w64-mingw32 -type release -m"
-	gem_script_v_Msg
-	gem_script_v_Msg "============================================================================="
-	gem_script_v_ExitMsg "\n${1}\n"
+	gem_log_v_Msg "============================================================================="
+	gem_log_v_Msg "IMPORTANT: This script must be located in the parent of the source tree."
+	gem_log_v_Msg
+	gem_log_v_Msg "FILE STRUCTURE:"
+	gem_log_v_Msg ""
+	gem_log_v_Msg "    EXAMPLE:"
+	gem_log_v_Msg "        my_project/       Parent of source tree.  This build script must be here."
+	gem_log_v_Msg "            bin/          Install location"
+	gem_log_v_Msg "            build/        Object files"
+	gem_log_v_Msg "            lib/          Library files"
+	gem_log_v_Msg "            src/          Source tree"
+	gem_log_v_Msg
+	gem_log_v_Msg "Usage: $(basename "${0}") <build type> <host> <commands>"
+	gem_log_v_Msg
+	gem_log_v_Msg "Commands:"
+	gem_log_v_Msg
+	gem_log_v_Msg "  -m           Configure or cmake"
+	gem_log_v_Msg "  -b           Build"
+	gem_log_v_Msg "  -c           Clean"
+	gem_log_v_Msg "  -ch          Run ./configure --help."
+	gem_log_v_Msg "  -d           Download the source."
+	gem_log_v_Msg "  -scrub       Uninstall and delete all build files."
+	gem_log_v_Msg "  -help, -h    Display this help message."
+	gem_log_v_Msg "  -i           Install"
+	gem_log_v_Msg "  -u           Uninstall"
+	gem_log_v_Msg "  -q           Quiet Mode"
+	gem_log_v_Msg "  -r           Run"
+	gem_log_v_Msg "  -p           Build CPack installer. This option is only available when using cmake."
+	gem_log_v_Msg "  -redir       Redirect output to a file."
+	gem_log_v_Msg "  -cmdline     Do not perform operations or output any text other than the command line.  Implies -q: Quiet Mode."
+	gem_log_v_Msg "  -diag        Contrast clean configure versus configure with our params."
+	gem_log_v_Msg
+	gem_log_v_Msg "Host:"
+	gem_log_v_Msg
+	gem_log_v_Msg "  -host        {x86_64-pc-linux-gnu | x86_64-pc-cygwin | x86_64-w64-mingw32 |"
+	gem_log_v_Msg "                x86_64-pc-windows-msvc | x86_64-linux-android |"
+	gem_log_v_Msg "                armv7a-linux-androideabi | aarch64-linux-android}"
+	gem_log_v_Msg
+	gem_log_v_Msg "Build type:"
+	gem_log_v_Msg
+	gem_log_v_Msg "  -type        {debug | release | relwithdebinfo}"
+	gem_log_v_Msg
+	gem_log_v_Msg "Library type:"
+	gem_log_v_Msg
+	gem_log_v_Msg "  -libtype        {static | shared}"
+	gem_log_v_Msg
+	gem_log_v_Msg "Install directory:"
+	gem_log_v_Msg
+	gem_log_v_Msg "  -install     Directory in which to install."
+	gem_log_v_Msg "               Default: ${gem_fullpath_install}"
+	gem_log_v_Msg "Android:"
+	gem_log_v_Msg
+	gem_log_v_Msg "  -android-api        Android api."
+	gem_log_v_Msg "                      Default: ${gem_android_api_level}"
+	gem_log_v_Msg
+	gem_log_v_Msg "Examples of common usage:"
+	gem_log_v_Msg
+	gem_log_v_Msg "    \$ ./$(basename "${0}") -host x86_64-pc-linux-gnu -type debug -c -m -b -i"
+	gem_log_v_Msg "    \$ ./$(basename "${0}") -host aarch64-linux-android -type release -m"
+	gem_log_v_Msg "    \$ ./$(basename "${0}") -host x86_64-w64-mingw32 -type release -m"
+	gem_log_v_Msg
+	gem_log_v_Msg "============================================================================="
+	gem_log_v_Msg "\n${1}\n"
+	return 0
 }
 
-function gem_build_v_SetDefaults { gem_build_SetDefaults ;}
+function gem_build_v_SetDefaults { gem_build_SetDefaults ; return $? ; }
 function gem_build_SetDefaults
 {
 	local noop=0
+	return 0
 }
 
-function gem_build_v_DownloadSource { gem_build_DownloadSource ;}
+function gem_build_v_DownloadSource { gem_build_DownloadSource ; return $? ; }
 function gem_build_DownloadSource
 {
-	echo "Fuck" ; exit
 	# Parse gem_filename_url.
-	gem_filename_archive=${gem_filename_url##*/}
+	gem_filename_archive="${gem_filename_url##*/}"
 
 	# Download
-	if [[ ! -f ${gem_filename_archive} ]]; then
-		wget -c ${gem_filename_url}
-		if [[ $? != 0 ]]; then
-			gem_script_v_Error "gem_build_v_DownloadSource: wget failed to download source archive: ${gem_filename_url}"
-		fi
-	fi
+	if [[ ! -f ${gem_filename_archive} ]] && ! wget -c "${gem_filename_url}"; then gem_script_v_Debug "gem_build_DownloadSource(): wget failed to download source archive: ${gem_filename_url}"; return 1; fi
 
 	if [[ ${gem_filename_archive} == *".zip" ]]; then
 
-		unzip ${gem_filename_archive}
-
+		if ! unzip "${gem_filename_archive}"; then gem_log_v_Msg "ERROR: gem_build_DownloadSource(): Failed to unzip the source archive, ${gem_filename_archive}."; return 1; fi
 	else
 		gem_filename_base=${gem_filename_archive%".tar"*}		# Remove everything *after* '.tar'
-		gem_filename_exten=${gem_filename_archive#*${gem_filename_base}.}
+		gem_filename_exten=${gem_filename_archive#*"${gem_filename_base}."}
 		gem_filename_version=${gem_filename_base#*"-"}		# Remove everything *before* '-'
 		gem_filename_pkg=${gem_filename_base%"-"*}
 
 		# Decompress
 		if [[ -d ${gem_fullpath_src} ]]; then
-			gem_script_DirIsEmpty ${gem_fullpath_src}
-			gem_dirIsEmpty=$?
-			if [[ ${gem_dirIsEmpty} -eq 0 ]]; then
-				gem_script_v_Msg "MESSAGE: The source tree already exists.  Defying order to decompress."
-				return 1
-			fi
+			local gem_dirIsEmpty;
+			if ! gem_dirIsEmpty=$(gem_script_DirIsEmpty "${gem_fullpath_src}"); then gem_log_v_Msg "ERROR: gem_build_DownloadSource(): Failed to determine if source directory is empty: ${gem_fullpath_src}."; return 1; fi
+			if [[ ${gem_dirIsEmpty} == "true" ]]; then gem_log_v_Msg "MESSAGE: The source tree already exists.  Defying order to decompress."; return 1; fi
 		fi
 
-		gem_script_mkdir -p ${gem_fullpath_src}
+		if ! gem_script_mkdir -p "${gem_fullpath_src}"; then gem_log_v_Msg "ERROR: gem_build_DownloadSource(): Failed to determine if source directory is empty: ${gem_fullpath_src}."; return 1; fi
+
 		gem_flags_tar="<undefined>"
 		if [[ ${gem_filename_exten} == *".gz" ]]; then
 			gem_flags_tar="xzf"
@@ -181,52 +178,62 @@ function gem_build_DownloadSource
 			gem_flags_tar="xjf"
 		fi
 		if [[ ${gem_flags_tar} == "<undefined>" ]]; then
-			gem_script_v_Error "gem_build_v_DownloadSource: Unable to decompress downloaded file with extension \"${gem_filename_exten}\"."
+			gem_log_v_Alert "gem_build_DownloadSource(): Unable to decompress downloaded file with extension \"${gem_filename_exten}\"."
+			return 1
 		fi
-		tar -${gem_flags_tar} ${gem_filename_archive} -C ${gem_fullpath_src}
-		if [[ $? != 0 ]]; then
-			gem_script_v_Error "gem_build_v_DownloadSource: Failed to uncompress the source archive: ${gem_filename_archive}"
+		
+		if ! tar -"${gem_flags_tar}" "${gem_filename_archive}" -C "${gem_fullpath_src}"; then
+			gem_log_v_Alert "gem_build_DownloadSource(): Failed to uncompress the source archive: ${gem_filename_archive}"
+			return 1
 		fi
-		gem_script_cp -rf ${gem_fullpath_src}/${gem_filename_base}/* ${gem_fullpath_src}
-		gem_script_rm -rf ${gem_fullpath_src}/${gem_filename_base}
+		if ! gem_script_cp -rf "${gem_fullpath_src}/${gem_filename_base}/*" "${gem_fullpath_src}"; then gem_log_v_Alert "ERROR: gem_build_DownloadSource(): Failed to copy ${gem_fullpath_src}/${gem_filename_base}/* to the source directory."; return 1; fi
+		if ! gem_script_rm -rf "${gem_fullpath_src}/${gem_filename_base}"; then gem_log_v_Alert "ERROR: gem_build_DownloadSource(): Failed to delete ${gem_fullpath_src}/${gem_filename_base}."; return 1; fi
 	fi
 	return 0
 }
 
-function gem_build_v_GetFilePath_src { gem_build_GetFilePath_src ;}
+function gem_build_v_GetFilePath_src { gem_build_GetFilePath_src ; return $? ; }
 function gem_build_GetFilePath_src
 {
 	if [[ "${gem_fullpath_project}"x == "x" ]]; then
-		gem_script_v_Error "gem_fullpath_project referenced before being set."
+		gem_log_v_Alert "gem_build_GetFilePath_src(): gem_fullpath_project referenced before being set."
+		return 1
 	fi
-	echo ${gem_fullpath_project}/src
+	echo "${gem_fullpath_project}"/src
+	return 0
 }
 
-function gem_build_v_GetFilePath_build { gem_build_GetFilePath_build ;}
+function gem_build_v_GetFilePath_build { gem_build_GetFilePath_build ; return $? ; }
 function gem_build_GetFilePath_build
 {
 	if [[ "${gem_fullpath_project}"x == "x" ]]; then
-		gem_script_v_Error "gem_fullpath_project referenced before being set."
+		gem_log_v_Alert "gem_build_GetFilePath_build(): gem_fullpath_project referenced before being set."
+		return 1
 	fi
 	if [[ "${gem_path_suffix}"x == "x" ]]; then
-		gem_script_v_Error "gem_path_suffix referenced before being set."
+		gem_log_v_Alert "gem_build_GetFilePath_build(): gem_path_suffix referenced before being set."
+		return 1
 	fi
-	echo ${gem_fullpath_project}/build/${gem_path_suffix}
+	echo "${gem_fullpath_project}"/build/"${gem_path_suffix}"
+	return 0
 }
 
-function gem_build_v_GetFilePath_install { gem_build_GetFilePath_install ;}
+function gem_build_v_GetFilePath_install { gem_build_GetFilePath_install ; return $? ; }
 function gem_build_GetFilePath_install
 {
 	if [[ "${gem_fullpath_local}"x == "x" ]]; then
-		gem_script_v_Error "gem_fullpath_local referenced before being set."
+		gem_log_v_Alert "gem_build_GetFilePath_install(): gem_fullpath_local referenced before being set."
+		return 1
 	fi
 	if [[ "${gem_path_suffix}"x == "x" ]]; then
-		gem_script_v_Error "gem_path_suffix referenced before being set."
+		gem_log_v_Alert "gem_build_GetFilePath_install(): gem_path_suffix referenced before being set."
+		return 1
 	fi
-	echo ${gem_fullpath_local}_${gem_path_suffix}
+	echo "${gem_fullpath_local}"_"${gem_path_suffix}"
+	return 0
 }
 
-function gem_build_v_BuildFilePaths { gem_build_BuildFilePaths ;}
+function gem_build_v_BuildFilePaths { gem_build_BuildFilePaths ; return $? ; }
 function gem_build_BuildFilePaths
 {
 	# The suffix on paths is required when multiple parameters may produce
@@ -234,15 +241,15 @@ function gem_build_BuildFilePaths
 	# for various build parameters.  Each output must be produced in it's own
 	# directory, so we append the build parameters to the directory name.
 	gem_path_suffix=${gem_triple}
-	if [[ ! -z ${gem_path_triple_details_suffix} ]]; then
+	if [[ -z ${gem_path_triple_details_suffix} ]]; then
 		gem_path_suffix=${gem_path_suffix}_${gem_path_triple_details_suffix}
 	fi
 	gem_path_suffix=${gem_path_suffix}/${gem_build_type}
 
-	gem_fullpath_project=$(pwd)
-	gem_fullpath_build=$(gem_build_v_GetFilePath_build)
-	gem_fullpath_src=$(gem_build_v_GetFilePath_src)
-	gem_fullpath_install=$(gem_build_v_GetFilePath_install)
+	if ! gem_fullpath_project=$(pwd); then gem_log_v_Debug "gem_build_BuildFilePaths(): pwd failed to retrieve the current directory."; return 1; fi
+	if ! gem_fullpath_build=$(gem_build_v_GetFilePath_build); then gem_log_v_Debug "gem_build_BuildFilePaths(): gem_build_v_GetFilePath_build() failed."; return 1; fi
+	if ! gem_fullpath_src=$(gem_build_v_GetFilePath_src); then gem_log_v_Debug "gem_build_BuildFilePaths(): gem_build_v_GetFilePath_src() failed."; return 1; fi
+	if ! gem_fullpath_install=$(gem_build_v_GetFilePath_install); then gem_log_v_Debug "gem_build_BuildFilePaths(): gem_build_v_GetFilePath_install() failed."; return 1; fi
 
 	# Always use the tool executables for the build machine, *not* for the host.
 	if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW shell on Windows.
@@ -252,7 +259,8 @@ function gem_build_BuildFilePaths
 	elif [[ ${gem_os} == "Linux" ]]; then	# Linux shell.
 		gem_fullpath_tool_bin=${gem_fullpath_local}/../local_x86_64-pc-linux-gnu/release/bin
 	else
-		gem_script_v_Error "Build platform not supported: ${gem_os}"
+		gem_log_v_Alert "Build platform not supported: ${gem_os}"
+		return 1
 	fi
 
 	# pkg-config documentation: https://www.freedesktop.org/wiki/Software/pkg-config/CrossCompileProposal
@@ -277,21 +285,22 @@ function gem_build_BuildFilePaths
 	export PKG_CONFIG=${gem_fullpath_tool_bin}/pkg-config
 	if [[ ! -f ${PKG_CONFIG} ]]; then
 #		if [[ ${gem_option_quiet_mode} -eq 0 ]]; then
-#			gem_script_v_Msg "MESSAGE: Gem's pkg-config was not found at ${PKG_CONFIG}.  Looking for system pkg-config..."
+#			gem_log_v_Msg "MESSAGE: Gem's pkg-config was not found at ${PKG_CONFIG}.  Looking for system pkg-config..."
 #		fi
 		PKG_CONFIG=$(which pkg-config)
 		if [[ ! -f ${PKG_CONFIG} ]]; then
-			gem_script_v_ExitMsg "MESSAGE: The system pkg-config was not found."
+			gem_log_v_Msg "MESSAGE: The system pkg-config was not found."
+			return 1
 		else
 			local noop=0
 #			if [[ ${gem_option_quiet_mode} -eq 0 ]]; then
-#				gem_script_v_Msg "MESSAGE: The system pkg-config was found at ${PKG_CONFIG}."
+#				gem_log_v_Msg "MESSAGE: The system pkg-config was found at ${PKG_CONFIG}."
 #			fi
 		fi
 	else
 		local noop=0
 #		if [[ ${gem_option_quiet_mode} -eq 0 ]]; then
-#			gem_script_v_Msg "MESSAGE: Gem's pkg-config was found at ${PKG_CONFIG}."
+#			gem_log_v_Msg "MESSAGE: Gem's pkg-config was found at ${PKG_CONFIG}."
 #		fi
 	fi
 	gem_fullpath_project_config=${PKG_CONFIG}
@@ -394,7 +403,7 @@ ${TEMP_SYSROOT_DIR}/share/pkgconfig"
 ${TEMP_SYSROOT_DIR}/mingw/lib/pkgconfig"
 		fi
 	fi
-#	gem_build_validate_PathList ${PKG_CONFIG_SYSTEM_INCLUDE_PATH}:${PKG_CONFIG_SYSTEM_LIBRARY_PATH}
+#	if ! gem_build_validate_PathList ${PKG_CONFIG_SYSTEM_INCLUDE_PATH}:${PKG_CONFIG_SYSTEM_LIBRARY_PATH}; then gem_log_v_Debug "gem_build_BuildFilePaths(): gem_build_validate_PathList() failed."; return 1; fi
 
 	# These must be reset to stay away from system libraries while cross compiling.
 	export PKG_CONFIG_PATH=
@@ -472,205 +481,202 @@ ${PKG_CONFIG_LIBDIR}"
 
 #	pkg-config --list-all ; exit
 
+	if ! gem_build_validate_ProjectFilePaths; then gem_log_v_Msg "gem_build_BuildFilePaths()- Failed to build project file paths."; return 1; fi
 
-	gem_build_validate_ProjectFilePaths
+	return 0
 }
 
-function gem_build_v_UpdateWinePath { gem_build_UpdateWinePath ;}
+function gem_build_v_UpdateWinePath { gem_build_UpdateWinePath ; return $? ; }
 function gem_build_UpdateWinePath
 {
 	# For running mingw apps on linux, add the location of our dlls to wine's path.
 	if [[ ${gem_os} == "Linux" && ${gem_triple} == "x86_64-w64-mingw32" ]]; then
 
-		if [[ ! -d ~/.wine ]]; then
-			gem_script_v_Error "Wine directory (~/.wine) does not exist.  Install and run wine once to create it.  Then try again."
-		fi
+		if [[ ! -d ~/.wine ]]; then gem_log_v_Alert "gem_build_UpdateWinePath(): Wine directory (~/.wine) does not exist.  Install and run wine once to create it.  Then try again."; return 1; fi
 		gem_fullpath_wine_system_reg="${HOME}/.wine/system.reg"
 
 		# Back up the wine registery before we modify it.
-		if [[ ! -f ${gem_fullpath_wine_system_reg}.bak ]]; then
-			cp ${gem_fullpath_wine_system_reg} ${gem_fullpath_wine_system_reg}.bak
-		fi
+		if [[ ! -f ${gem_fullpath_wine_system_reg}.bak ]]; then cp "${gem_fullpath_wine_system_reg}" "${gem_fullpath_wine_system_reg}".bak; fi
 
 #		cp ${gem_fullpath_wine_system_reg}.bak ${gem_fullpath_wine_system_reg}
 		# Locate the line containing the wine path.
-		gem_path_line_num=$(grep -n '"PATH"=str(2):"C:\\\\windows\\\\system32' ${gem_fullpath_wine_system_reg} | cut -f1 -d:)
-		if [[ -z ${gem_path_line_num} ]]; then
-			gem_script_v_Error "Failed to locate the path variable in ${gem_fullpath_wine_system_reg}."
-		fi
-		gem_path_string=$(head -"${gem_path_line_num}" ${gem_fullpath_wine_system_reg} | tail -1)
+		gem_path_line_num=$(grep -n '"PATH"=str(2):"C:\\\\windows\\\\system32' "${gem_fullpath_wine_system_reg}" | cut -f1 -d:)
+		if [[ -z ${gem_path_line_num} ]]; then gem_log_v_Alert "gem_build_UpdateWinePath(): Failed to locate the path variable in ${gem_fullpath_wine_system_reg}."; return 1; fi
+		gem_path_string=$(head -"${gem_path_line_num}" "${gem_fullpath_wine_system_reg}" | tail -1)
 
 		# Replace the trailing double quote with the path to the system dlls, if it's not already there.
 		gem_fullpath_dlls='Z:\\usr\\x86_64-w64-mingw32\\sys-root\\mingw\\bin'
 		if [[ ${gem_path_string} != *"${gem_fullpath_dlls}"* ]]; then
-			local gem_fullpath=$(echo ${gem_fullpath_dlls} | sed 's|\\|\\\\|g')
-			sed -i "${gem_path_line_num}s/\"$/;${gem_fullpath}\"/" ${gem_fullpath_wine_system_reg}
-			gem_script_v_Msg "Adding ${gem_fullpath} to wine path in ${gem_fullpath_wine_system_reg}."
+			local gem_fullpath
+			gem_fullpath=$(echo "${gem_fullpath_dlls}" | sed 's|\\|\\\\|g')
+			sed -i "${gem_path_line_num}s/\"$/;${gem_fullpath}\"/" "${gem_fullpath_wine_system_reg}"
+			gem_log_v_Msg "Adding ${gem_fullpath} to wine path in ${gem_fullpath_wine_system_reg}."
 		fi
 
 		# Replace the trailing double quote with the path to gem's installed dlls, if it's not already there.
 		gem_fullpath_dlls=$(echo "Z:${gem_fullpath_install}/bin" | sed 's|/|\\\\|g')
 		if [[ ${gem_path_string} != *"${gem_fullpath_dlls}"* ]]; then
-			local gem_fullpath=$(echo ${gem_fullpath_dlls} | sed 's|\\|\\\\|g')
-			sed -i "${gem_path_line_num}s/\"$/;${gem_fullpath}\"/" ${gem_fullpath_wine_system_reg}
-			gem_script_v_Msg "Adding ${gem_fullpath} to wine path in ${gem_fullpath_wine_system_reg}."
+			local gem_fullpath
+			gem_fullpath=$(echo "${gem_fullpath_dlls}" | sed 's|\\|\\\\|g')
+			sed -i "${gem_path_line_num}s/\"$/;${gem_fullpath}\"/" "${gem_fullpath_wine_system_reg}"
+			gem_log_v_Msg "gem_build_UpdateWinePath(): Adding ${gem_fullpath} to wine path in ${gem_fullpath_wine_system_reg}."
 		fi
 	fi
+	return 0
 }
 
-function gem_build_v_SetFlags { gem_build_SetFlags ;}
+function gem_build_v_SetFlags { gem_build_SetFlags ; return $? ; }
 function gem_build_SetFlags
 {
-	gem_flags_c="${gem_flags_c}"
-	gem_flags_cpp="${gem_flags_cpp}"
-	gem_flags_cxx="${gem_flags_cxx}"
-	gem_flags_ld="${gem_flags_ld}"
+#	gem_flags_c="${gem_flags_c}"
+#	gem_flags_cpp="${gem_flags_cpp}"
+#	gem_flags_cxx="${gem_flags_cxx}"
+#	gem_flags_ld="${gem_flags_ld}"
+	return 0
 }
 
-function gem_build_v_SelectCMakeGenerator { gem_build_SelectCMakeGenerator ;}
+function gem_build_v_SelectCMakeGenerator { gem_build_SelectCMakeGenerator ; return $? ; }
 function gem_build_SelectCMakeGenerator
 {
 	# Select the correct generator based upon gem_triple.
 	case ${gem_triple} in
+
 		x86_64-pc-linux-gnu|x86_64-pc-cygwin|x86_64-w64-mingw32|x86_64-linux-android|armv7a-linux-androideabi|aarch64-linux-android)
 			gem_cmake_generator="-G\"Unix Makefiles\"" ;;
+
 		x86_64-pc-windows-msvc)
-			gem_script_v_Error "We may need to pass --msvc-syntax to pkg-config."
+			gem_log_v_Alert "We may need to pass --msvc-syntax to pkg-config."
 			# Good sources: https://cognitivewaves.wordpress.com/cmake-and-visual-studio/
 			# https://gitlab.kitware.com/cmake/community/wikis/FAQ
 			# https://devblogs.microsoft.com/cppblog/cmake-support-in-visual-studio/
 			# https://docs.microsoft.com/en-us/cpp/build/get-started-linux-cmake?view=vs-2019
 			gem_cmake_generator="-G\"Visual Studio 15 2017 Win64\"" ;;
-		*)	gem_script_v_Error "gem_build_SelectCMakeGenerator: Invalid build host: ${gem_triple}"
+
+		*)	gem_log_v_Alert "gem_build_SelectCMakeGenerator: Invalid build host: ${gem_triple}"
+			return 1
 	esac
-	if [[ ${gem_cmake_generator} == "<undefined>" ]]; then
-		gem_script_v_Error "gem_build_SelectCMakeGenerator: -host must be specified for cmake builds."
-	fi
+	if [[ ${gem_cmake_generator} == "<undefined>" ]]; then gem_log_v_Alert "gem_build_SelectCMakeGenerator: -host must be specified for cmake builds."; return 1; fi
+	return 0
 }
 
 
-function gem_build_v_DebugDumpVars { gem_build_DebugDumpVars ;}
+function gem_build_v_DebugDumpVars { gem_build_DebugDumpVars ; return $? ; }
 function gem_build_DebugDumpVars
 {
-	if [[ ${gem_option_quiet_mode} -ne 0 ]]; then
-		return
-	fi
+	if [[ ${gem_option_quiet_mode} -ne 0 ]]; then return 0; fi
 
-	gem_script_v_Msg "----------------------------- gem_build_v_DebugDumpVars() ----------------------------"
-	gem_script_v_Msg "gem_os =                ${gem_os}"
-	gem_script_v_Msg "gem_triple =            ${gem_triple}"
-	gem_script_v_Msg "gem_isCrossCompiling =  ${gem_isCrossCompiling}"
-	gem_script_v_Msg "gem_path_triple_details_suffix ="
-	gem_script_v_Msg "gem_build_type =        ${gem_build_type}"
-	gem_script_v_Msg "gem_build_script_type = ${gem_build_script_type}"
-	gem_script_v_Msg "gem_lib_type =          ${gem_lib_type}"
-	gem_script_v_Msg "                        ${gem_path_triple_details_suffix}"
-	gem_script_v_Msg "gem_path_suffix =       ${gem_path_suffix}"
-	gem_script_v_Msg "gem_fullpath_src =      ${gem_fullpath_src}"
-	gem_script_v_Msg "gem_fullpath_build =    ${gem_fullpath_build}"
-	gem_script_v_Msg "gem_fullpath_install =  ${gem_fullpath_install}"
-	gem_script_v_Msg "gem_fullpath_sysroot=   ${gem_fullpath_sysroot}"
-	gem_script_v_Msg
+	gem_log_v_Msg "----------------------------- gem_build_v_DebugDumpVars() ----------------------------"
+	gem_log_v_Msg "gem_os =                ${gem_os}"
+	gem_log_v_Msg "gem_triple =            ${gem_triple}"
+	gem_log_v_Msg "gem_isCrossCompiling =  ${gem_isCrossCompiling}"
+	gem_log_v_Msg "gem_path_triple_details_suffix ="
+	gem_log_v_Msg "gem_build_type =        ${gem_build_type}"
+	gem_log_v_Msg "gem_build_script_type = ${gem_build_script_type}"
+	gem_log_v_Msg "gem_lib_type =          ${gem_lib_type}"
+	gem_log_v_Msg "                        ${gem_path_triple_details_suffix}"
+	gem_log_v_Msg "gem_path_suffix =       ${gem_path_suffix}"
+	gem_log_v_Msg "gem_fullpath_src =      ${gem_fullpath_src}"
+	gem_log_v_Msg "gem_fullpath_build =    ${gem_fullpath_build}"
+	gem_log_v_Msg "gem_fullpath_install =  ${gem_fullpath_install}"
+	gem_log_v_Msg "gem_fullpath_sysroot=   ${gem_fullpath_sysroot}"
+	gem_log_v_Msg
 	if [[ ${gem_build_script_type} == "cmake" ]]; then
-		gem_script_v_Msg "gem_fullpath_toolchain_cmake ="
-		gem_script_v_Msg "                       ${gem_fullpath_toolchain_cmake}"
-		gem_script_v_Msg "gem_cmake_generator =  ${gem_cmake_generator}"
-		gem_script_v_Msg
+		gem_log_v_Msg "gem_fullpath_toolchain_cmake ="
+		gem_log_v_Msg "                       ${gem_fullpath_toolchain_cmake}"
+		gem_log_v_Msg "gem_cmake_generator =  ${gem_cmake_generator}"
+		gem_log_v_Msg
 	fi
 	if [[ ${gem_triple} == *"android"* ]]; then
-		gem_script_v_Msg "gem_android_ndk_version =  ${gem_android_ndk_version}"
-		gem_script_v_Msg "gem_android_api_level =    ${gem_android_api_level}"
-		gem_script_v_Msg "gem_arch =                 ${gem_arch}"
-		gem_script_v_Msg
+		gem_log_v_Msg "gem_android_ndk_version =  ${gem_android_ndk_version}"
+		gem_log_v_Msg "gem_android_api_level =    ${gem_android_api_level}"
+		gem_log_v_Msg "gem_arch =                 ${gem_arch}"
+		gem_log_v_Msg
 	fi
-	gem_script_v_Msg "gem_use_clang = ${gem_use_clang}"
-	gem_script_v_Msg "ADDR2LINE =     ${ADDR2LINE}"
-	gem_script_v_Msg "AR =            ${AR}"
-	gem_script_v_Msg "AS =            ${AS}"
-	gem_script_v_Msg "CC =            ${CC}"
-	gem_script_v_Msg "CXX =           ${CXX}"
-	gem_script_v_Msg "DLLTOOL =       ${CXX}"
-	gem_script_v_Msg "LD =            ${LD}"
-	gem_script_v_Msg "NM =            ${NM}"
-	gem_script_v_Msg "OBJCOPY =       ${OBJCOPY}"
-	gem_script_v_Msg "OBJDUMP =       ${OBJDUMP}"
-	gem_script_v_Msg "RANLIB =        ${RANLIB}"
-	gem_script_v_Msg "READELF =       ${READELF}"
-	gem_script_v_Msg "RESCOMP =       ${RESCOMP}"
-	gem_script_v_Msg "STRIP =         ${STRIP}"
-	gem_script_v_Msg
-	gem_script_v_Msg "gem_flags_c =         ${gem_flags_c}"
-	gem_script_v_Msg "gem_flags_cpp =       ${gem_flags_cpp}"
-	gem_script_v_Msg "gem_flags_cxx =       ${gem_flags_cxx}"
-	gem_script_v_Msg "gem_flags_ld =        ${gem_flags_ld}"
-	gem_script_v_Msg "gem_flags_configure = ${gem_flags_configure}"
-	gem_script_v_Msg
-	gem_script_v_Msg "PKG_CONFIG =                     ${PKG_CONFIG}"
-	gem_script_v_Msg "PKG_CONFIG_PATH =                ${PKG_CONFIG_PATH}"
-	gem_script_v_Msg "PKG_CONFIG_DIR =                 ${PKG_CONFIG_DIR}"
-	gem_script_v_Msg "PKG_CONFIG_SYSROOT_DIR =         ${PKG_CONFIG_SYSROOT_DIR}"
-	gem_script_v_Msg "PKG_CONFIG_LIBDIR =              ${PKG_CONFIG_LIBDIR}"
-	gem_script_v_Msg "PKG_CONFIG_SYSTEM_INCLUDE_PATH = ${PKG_CONFIG_SYSTEM_INCLUDE_PATH}"
-	gem_script_v_Msg "PKG_CONFIG_SYSTEM_LIBRARY_PATH = ${PKG_CONFIG_SYSTEM_LIBRARY_PATH}"
-	gem_script_v_Msg "--------------------------------------------------------------------------------"
+	gem_log_v_Msg "gem_use_clang = ${gem_use_clang}"
+	gem_log_v_Msg "ADDR2LINE =     ${ADDR2LINE}"
+	gem_log_v_Msg "AR =            ${AR}"
+	gem_log_v_Msg "AS =            ${AS}"
+	gem_log_v_Msg "CC =            ${CC}"
+	gem_log_v_Msg "CXX =           ${CXX}"
+	gem_log_v_Msg "DLLTOOL =       ${CXX}"
+	gem_log_v_Msg "LD =            ${LD}"
+	gem_log_v_Msg "NM =            ${NM}"
+	gem_log_v_Msg "OBJCOPY =       ${OBJCOPY}"
+	gem_log_v_Msg "OBJDUMP =       ${OBJDUMP}"
+	gem_log_v_Msg "RANLIB =        ${RANLIB}"
+	gem_log_v_Msg "READELF =       ${READELF}"
+	gem_log_v_Msg "RESCOMP =       ${RESCOMP}"
+	gem_log_v_Msg "STRIP =         ${STRIP}"
+	gem_log_v_Msg
+	gem_log_v_Msg "gem_flags_c =         ${gem_flags_c}"
+	gem_log_v_Msg "gem_flags_cpp =       ${gem_flags_cpp}"
+	gem_log_v_Msg "gem_flags_cxx =       ${gem_flags_cxx}"
+	gem_log_v_Msg "gem_flags_ld =        ${gem_flags_ld}"
+	gem_log_v_Msg "gem_flags_configure = ${gem_flags_configure}"
+	gem_log_v_Msg
+	gem_log_v_Msg "PKG_CONFIG =                     ${PKG_CONFIG}"
+	gem_log_v_Msg "PKG_CONFIG_PATH =                ${PKG_CONFIG_PATH}"
+	gem_log_v_Msg "PKG_CONFIG_DIR =                 ${PKG_CONFIG_DIR}"
+	gem_log_v_Msg "PKG_CONFIG_SYSROOT_DIR =         ${PKG_CONFIG_SYSROOT_DIR}"
+	gem_log_v_Msg "PKG_CONFIG_LIBDIR =              ${PKG_CONFIG_LIBDIR}"
+	gem_log_v_Msg "PKG_CONFIG_SYSTEM_INCLUDE_PATH = ${PKG_CONFIG_SYSTEM_INCLUDE_PATH}"
+	gem_log_v_Msg "PKG_CONFIG_SYSTEM_LIBRARY_PATH = ${PKG_CONFIG_SYSTEM_LIBRARY_PATH}"
+	gem_log_v_Msg "--------------------------------------------------------------------------------"
+	return 0
 }
 
-function gem_build_v_CheckLogForErrors { gem_build_v_CheckLogForErrors $@;}
-function gem_build_v_CheckLogForErrors
+function gem_build_v_CheckLogForErrors { gem_build_CheckLogForErrors "$@"; return $? ; }
+function gem_build_CheckLogForErrors
 {
-	if [[ ${gem_option_quiet_mode} -ne 0 ]]; then
-		return
-	fi
+	if [[ ${gem_option_quiet_mode} -ne 0 ]]; then return 0; fi
 
 	local gem_filename_log=${1}
 	if [[ ${gem_option_redirect_output} -ne 0 ]]; then
 
-		gem_errors="$(grep -i -s -n -e error -e fail ${gem_filename_log})"
-		local gem_result=$?
-		if [[ ${gem_result} -eq 0 ]]; then
-			gem_script_v_Msg $'\n'$'\n'$'\n'
-			gem_script_v_Msg "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-			gem_script_v_Msg "%%                                                                            %%"
-			gem_script_v_Msg "%%                         Possible errors detected                           %%"
-			gem_script_v_Msg "%%                                                                            %%"
-			gem_script_v_Msg "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-			gem_script_v_Msg $'\n'Log file:$'\n'$'\n'${gem_filename_log}$'\n'
-			gem_script_v_Msg $'\n'$'\n'$'\n'"${gem_errors//$'\n'/$'\n'$'\n'$'\n'}"$'\n'$'\n'$'\n'
-			gem_script_v_Msg "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+		local gem_errors
+		if ! gem_errors="$(grep -i -s -n -e error -e fail "${gem_filename_log}")"; then
+	
+			echo $'\n'$'\n'$'\n'
+			echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+			echo "%%                                                                            %%"
+			echo "%%                         Possible errors detected                           %%"
+			echo "%%                                                                            %%"
+			echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+			echo $'\n'Log file:$'\n'$'\n'"${gem_filename_log}"$'\n'
+			echo $'\n'$'\n'$'\n'"${gem_errors//$'\n'/$'\n'$'\n'$'\n'}"$'\n'$'\n'$'\n'
+			echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+		else
+			echo ""
 		fi
 	fi
+	return 0
 }
 
 function gem_build_FlagsToMesonArray
 {
-	gem_flags_param=$@
+	gem_flags_param=$*
 	gem_flags_meson_array=
 	local gem_counter=0
 	for flag in ${gem_flags_param}; do
-		if [[ ${gem_counter} > 0 ]]; then
+		if [[ ${gem_counter} -gt 0 ]]; then
 			gem_flags_meson_array="${gem_flags_meson_array}, "
 		fi
 		gem_flags_meson_array="${gem_flags_meson_array}'${flag}'"
 		((gem_counter++))
 	done
-	if [[ ${gem_counter} > 0 ]]; then
+	if [[ ${gem_counter} -gt 0 ]]; then
 		gem_flags_meson_array="[${gem_flags_meson_array}]"
 	fi
+	return 0
 }
 
 # Append the values of gem_flags_c, gem_flags_cpp, gem_flags_cxx, and
 # gem_flags_ld to the string whose name is specified by $1.
 function gem_build_String_AddFlags
 {
-	if [[ ${CFLAGS}x != "x" || ${CPPFLAGS}x != "x" || ${CXXFLAGS}x != "x" || ${LDFLAGS}x != "x" ]]; then
-		gem_script_v_Error "gem_build_String_AddFlags(): Don't set CFLAGS, CPPFLAGS, CXXFLAGS, or LDFLAGS directly.  Instead, use gem_flags_c, gem_flags_cpp, gem_flags_cxx, and gem_flags_ld."
-	fi
-	if [[ ${gem_flags_c} == *\"* || ${gem_flags_cpp} == *\"* || ${gem_flags_cxx} == *\"* || ${gem_flags_ld} == *\"* ]]; then
-		gem_script_v_Error "gem_build_String_AddFlags(): Warning: A flag contained a double quote.  We may need to escape it!"
-	fi
-	if [[ $# -ne 1 ]]; then
-		gem_script_v_Error "gem_build_String_AddFlags() not called with one parameter, a variable name."
-	fi
+	if [[ ${CFLAGS}x != "x" || ${CPPFLAGS}x != "x" || ${CXXFLAGS}x != "x" || ${LDFLAGS}x != "x" ]]; then gem_log_v_Alert "gem_build_String_AddFlags(): Don't set CFLAGS, CPPFLAGS, CXXFLAGS, or LDFLAGS directly.  Instead, use gem_flags_c, gem_flags_cpp, gem_flags_cxx, and gem_flags_ld."; return 1; fi
+	if [[ ${gem_flags_c} == *\"* || ${gem_flags_cpp} == *\"* || ${gem_flags_cxx} == *\"* || ${gem_flags_ld} == *\"* ]]; then gem_log_v_Alert "gem_build_String_AddFlags(): Warning: A flag contained a double quote.  We may need to escape it!"; return 1; fi
+	if [[ $# -ne 1 ]]; then gem_log_v_Alert "gem_build_String_AddFlags() not called with one parameter, a variable name."; return 1; fi
 
 	if [[ ${gem_build_script_type} == "cmake" ]]; then
 
@@ -688,7 +694,8 @@ function gem_build_String_AddFlags
 
 	elif [[ ${gem_build_script_type} == "meson" ]]; then
 
-		gem_script_v_Error "gem_build_AddFlagsToString() not implemented for meson.  They are placed in an array in the meson cross file.  See gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common()."
+		gem_log_v_Alert "gem_build_AddFlagsToString() not implemented for meson.  They are placed in an array in the meson cross file.  See gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common()."
+		return 1
 	fi
 
 	local temp
@@ -706,29 +713,27 @@ function gem_build_String_AddFlags
 	fi
 
 	if [[ ${gem_build_script_type} == "autotools" ]]; then
-		printf -v ${1} "%s ${!1}" "${temp}"
+		printf -v "${1}" "%s ${!1}" "${temp}"
 	else
-		printf -v ${1} "${!1} %s" "${temp}"
+		printf -v "${1}" "${!1} %s" "${temp}"
 	fi
 
-#echo "${1}" ; exit
-#echo "$temp" ; exit
+	return 0
 }
 
 function gem_build_PkgConfig
 {
-	local gem_output=$(pkg-config "$@")
-	if [[ $? -ne 0 ]]; then
-		gem_script_v_Error "Command failed: pkg-config $@"
-	fi
-	echo ${gem_output}
+	local gem_output;
+	if ! gem_output=$(pkg-config "$@"); then gem_log_v_Alert "Command failed: pkg-config $*"; return 1; fi
+	echo "${gem_output}"
+	return 0
 }
 
 
 # =============================================================================
 #                          Configure Build Platform
 # =============================================================================
-function gem_build_v_InitToolchain_common { gem_build_InitToolchain_common ;}
+function gem_build_v_InitToolchain_common { gem_build_InitToolchain_common ; return $? ; }
 function gem_build_InitToolchain_common
 {
 	if [[ ${gem_use_clang} -eq 0 ]]; then
@@ -742,9 +747,11 @@ function gem_build_InitToolchain_common
 	fi								# "checking whether we are cross compiling..."
 
 #	gem_flags_ld="-nostdlib -lc -lm -ldl -llog ${gem_flags_ld}"
+
+	return 0
 }
 
-function gem_build_v_InitToolchain_x86_64_common { gem_build_InitToolchain_x86_64_common ;}
+function gem_build_v_InitToolchain_x86_64_common { gem_build_InitToolchain_x86_64_common ; return $? ; }
 function gem_build_InitToolchain_x86_64_common
 {
 	# For performance hints see: https://software.intel.com/blogs/2012/09/26/gcc-x86-performance-hints
@@ -761,13 +768,15 @@ function gem_build_InitToolchain_x86_64_common
 	gem_flags_c="${gem_flags_c} ${gem_flags_common}"
 	gem_flags_cpp="${gem_flags_cpp} ${gem_flags_common}"
 	gem_flags_cxx="${gem_flags_cxx} ${gem_flags_common}"
-	gem_flags_ld="${gem_flags_ld}"
-	gem_flags_configure="${gem_flags_configure}"
+#	gem_flags_ld="${gem_flags_ld}"
+#	gem_flags_configure="${gem_flags_configure}"
 
-	gem_build_v_InitToolchain_common
+	if ! gem_build_v_InitToolchain_common; then gem_log_v_Debug "gem_build_InitToolchain_x86_64_common(): gem_build_v_InitToolchain_common() failed."; return 1; fi
+
+	return 0
 }
 
-function gem_build_v_InitToolchain_x86_64-pc-linux-gnu { gem_build_InitToolchain_x86_64-pc-linux-gnu ;}
+function gem_build_v_InitToolchain_x86_64-pc-linux-gnu { gem_build_InitToolchain_x86_64-pc-linux-gnu; return $? ; }
 function gem_build_InitToolchain_x86_64-pc-linux-gnu
 {
 	if [[ ${gem_build_script_type} == "cmake" ]]; then
@@ -789,10 +798,11 @@ function gem_build_InitToolchain_x86_64-pc-linux-gnu
 		gem_fullpathlist_compiler_libs=
 	fi
 
-	gem_build_v_InitToolchain_x86_64_common
+	if ! gem_build_v_InitToolchain_x86_64_common; then gem_log_v_Debug "gem_build_InitToolchain_x86_64-pc-linux-gnu(): gem_build_v_InitToolchain_x86_64_common() failed."; return 1; fi
+	return 0
 }
 
-function gem_build_v_InitToolchain_x86_64-pc-cygwin { gem_build_InitToolchain_x86_64-pc-cygwin ;}
+function gem_build_v_InitToolchain_x86_64-pc-cygwin { gem_build_InitToolchain_x86_64-pc-cygwin ; return $? ; }
 function gem_build_InitToolchain_x86_64-pc-cygwin
 {
 	gem_fullpath_sysroot=/
@@ -809,10 +819,12 @@ function gem_build_InitToolchain_x86_64-pc-cygwin
 		gem_fullpathlist_compiler_hdrs=
 		gem_fullpathlist_compiler_libs=
 	fi
-	gem_build_v_InitToolchain_x86_64_common
+
+	if ! gem_build_v_InitToolchain_x86_64_common; then gem_log_v_Debug "gem_build_InitToolchain_x86_64-pc-cygwin(): gem_build_v_InitToolchain_x86_64_common() failed."; return 1; fi
+	return 0
 }
 
-function gem_build_v_InitToolchain_x86_64-w64-mingw32 { gem_build_InitToolchain_x86_64-w64-mingw32 ;}
+function gem_build_v_InitToolchain_x86_64-w64-mingw32 { gem_build_InitToolchain_x86_64-w64-mingw32 ; return $? ; }
 function gem_build_InitToolchain_x86_64-w64-mingw32
 {
 # cxx_sys=/usr/local/include/c++/7.3.0
@@ -855,7 +867,8 @@ function gem_build_InitToolchain_x86_64-w64-mingw32
 		fi
 
 	else
-		gem_script_v_Error "gem_build_InitToolchain_x86_64-w64-mingw32: Unrecognized shell: ${gem_os}."
+		gem_log_v_Alert "gem_build_InitToolchain_x86_64-w64-mingw32: Unrecognized shell: ${gem_os}."
+		return 1
 	fi
 
 	if [[ ${gem_build_script_type} == "cmake" ]]; then
@@ -877,17 +890,19 @@ function gem_build_InitToolchain_x86_64-w64-mingw32
 		local noop=0
 	fi
 
-	gem_build_v_InitToolchain_x86_64_common
+	if ! gem_build_v_InitToolchain_x86_64_common; then gem_log_v_Debug "gem_build_InitToolchain_x86_64-w64-mingw32(): gem_build_v_InitToolchain_x86_64_common() failed."; return 1; fi
+	return 0
 }
 
-function gem_build_v_InitToolchain_x86_64-pc-windows-msvc { gem_build_InitToolchain_x86_64-pc-windows-msvc ;}
+function gem_build_v_InitToolchain_x86_64-pc-windows-msvc { gem_build_InitToolchain_x86_64-pc-windows-msvc ; return $? ; }
 function gem_build_InitToolchain_x86_64-pc-windows-msvc
 {
 	gem_processor=x86_64
 
 	if [[ ${gem_build_script_type} == "cmake" ]]; then
 
-		gem_script_v_Error "NOT REALLY AN ERROR: In gem_build_InitToolchain_x86_64-pc-windows-msvc(), did we mean to reference the mingw toolchain file?  Look into this."
+		gem_log_v_Alert "NOT REALLY AN ERROR: In gem_build_InitToolchain_x86_64-pc-windows-msvc(), did we mean to reference the mingw toolchain file?  Look into this."
+
 		gem_fullpath_toolchain_cmake=${gem_fullpath_local}/src/toolchains/mingw.toolchain.cmake
 		gem_cmake_system_name="Windows"
 		gem_cmake_system_version="10.0"	# Windows 10
@@ -897,13 +912,14 @@ function gem_build_InitToolchain_x86_64-pc-windows-msvc
 	if [[ ${gem_use_clang} -ne 0 ]]; then
 		gem_fullpathlist_compiler_hdrs=
 		gem_fullpathlist_compiler_libs=
-		gem_script_v_Error "Do we need to implement finding x86_64-pc-windows-msvc libraries on mingw32."
+		gem_log_v_Alert "Do we need to implement finding x86_64-pc-windows-msvc libraries on mingw32."
 	fi
 
-	gem_build_v_InitToolchain_x86_64_common
+	if ! gem_build_v_InitToolchain_x86_64_common; then gem_log_v_Debug "gem_build_InitToolchain_x86_64-pc-windows-msvc(): gem_build_v_InitToolchain_x86_64_common() failed."; return 1; fi
+	return 0
 }
 
-function gem_build_v_InitToolchain_android_common { gem_build_InitToolchain_android_common ;}
+function gem_build_v_InitToolchain_android_common { gem_build_InitToolchain_android_common ; return $? ; }
 function gem_build_InitToolchain_android_common
 {
 	# Using the NDK with other build systems.
@@ -911,7 +927,8 @@ function gem_build_InitToolchain_android_common
 
 	# Android only supports clang compiler.
 	if [[ ${gem_use_clang} -eq 0 ]]; then
-		gem_script_v_Error "Android toolchain only supports the clang compiler.  Set gem_use_clang=1."
+		gem_log_v_Alert "Android toolchain only supports the clang compiler.  Set gem_use_clang=1."
+		return 1
 	fi
 
 	gem_path_triple_details_suffix=ndk_${gem_android_ndk_version}_api_${gem_android_api_level}_arch_${gem_arch}
@@ -922,7 +939,8 @@ function gem_build_InitToolchain_android_common
 		gem_fullpath_toolchain_cmake=${gem_fullpath_android_ndk}/build/cmake/android.toolchain.cmake
 		gem_cmake_system_name="Android"
 		gem_cmake_system_version=		# What to set this to?
-		gem_script_v_Error "What to set gem_cmake_system_version to?"
+		gem_log_v_Alert "What to set gem_cmake_system_version to?"
+		return 1
 
 	elif [[ ${gem_build_script_type} == "autotools" || ${gem_build_script_type} == "meson" ]]; then
 
@@ -957,10 +975,13 @@ function gem_build_InitToolchain_android_common
 	if [[ ${gem_use_clang} -ne 0 ]]; then
 		gem_fullpathlist_compiler_hdrs=
 		gem_fullpathlist_compiler_libs=
-		gem_script_v_Error "Need to implement finding android libraries on linux."
+		gem_log_v_Alert "Need to implement finding android libraries on linux."
+		return 1
 	fi
 
-	gem_build_v_InitToolchain_common
+	if ! gem_build_v_InitToolchain_common; then gem_log_v_Debug "gem_build_InitToolchain_android_common(): gem_build_v_InitToolchain_common() failed."; return 1; fi
+
+	return 0
 }
 
 # Name	        arch	ABI             triple
@@ -970,7 +991,7 @@ function gem_build_InitToolchain_android_common
 # 32-bit Intel	x86     x86 	        i686-linux-android
 # 64-bit Intel	x86_64	x86_64      	x86_64-linux-android
 
-function gem_build_v_InitToolchain_x86_64-linux-android { gem_build_InitToolchain_x86_64-linux-android ;}
+function gem_build_v_InitToolchain_x86_64-linux-android { gem_build_InitToolchain_x86_64-linux-android ; return $? ; }
 function gem_build_InitToolchain_x86_64-linux-android
 {
 	# Overview: https://android.googlesource.com/platform/ndk/+/master/docs/BuildSystemMaintainers.md
@@ -994,12 +1015,14 @@ function gem_build_InitToolchain_x86_64-linux-android
 	gem_flags_c="${gem_flags_c} ${gem_flags_common}"
 	gem_flags_cpp="${gem_flags_cpp} ${gem_flags_common}"
 	gem_flags_cxx="${gem_flags_cxx} ${gem_flags_common}"
-	gem_flags_ld="${gem_flags_ld}"
+#	gem_flags_ld="${gem_flags_ld}"
 
-	gem_build_v_InitToolchain_android_common
+	if ! gem_build_v_InitToolchain_android_common; then gem_log_v_Debug "gem_build_InitToolchain_x86_64-linux-android(): gem_build_v_InitToolchain_android_common() failed."; return 1; fi
+
+	return 0
 }
 
-function gem_build_v_InitToolchain_armv7a-linux-androideabi { gem_build_InitToolchain_armv7a-linux-androideabi ;}
+function gem_build_v_InitToolchain_armv7a-linux-androideabi { gem_build_InitToolchain_armv7a-linux-androideabi ; return $? ; }
 function gem_build_InitToolchain_armv7a-linux-androideabi
 {
 	# Overview: https://android.googlesource.com/platform/ndk/+/master/docs/BuildSystemMaintainers.md
@@ -1008,14 +1031,10 @@ function gem_build_InitToolchain_armv7a-linux-androideabi
 #	gem_arch=arm		# clang?	Use llc --help and llc --version
 	gem_processor=armv7-a
 
-if [[ ${gem_arch}x == "x" ]]; then
-	gem_script_v_Error "Need to set gem_arch for armv7a."
-fi
-if [[ ${gem_processor}x == "x" ]]; then
-	gem_script_v_Error "Need to set gem_processor for armv7a."
-fi
+	if [[ ${gem_arch}x == "x" ]]; then gem_log_v_Alert "Need to set gem_arch for armv7a."; return 1; fi
+	if [[ ${gem_processor}x == "x" ]]; then gem_log_v_Alert "Need to set gem_processor for armv7a."; return 1; fi
 
-	gem_flags_configure="${gem_flags_configure}"
+#	gem_flags_configure="${gem_flags_configure}"
 	local gem_flags_common="-march=${gem_arch}"
 	if [[ ${gem_use_clang} -ne 0 ]]; then	# clang
 		# clang: error: the clang compiler does not support '-mtune=generic-armv8-a'
@@ -1030,12 +1049,14 @@ fi
 	gem_flags_c="${gem_flags_c} ${gem_flags_common}"
 	gem_flags_cpp="${gem_flags_cpp} ${gem_flags_common}"
 	gem_flags_cxx="${gem_flags_cxx} ${gem_flags_common}"
-	gem_flags_ld="${gem_flags_ld}"
+#	gem_flags_ld="${gem_flags_ld}"
 
-	gem_build_v_InitToolchain_android_common
+	if ! gem_build_v_InitToolchain_android_common; then gem_log_v_Debug "gem_build_InitToolchain_armv7a-linux-androideabi(): gem_build_v_InitToolchain_android_common() failed."; return 1; fi
+
+	return 0
 }
 
-function gem_build_v_InitToolchain_aarch64-linux-android { gem_build_InitToolchain_aarch64-linux-android ;}
+function gem_build_v_InitToolchain_aarch64-linux-android { gem_build_InitToolchain_aarch64-linux-android ; return $? ; }
 function gem_build_InitToolchain_aarch64-linux-android
 {
 	# Overview: https://android.googlesource.com/platform/ndk/+/master/docs/BuildSystemMaintainers.md
@@ -1049,7 +1070,7 @@ function gem_build_InitToolchain_aarch64-linux-android
 # --march=<string>                                   - Architecture to generate code for (see --version)
 # --mcpu=<cpu-name>                                  - Target a specific cpu type (-mcpu=help for details)
 
-	gem_flags_configure="${gem_flags_configure}"
+#	gem_flags_configure="${gem_flags_configure}"
 	local gem_flags_common="-march=${gem_arch}"
 	if [[ ${gem_use_clang} -ne 0 ]]; then	# clang
 		# clang: error: the clang compiler does not support '-mtune=generic-armv8-a'
@@ -1062,9 +1083,11 @@ function gem_build_InitToolchain_aarch64-linux-android
 	gem_flags_c="${gem_flags_c} ${gem_flags_common}"
 	gem_flags_cpp="${gem_flags_cpp} ${gem_flags_common}"
 	gem_flags_cxx="${gem_flags_cxx} ${gem_flags_common}"
-	gem_flags_ld="${gem_flags_ld}"
+#	gem_flags_ld="${gem_flags_ld}"
 
-	gem_build_v_InitToolchain_android_common
+	if ! gem_build_v_InitToolchain_android_common; then gem_log_v_Debug "gem_build_InitToolchain_aarch64-linux-android(): gem_build_v_InitToolchain_android_common() failed."; return 1; fi
+
+	return 0
 }
 
 
@@ -1072,7 +1095,7 @@ function gem_build_InitToolchain_aarch64-linux-android
 #                            Configure Build Type
 # =============================================================================
 
-function gem_build_v_SetBuildType_common { gem_build_SetBuildType_common ;}
+function gem_build_v_SetBuildType_common { gem_build_SetBuildType_common ; return $? ; }
 function gem_build_SetBuildType_common
 {
 	# Define common build flags.
@@ -1090,7 +1113,8 @@ function gem_build_SetBuildType_common
 	elif [[ ${gem_build_script_type} == "autotools" ]]; then
 
 		if [[ -z ${gem_fullpath_sysroot} ]]; then
-			gem_script_v_Error "gem_fullpath_sysroot is not set!"
+			gem_log_v_Alert "gem_fullpath_sysroot is not set!"
+			return 1
 		fi
 #		gem_flags_cxx="${gem_flags_cxx} --sysroot=/abc"
 		gem_flags_cxx="${gem_flags_cxx} --sysroot=${gem_fullpath_sysroot}"
@@ -1115,9 +1139,11 @@ function gem_build_SetBuildType_common
 #			gem_flags_c="-Wall -Wextra -Wpedantic -Wconversion ${gem_flags_c}"
 		fi
 	fi
+
+	return 0
 }
 
-function gem_build_v_SetBuildType_debug { gem_build_SetBuildType_debug ;}
+function gem_build_v_SetBuildType_debug { gem_build_SetBuildType_debug ; return $? ; }
 function gem_build_SetBuildType_debug
 {
 	if [[ ${gem_build_script_type} == "cmake" ]]; then
@@ -1130,10 +1156,12 @@ function gem_build_SetBuildType_debug
 	elif [[ ${gem_build_script_type} == "meson" ]]; then
 		noop=0
 	fi
-	gem_build_v_SetBuildType_common
+
+	if ! gem_build_v_SetBuildType_common; then gem_log_v_Debug "gem_build_SetBuildType_debug(): gem_build_v_SetBuildType_common() failed."; return 1; fi
+	return 0
 }
 
-function gem_build_v_SetBuildType_release { gem_build_SetBuildType_release ;}
+function gem_build_v_SetBuildType_release { gem_build_SetBuildType_release ; return $? ; }
 function gem_build_SetBuildType_release
 {
 	if [[ ${gem_build_script_type} == "cmake" ]]; then
@@ -1142,14 +1170,16 @@ function gem_build_SetBuildType_release
 		gem_flags_c="${gem_flags_c} -O2"
 		gem_flags_cpp="${gem_flags_cpp} -O2"
 		gem_flags_cxx="${gem_flags_cxx} -O2"
-		gem_flags_ld="${gem_flags_ld}"
+#		gem_flags_ld="${gem_flags_ld}"
 	elif [[ ${gem_build_script_type} == "meson" ]]; then
 		noop=0
 	fi
-	gem_build_v_SetBuildType_common
+
+	if ! gem_build_v_SetBuildType_common; then gem_log_v_Debug "gem_build_SetBuildType_release(): gem_build_v_SetBuildType_common() failed."; return 1; fi
+	return 0
 }
 
-function gem_build_v_SetBuildType_relwithdebinfo { gem_build_SetBuildType_relwithdebinfo ;}
+function gem_build_v_SetBuildType_relwithdebinfo { gem_build_SetBuildType_relwithdebinfo ; return $? ; }
 function gem_build_SetBuildType_relwithdebinfo
 {
 	if [[ ${gem_build_script_type} == "cmake" ]]; then
@@ -1158,80 +1188,100 @@ function gem_build_SetBuildType_relwithdebinfo
 		gem_flags_c="${gem_flags_c} -g -O2"
 		gem_flags_cpp="${gem_flags_cpp} -g -O2"
 		gem_flags_cxx="${gem_flags_cxx} -g -O2"
-		gem_flags_ld="${gem_flags_ld}"
-	elif [[ ${gem_build_script_type} == "meson" ]]; then
-		noop=0
+#		gem_flags_ld="${gem_flags_ld}"
+#	elif [[ ${gem_build_script_type} == "meson" ]]; then
+	else
+		gem_log_v_Debug "Buil type: ${gem_build_script_type} is not supported."
+		return 1
 	fi
-	gem_build_v_SetBuildType_common
+
+	if ! gem_build_v_SetBuildType_common; then gem_log_v_Debug "gem_build_SetBuildType_relwithdebinfo(): gem_build_v_SetBuildType_common() failed."; return 1; fi
+	return 0
 }
 
 # =============================================================================
 #                                   Configure
 # =============================================================================
-function gem_build_v_Cmd_Configure { gem_build_Cmd_Configure ;}
+function gem_build_v_Cmd_Configure { gem_build_Cmd_Configure ; return $? ; }
 function gem_build_Cmd_Configure
 {
-	gem_build_validate_BuildFile
+	if ! gem_build_validate_BuildFile; then gem_log_v_Msg "gem_build_Cmd_Configure()- Failed to validate the existance of the build file or type: ${gem_build_script_type}.  Perhaps you first need to download the source code."; return 1; fi
 
 	# Start with a clean build directory.  If one already exists, delete it,
 	# else create a new one.
 	if [[ -d ${gem_fullpath_build} ]]; then
-		gem_script_rm -rf ${gem_fullpath_build}/*
+		if ! gem_script_rm -rf "${gem_fullpath_build}"/*; then gem_log_v_Debug "gem_build_Cmd_Configure(): Failed to delete files from the build directory."; return 1; fi
 	else
-		gem_script_mkdir -p ${gem_fullpath_build}
+		if ! gem_script_mkdir -p "${gem_fullpath_build}"; then gem_log_v_Debug "gem_build_Cmd_Configure(): Failed to create the build directory."; return 1; fi
 	fi
 
-	gem_script_cd ${gem_fullpath_build}
+	if ! gem_script_cd "${gem_fullpath_build}"; then gem_log_v_Debug "gem_build_Cmd_Configure(): gem_script_cd() failed."; fi
 
-	gem_build_v_OnConfigure
-	gem_build_v_CheckLogForErrors ${gem_filename_log_configure}
+	if ! gem_build_v_OnConfigure; then gem_log_v_Debug "gem_build_Cmd_Configure(): gem_build_v_OnConfigure() failed."; fi
+
+	local gem_string_report
+	if ! gem_string_report=$(gem_build_v_CheckLogForErrors "${gem_filename_log_configure}"); then gem_log_v_Debug "gem_build_Cmd_Configure(): gem_build_v_CheckLogForErrors() failed."; return 1; fi
+	if [[ -n ${gem_string_report} ]]; then gem_log_v_Msg "${gem_string_report}"; fi
+
+	return 0
 }
 
-function gem_build_v_OnConfigure { gem_build_OnConfigure ;}
+function gem_build_v_OnConfigure { gem_build_OnConfigure ; return $? ; }
 function gem_build_OnConfigure
 {
 	gem_build_OnCommandLine_Configure
 
 	if [[ ${gem_option_cmdline_only} -eq 1 ]]; then
-		gem_script_v_Msg_NotQuiet "${gem_cmd_line_configure}"
+		gem_log_v_Msg_NotQuiet "${gem_cmd_line_configure}"
 	else
 		if [[ ${gem_cmd_line_configure}x != "x" ]]; then
-			eval "${gem_cmd_line_configure} ${gem_redirect_suffix_configure}"
-			gem_result=$?
-			gem_script_v_Msg "=============================================="
-			gem_script_v_Msg "Configure result: ${gem_result}"
-			gem_script_v_Msg "=============================================="
+			eval "${gem_cmd_line_configure} ${gem_redirect_suffix_configure}"; gem_result=$?
+			if [[ ${gem_result} -ne 0 ]] ; then gem_log_v_Debug "gem_build_OnConfigure(): Eval() failed."; return 1; fi
+			gem_log_v_Msg "=============================================="
+			gem_log_v_Msg "Configure result: ${gem_result}"
+			gem_log_v_Msg "=============================================="
 		fi
 	fi
+	return 0
 }
 
+# *FIX:rename these so we can just append ${gem_build_script_type} so we can
+# call by gem_build_OnCommandLine_Configure_${gem_build_script_type}.
 function gem_build_OnCommandLine_Configure
 {
 	if [[ ${gem_build_script_type} == "cmake" ]]; then
 
-		gem_build_v_OnCommandLine_Configure_CMake
+		if ! gem_build_v_OnCommandLine_Configure_CMake; then gem_log_v_Debug "gem_build_OnCommandLine_Configure(): gem_build_v_OnCommandLine_Configure_CMake() failed."; return 1; fi
 
 	elif [[ ${gem_build_script_type} == "autotools" ]]; then
 
-		gem_build_v_OnCommandLine_Configure_Autotools
+		if ! gem_build_v_OnCommandLine_Configure_Autotools; then gem_log_v_Debug "gem_build_OnCommandLine_Configure(): gem_build_v_OnCommandLine_Configure_Autotools() failed."; return 1; fi
 
 	elif [[ ${gem_build_script_type} == "meson" ]]; then
 
-		gem_build_v_OnCommandLine_Configure_Meson
+		if ! gem_build_v_OnCommandLine_Configure_Meson; then gem_log_v_Debug "gem_build_OnCommandLine_Configure(): gem_build_v_OnCommandLine_Configure_Meson() failed."; return 1; fi
+	
+	else
+		gem_log_v_Msg "ERROR: gem_build_OnCommandLine_Configure(): gem_build_script_type=$gem_build_script_type is not supported."
+		return 1
 	fi
+	return 0
 }
 
-function gem_build_v_OnCommandLine_Configure_CMake { gem_build_OnCommandLine_Configure_CMake ;}
+function gem_build_v_OnCommandLine_Configure_CMake { gem_build_OnCommandLine_Configure_CMake ; return $? ; }
 function gem_build_OnCommandLine_Configure_CMake
 {
 	if [[ ${gem_processor}x == "x" ]]; then
-		gem_script_v_Error "gem_processor must be set prior to calling cmake."
+		gem_log_v_Alert "gem_processor must be set prior to calling cmake."
+		return 1
 	fi
 	if [[ ${gem_cmake_system_version}x == "x" ]]; then
-		gem_script_v_Error "gem_cmake_system_version must be set prior to calling cmake.  On android, remove this check then let google's cmake toolchain file determine this, then set it here and re-enable this check."
+		gem_log_v_Alert "gem_cmake_system_version must be set prior to calling cmake.  On android, remove this check then let google's cmake toolchain file determine this, then set it here and re-enable this check."
+		return 1
 	fi
 	if [[ ${gem_cmake_system_name}x == "x" ]]; then
-		gem_script_v_Error "gem_cmake_system_name must be set prior to calling cmake.  On android, remove this check then let google's cmake toolchain file determine this, then set it here and re-enable this check."
+		gem_log_v_Alert "gem_cmake_system_name must be set prior to calling cmake.  On android, remove this check then let google's cmake toolchain file determine this, then set it here and re-enable this check."
+		return 1
 	fi
 
 # The suffix _INIT will make CMake initialize the corresponding *_FLAGS
@@ -1287,7 +1337,6 @@ ${gem_cmake_params}"
 						# platform x64 was specified.
 		gem_cmd_line_configure="${gem_cmd_line_configure} -T host=x64"
 	else
-		local noop=0
 		gem_cmd_line_configure="${gem_cmd_line_configure} \
 -DCMAKE_SYSROOT=${gem_fullpath_sysroot}"
 	fi
@@ -1340,29 +1389,30 @@ ${gem_cmake_params}"
 
 	# Append CMAKE_C_FLAGS, CMAKE_CPP_FLAGS, CMAKE_CXX_FLAGS, and CMAKE_LD_FLAGS
 	# or CFLAGS, CPPFLAGS, CXXFLAGS and LDFLAGS.
-	gem_build_String_AddFlags gem_cmd_line_configure
+	if ! gem_build_String_AddFlags gem_cmd_line_configure; then gem_log_v_Debug "gem_build_OnCommandLine_Build(): gem_build_String_AddFlags() failed."; return 1; fi
 
-#	echo ${gem_cmd_line_configure} ; exit
+	return 0
 }
 
-function gem_build_v_OnCommandLine_Configure_Autotools { gem_build_OnCommandLine_Configure_Autotools ;}
+function gem_build_v_OnCommandLine_Configure_Autotools { gem_build_OnCommandLine_Configure_Autotools ; return $? ; }
 function gem_build_OnCommandLine_Configure_Autotools
 {
 	if [[ -f ${gem_fullpath_src}/configure ]]; then
 		gem_cmd_line_configure="${gem_fullpath_src}/configure \
-	--prefix=${gem_fullpath_install} \
-	--host=${gem_triple} \
-	--build=${gem_platform_build} \
-	--target=${gem_triple} \
-	${gem_flags_configure}"
+--prefix=${gem_fullpath_install} \
+--host=${gem_triple} \
+--build=${gem_platform_build} \
+--target=${gem_triple} \
+${gem_flags_configure}"
 
 		# Append CMAKE_C_FLAGS, CMAKE_CPP_FLAGS, CMAKE_CXX_FLAGS, and CMAKE_LD_FLAGS
 		# or CFLAGS, CPPFLAGS, CXXFLAGS and LDFLAGS.
-		gem_build_String_AddFlags gem_cmd_line_configure
+		if ! gem_build_String_AddFlags gem_cmd_line_configure; then gem_log_v_Debug "gem_build_OnCommandLine_Configure_Autotools(): gem_build_String_AddFlags() failed."; return 1; fi
 	fi
+	return 0
 }
 
-function gem_build_v_OnCommandLine_Configure_Meson { gem_build_OnCommandLine_Configure_Meson ;}
+function gem_build_v_OnCommandLine_Configure_Meson { gem_build_OnCommandLine_Configure_Meson ; return $? ; }
 function gem_build_OnCommandLine_Configure_Meson
 {
 	# ~/gem/local/src/meson/meson-0.50.0/meson.py setup --help
@@ -1439,7 +1489,8 @@ function gem_build_OnCommandLine_Configure_Meson
 	# *FIX: Put this back in when we have meson version > 48.0 installed.
 #		which meson &>/dev/null
 #		if [[ $? != 0 ]]; then
-#			gem_script_v_Error "ERROR: gem_build_OnCommandLine_Configure_Meson: The meson tool is required to build glib."
+#			gem_log_v_Alert "ERROR: gem_build_OnCommandLine_Configure_Meson: The meson tool is required to build glib."
+			return 1
 #		fi
 
 	gem_meson_crossfile="<undefined>"
@@ -1447,33 +1498,36 @@ function gem_build_OnCommandLine_Configure_Meson
 		if [[ ${gem_triple} == "x86_64-pc-linux-gnu" ]]; then
 			gem_meson_crossfile_source=${gem_fullpath_local}/toolchains/linux.toolchain.meson
 			gem_meson_crossfile=${gem_fullpath_build}/linux.toolchain.meson
-			gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_linux
+			if ! gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_linux; then gem_log_v_Alert "gem_build_OnCommandLine_Configure_Meson(): gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_linux() failed."; return 1; fi
 		elif [[ ${gem_triple} == "x86_64-w64-mingw32" ]]; then
 			gem_meson_crossfile_source=${gem_fullpath_local}/toolchains/mingw_on_linux.toolchain.meson
 			gem_meson_crossfile=${gem_fullpath_build}/mingw_on_linux.toolchain.meson
-			gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_mingw
+			if ! gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_mingw; then gem_log_v_Alert "gem_build_OnCommandLine_Configure_Meson(): gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_mingw() failed."; return 1; fi
 		elif [[ ${gem_triple} == *"android"* ]]; then
 			gem_meson_crossfile_source=${gem_fullpath_local}/toolchains/android.toolchain.meson
 			gem_meson_crossfile=${gem_fullpath_build}/android.toolchain.meson
-			gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_android
+			if ! gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_android; then gem_log_v_Alert "gem_build_OnCommandLine_Configure_Meson(): gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_android() failed."; return 1; fi
 		fi
 	elif  [[ ${gem_os} == "MINGW64"* ]]; then	# Running in MinGW Windows
 		if [[ ${gem_triple} == "x86_64-w64-mingw32" ]]; then	# MinGW on Windows
 			gem_meson_crossfile_source=${gem_fullpath_local}/toolchains/mingw_on_windows.toolchain.meson
 			gem_meson_crossfile=${gem_fullpath_build}/mingw_on_windows.toolchain.meson
-			gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_mingw
+			if ! gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_mingw; then gem_log_v_Alert "gem_build_OnCommandLine_Configure_Meson(): gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_mingw() failed."; return 1; fi
 		elif [[ ${gem_triple} == "x86_64-pc-windows-msvc" ]]; then
-			gem_script_v_Error "Do we need to set these for msvc?"
+			gem_log_v_Alert "Do we need to set these for msvc?"
+			return 1
 		fi
 	elif  [[ ${gem_os} == "CYGWIN"* ]]; then	# Running in Cygwin Windows
 		if [[ ${gem_triple} == "x86_64-pc-cygwin" ]]; then	# Build for cygwin.
 			gem_meson_crossfile_source=${gem_fullpath_local}/toolchains/cygwin.toolchain.meson
 			gem_meson_crossfile=${gem_fullpath_build}/cygwin.toolchain.meson
-			gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_cygwin
+			
+			if ! gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_cygwin; then gem_log_v_Alert "gem_build_OnCommandLine_Configure_Meson(): gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_cygwin() failed."; return 1; fi
 		fi
 	fi
 	if [[ ${gem_meson_crossfile} == "<undefined>" ]]; then
-		gem_script_v_Error "gem_build_OnCommandLine_Configure_Meson: gem_build_InitToolchain_common_android: Build for host \"${gem_triple}\" on OS \"${gem_os}\" is not supported."
+		gem_log_v_Alert "gem_build_OnCommandLine_Configure_Meson: gem_build_InitToolchain_common_android(): Build for host \"${gem_triple}\" on OS \"${gem_os}\" is not supported."
+		return 1
 	fi
 
 	# Map our build type to meson's build type.
@@ -1484,7 +1538,9 @@ function gem_build_OnCommandLine_Configure_Meson
 			gem_build_type_meson=release ;;
 		relwithdebinfo)
 			gem_build_type_meson=debugoptimized ;;
-		*)	gem_script_v_Error "Invalid build configuration: ${gem_build_type}"
+		*)
+			gem_log_v_Alert "Invalid build configuration: ${gem_build_type}"
+			return 1 ;;
 	esac
 
 	gem_cmd_line_configure="${gem_fullpath_meson_py} . ../../../src \
@@ -1517,138 +1573,130 @@ ${gem_flags_configure}"
 	#CPPFLAGS=\"${gem_flags_cpp}\" \
 	#CXXFLAGS=\"${gem_flags_cxx}\" \
 	#LDFLAGS=\"${gem_flags_ld}\" \
+
+	return 0
 }
 
-# Creates a meson cross file in the buil directory.  The created cross file
-# will have written to it settings specific to this build.
-# Preconditions: gem_meson_crossfile_source is the full path to the meson cross
-# file to use as a template.  gem_meson_crossfile is the full path to the meson
-# file to be written to the build directory.  These are set in 
+# Creates a meson cross file in the buil directory.  The created cross file will
+# have written to it settings specific to this build.  Preconditions:
+# gem_meson_crossfile_source is the full path to the meson cross file to use as
+# a template.  gem_meson_crossfile is the full path to the meson file to be
+# written to the build directory.  These are set in
 # gem_build_OnCommandLine_Configure().
 function gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common
 {
-	if [[ -z ${gem_meson_crossfile_source} || -z ${gem_meson_crossfile} ]]; then
-		gem_script_v_Error "gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common: gem_meson_crossfile_source and gem_meson_crossfile must both be set."
-	fi
+	if [[ -z ${gem_meson_crossfile_source} || -z ${gem_meson_crossfile} ]]; then gem_log_v_Alert "gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common(): gem_meson_crossfile_source and gem_meson_crossfile must both be set."; return 1; fi
 
-	gem_script_cp ${gem_meson_crossfile_source} ${gem_meson_crossfile}
-	if [[ $? -ne 0 ]]; then
-		gem_script_v_Error "gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common: Failed to copy meson crossfile '${gem_meson_crossfile_source}' to directory '${gem_fullpath_build}'"
-	fi
+	if ! gem_script_cp "${gem_meson_crossfile_source}" "${gem_meson_crossfile}"; then gem_log_v_Alert "gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common(): Failed to copy meson crossfile '${gem_meson_crossfile_source}' to directory '${gem_fullpath_build}'"; return 1; fi
 
-	if [[ ! -z ${gem_flags_c} ]]; then
-		gem_build_FlagsToMesonArray ${gem_flags_c}
-		sed -i "s|GEM_C_ARGS|c_args = ${gem_flags_meson_array}|g" ${gem_meson_crossfile}
-		if [[ $? -ne 0 ]]; then
-			gem_script_v_Error "gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common: Sed failed to modify meson crossfile '${gem_fullpath_build}'"
-		fi
+	if [[ -n ${gem_flags_c} ]]; then
+		if ! gem_build_FlagsToMesonArray "${gem_flags_c}"; then gem_log_v_Alert "gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common(): gem_build_FlagsToMesonArray() failed."; return 1; fi
+
+		if ! sed -i "s|GEM_C_ARGS|c_args = ${gem_flags_meson_array}|g" "${gem_meson_crossfile}"; then gem_log_v_Alert "gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common(): Sed failed to modify meson crossfile '${gem_meson_crossfile}'"; return 1; fi
 	else
-		sed -i "s|GEM_C_ARGS||g" ${gem_meson_crossfile}
+		if ! sed -i "s|GEM_C_ARGS||g" "${gem_meson_crossfile}"; then gem_log_v_Alert "gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common(): Sed failed to modify meson crossfile '${gem_meson_crossfile}'"; return 1; fi
 	fi
-	if [[ ! -z ${gem_flags_cpp} ]]; then
-		gem_build_FlagsToMesonArray ${gem_flags_cpp}
-		sed -i "s|GEM_CPP_ARGS|cpp_args = ${gem_flags_meson_array}|g" ${gem_meson_crossfile}
-		if [[ $? -ne 0 ]]; then
-			gem_script_v_Error "gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common: Sed failed to modify meson crossfile '${gem_fullpath_build}'"
-		fi
+	if [[ -n ${gem_flags_cpp} ]]; then
+		if ! gem_build_FlagsToMesonArray "${gem_flags_cpp}"; then gem_log_v_Alert "gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common(): gem_build_FlagsToMesonArray() failed."; return 1; fi
+		
+		if ! sed -i "s|GEM_CPP_ARGS|cpp_args = ${gem_flags_meson_array}|g" "${gem_meson_crossfile}"; then gem_log_v_Alert "gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common(): Sed failed to modify meson crossfile '${gem_meson_crossfile}'"; return 1; fi
 	else
-		sed -i "s|GEM_CPP_ARGS||g" ${gem_meson_crossfile}
+		if ! sed -i "s|GEM_CPP_ARGS||g" "${gem_meson_crossfile}"; then gem_log_v_Alert "gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common(): Sed failed to modify meson crossfile '${gem_meson_crossfile}'"; return 1; fi
 	fi
-	if [[ ! -z ${gem_flags_ld} ]]; then
-		gem_build_FlagsToMesonArray ${gem_flags_ld}
-		sed -i "s|GEM_C_LINK_ARGS|c_link_args = ${gem_flags_meson_array}|g" ${gem_meson_crossfile}
-		if [[ $? -ne 0 ]]; then
-			gem_script_v_Error "gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common: Sed failed to modify meson crossfile '${gem_fullpath_build}'"
-		fi
-		sed -i "s|GEM_CPP_LINK_ARGS|cpp_link_args = ${gem_flags_meson_array}|g" ${gem_meson_crossfile}
-		if [[ $? -ne 0 ]]; then
-			gem_script_v_Error "gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common: Sed failed to modify meson crossfile '${gem_fullpath_build}'"
-		fi
+	if [[ -n ${gem_flags_ld} ]]; then
+		if ! gem_build_FlagsToMesonArray "${gem_flags_ld}"; then gem_log_v_Alert "gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common(): gem_build_FlagsToMesonArray() failed."; return 1; fi
+		if ! sed -i "s|GEM_C_LINK_ARGS|c_link_args = ${gem_flags_meson_array}|g" "${gem_meson_crossfile}"; then gem_log_v_Alert "gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common(): Sed failed to modify meson crossfile '${gem_meson_crossfile}'"; return 1; fi
+		if ! sed -i "s|GEM_CPP_LINK_ARGS|cpp_link_args = ${gem_flags_meson_array}|g" "${gem_meson_crossfile}"; then gem_log_v_Alert "gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common(): Sed failed to modify meson crossfile '${gem_meson_crossfile}'"; return 1; fi
 	else
-		sed -i "s|GEM_C_LINK_ARGS||g" ${gem_meson_crossfile}
-		sed -i "s|GEM_CPP_LINK_ARGS||g" ${gem_meson_crossfile}
+		if ! sed -i "s|GEM_C_LINK_ARGS||g" "${gem_meson_crossfile}"; then gem_log_v_Alert "gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common(): Sed failed to modify meson crossfile '${gem_meson_crossfile}'"; return 1; fi
+		if ! sed -i "s|GEM_CPP_LINK_ARGS||g" "${gem_meson_crossfile}"; then gem_log_v_Alert "gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common(): Sed failed to modify meson crossfile '${gem_meson_crossfile}'"; return 1; fi
 	fi
-	sed -i "s|gem_fullpath_projectCONFIG_EXE|${gem_fullpath_project_config}|g" ${gem_meson_crossfile}
+	if ! sed -i "s|gem_fullpath_projectCONFIG_EXE|${gem_fullpath_project_config}|g" "${gem_meson_crossfile}"; then gem_log_v_Alert "gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common(): Sed failed to modify meson crossfile '${gem_meson_crossfile}'"; return 1; fi
+	return 0
 }
 
 function gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_linux
 {
-	gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common
+	if ! gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common; then gem_log_v_Alert "gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_linux(): gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common() failed."; return 1; fi
+	return 0
 }
 
 function gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_mingw
 {
-    gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common
+	if ! gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common; then gem_log_v_Alert "gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_mingw(): gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common() failed."; return 1; fi
+	return 0
 }
 
 function gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_cygwin
 {
-	gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common
+	if ! gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common; then gem_log_v_Alert "gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_cygwin(): gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common() failed."; return 1; fi
+	return 0
 }
 
 function gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_android
 {
-	gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common
+	if ! gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common; then gem_log_v_Alert "gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_android(): gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_common() failed."; return 1; fi
 
-	gem_script_v_Error "We're no longer using the tool chains.  See https://developer.android.com/ndk/guides/standalone_toolchain"
+	gem_log_v_Alert "gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_android(): We're no longer using the tool chains.  See https://developer.android.com/ndk/guides/standalone_toolchain"
+	return 1
 
-	sed -i "s|GEM_DIR_STANDALONE_TOOLCHAIN|${gem_fullpath_android_standalone_toolchain}|g" ${gem_meson_crossfile}
-	if [[ $? -ne 0 ]]; then
-		gem_script_v_Error "gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_android: Sed failed to modify meson crossfile '${gem_fullpath_build}'"
-	fi
-	sed -i "s|GEM_TRIPLE|${gem_triple}|g" ${gem_meson_crossfile}
-	if [[ $? -ne 0 ]]; then
-		gem_script_v_Error "gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_android: Sed failed to modify meson crossfile '${gem_fullpath_build}'"
-	fi
+	if ! sed -i "s|GEM_DIR_STANDALONE_TOOLCHAIN|${gem_fullpath_android_standalone_toolchain}|g" "${gem_meson_crossfile}"; then gem_log_v_Alert "gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_android(): Sed failed to modify meson crossfile '${gem_fullpath_build}'"; return 1; fi
+	if ! sed -i "s|GEM_TRIPLE|${gem_triple}|g" "${gem_meson_crossfile}"; then gem_log_v_Alert "gem_build_OnCommandLine_Configure_Meson_BuildCrossFile_android(): Sed failed to modify meson crossfile '${gem_fullpath_build}'"; return 1; fi
+
+	return 0
 }
 
 
 # =============================================================================
 #                                Configure Help
 # =============================================================================
-function gem_build_v_Cmd_ConfigureHelp { gem_build_Cmd_ConfigureHelp ;}
+function gem_build_v_Cmd_ConfigureHelp { gem_build_Cmd_ConfigureHelp ; return $? ; }
 function gem_build_Cmd_ConfigureHelp
 {
-	gem_build_validate_SrcPath
+	if ! gem_build_validate_SrcPath; then gem_log_v_Debug "gem_build_Cmd_ConfigureHelp(): gem_build_validate_SrcPath() failed."; return 1; fi
 
-	gem_script_cd ${gem_fullpath_src}
+	if ! gem_script_cd "${gem_fullpath_src}"; then gem_log_v_Debug "gem_build_Cmd_ConfigureHelp(): gem_script_cd() failed."; return 1; fi
 
 	if [[ ${gem_build_script_type} == "cmake" ]]; then
 
-		gem_script_v_Error "Configuration help is not implemented for CMake."
+		gem_log_v_Alert "Configuration help is not implemented for CMake."; return 1
 
 	elif [[ ${gem_build_script_type} == "autotools" ]]; then
 
-		if [[ ! -f ./configure ]]; then
-			gem_script_v_Error "gem_build_Cmd_ConfigureHelp: The configuration file ${gem_fullpath_src}/configure does not exist.  Try configuring the project first using the -m option."
-		fi
+		if [[ ! -f ./configure ]]; then gem_log_v_Alert "gem_build_Cmd_ConfigureHelp: The configuration file ${gem_fullpath_src}/configure does not exist.  Try configuring the project first using the -m option."; return 1; fi
 		./configure --help
 
 	elif [[ ${gem_build_script_type} == "meson" ]]; then
 
 		meson configure --help
 	fi
+	return 0
 }
 
 # =============================================================================
 #                                     Build
 # =============================================================================
 
-function gem_build_v_Cmd_Build { gem_build_Cmd_Build ;}
+function gem_build_v_Cmd_Build { gem_build_Cmd_Build ; return $? ; }
 function gem_build_Cmd_Build
 {
-	gem_build_validate_BuildFile
+	if ! gem_build_validate_BuildFile; then gem_log_v_Debug "gem_build_Cmd_Build(): gem_build_validate_BuildFile() failed."; return 1; fi
 
-	gem_script_cd ${gem_fullpath_build}
+	if ! gem_script_cd "${gem_fullpath_build}"; then gem_log_v_Debug "gem_build_Cmd_Build(): gem_script_cd() failed."; return 1; fi
 
-	gem_build_v_OnBuild
-	gem_build_v_CheckLogForErrors ${gem_filename_log_build}
+	if ! gem_build_v_OnBuild; then gem_log_v_Debug "gem_build_Cmd_Build(): gem_build_v_OnBuild() failed."; return 1; fi
+
+	local gem_string_report
+	if ! gem_string_report=$(gem_build_v_CheckLogForErrors "${gem_filename_log_build}"); then gem_log_v_Debug "gem_build_Cmd_Build(): gem_build_v_CheckLogForErrors() failed."; return 1; fi
+	if [[ -n ${gem_string_report} ]]; then gem_log_v_Debug "${gem_string_report}"; fi
+
+	return 0
 }
 
-function gem_build_v_OnBuild { gem_build_OnBuild ;}
+function gem_build_v_OnBuild { gem_build_OnBuild ; return $? ; }
 function gem_build_OnBuild
 {
-	gem_build_v_OnCommandLine_Build
+	if ! gem_build_v_OnCommandLine_Build; then gem_log_v_Debug "gem_build_OnBuild(): gem_build_v_OnCommandLine_Build() failed."; return 1; fi
 
 
 # Doesn't work (Original):
@@ -1669,26 +1717,30 @@ function gem_build_OnBuild
 #exit
 
 
+	local gem_result=1
 	if [[ ${gem_option_cmdline_only} -eq 0 ]]; then
-		eval "${gem_cmd_line_build} ${gem_redirect_suffix_build}"
-		gem_result=$?
-		gem_script_v_Msg "=============================================="
-		gem_script_v_Msg "Build result: ${gem_result}"
-		gem_script_v_Msg "=============================================="
+		if ! eval "${gem_cmd_line_build} ${gem_redirect_suffix_build}"; then gem_log_v_Debug "gem_build_OnBuild(): Eval() failed."; return 1; fi
+		gem_log_v_Msg "=============================================="
+		gem_log_v_Msg "Build result: ${gem_result}"
+		gem_log_v_Msg "=============================================="
 	else
-		gem_script_v_Msg_NotQuiet "${gem_cmd_line_build}"
+		gem_log_v_Msg "${gem_cmd_line_build}"
 	fi
+	return 0
 }
 
-function gem_build_v_OnCommandLine_Build { gem_build_OnCommandLine_Build ;}
+function gem_build_v_OnCommandLine_Build { gem_build_OnCommandLine_Build ; return $? ; }
 function gem_build_OnCommandLine_Build
 {
 	if [[ ${gem_build_script_type} == "cmake" ]]; then
-		gem_cmd_line_build="cmake \
+
+
+gem_cmd_line_build="cmake \
 --build \
 . \
 --config \"${gem_build_type}\" \
 --parallel ${gem_num_jobs}"
+
 
 	elif [[ ${gem_build_script_type} == "autotools" ]]; then
 
@@ -1709,15 +1761,13 @@ function gem_build_OnCommandLine_Build
 			fi
 		done
 		IFS=${gem_ifs_saved}
-		if [[ "${gem_fullpath_autotools_makefile}"x == "x" ]]; then
-			gem_script_v_Error "Failed to find the makefile."
-		fi
+		if [[ "${gem_fullpath_autotools_makefile}"x == "x" ]]; then gem_log_v_Alert "Failed to find the makefile."; return 1; fi
 
 		gem_cmd_line_build="make -j${gem_num_jobs} -f ${gem_fullpath_autotools_makefile}"
 
 		# Append CMAKE_C_FLAGS, CMAKE_CPP_FLAGS, CMAKE_CXX_FLAGS, and
 		# CMAKE_LD_FLAGS or CFLAGS, CPPFLAGS, CXXFLAGS and LDFLAGS.
-		gem_build_String_AddFlags gem_cmd_line_build
+		if ! gem_build_String_AddFlags gem_cmd_line_build; then gem_log_v_Debug "gem_build_OnCommandLine_Build(): gem_build_String_AddFlags() failed."; return 1; fi
 
 #echo "gem_cmd_line_build=${gem_cmd_line_build}" ; exit
 
@@ -1728,43 +1778,47 @@ function gem_build_OnCommandLine_Build
 -j ${gem_num_jobs} \
 ."
 	fi
+	return 0
 }
 
 # =============================================================================
 #                                      Install
 # =============================================================================
-function gem_build_v_Cmd_Install { gem_build_Cmd_Install ;}
+function gem_build_v_Cmd_Install { gem_build_Cmd_Install ; return $? ; }
 function gem_build_Cmd_Install
 {
-	gem_build_validate_BuildPath
+	if ! gem_build_validate_BuildPath; then gem_log_v_Debug "gem_build_Cmd_Install(): gem_build_validate_BuildPath() failed."; return 1; fi
 
-	gem_script_cd ${gem_fullpath_build}
+	if ! gem_script_cd "${gem_fullpath_build}"; then gem_log_v_Debug "gem_build_Cmd_Install(): gem_script_cd() failed."; return 1; fi
 
-	gem_build_v_OnInstall
-	gem_build_v_CheckLogForErrors ${gem_filename_log_install}
+	if ! gem_build_v_OnInstall; then gem_log_v_Debug "gem_build_Cmd_Install(): gem_build_v_OnInstall() failed."; return 1; fi
+
+	local gem_string_report
+	if ! gem_string_report=$(gem_build_v_CheckLogForErrors "${gem_filename_log_install}"); then gem_log_v_Debug "gem_build_Cmd_Install(): gem_build_v_CheckLogForErrors() failed."; return 1; fi
+	if [[ -n ${gem_string_report} ]]; then gem_log_v_Debug "${gem_string_report}"; fi
+
+	return 0
 }
 
-function gem_build_v_OnInstall { gem_build_OnInstall ;}
+function gem_build_v_OnInstall { gem_build_OnInstall ; return $? ; }
 function gem_build_OnInstall
 {
-	gem_build_OnCommandLine_Install
+	if ! gem_build_OnCommandLine_Install; then gem_log_v_Debug "gem_build_OnInstall(): gem_build_OnCommandLine_Install() failed."; return 1; fi
 
-	if [[ ${gem_option_cmdline_only} -ne 0 ]]; then
-		gem_script_v_Msg_NotQuiet "${gem_cmd_line_install}"
-		return 1
-	fi
+	if [[ ${gem_option_cmdline_only} -ne 0 ]]; then gem_log_v_Msg_NotQuiet "${gem_cmd_line_install}"; return 1; fi
 
-	eval "${gem_cmd_line_install} ${gem_redirect_suffix_install}"
+	if ! eval "${gem_cmd_line_install} ${gem_redirect_suffix_install}"; then gem_log_v_Debug "gem_build_OnInstall(): Command failed: ${gem_cmd_line_install}"; return 1; fi
 
 	if [[ ${gem_os} == "MINGW64"* ]]; then
 
-		cp /c/msys64/mingw64/bin/libgcc_s_seh-1.dll ${gem_fullpath_install}/bin
-		cp /c/msys64/mingw64/bin/libstdc++-6.dll ${gem_fullpath_install}/bin
-		cp /c/msys64/mingw64/bin/libwinpthread-1.dll ${gem_fullpath_install}/bin
+		if ! cp /c/msys64/mingw64/bin/libgcc_s_seh-1.dll "${gem_fullpath_install}/bin"; then gem_log_v_Debug "gem_build_OnInstall(): Failed to copy a mingw library file to ${gem_fullpath_install}/bin."; return 1; fi
+		if ! cp /c/msys64/mingw64/bin/libstdc++-6.dll "${gem_fullpath_install}/bin"; then gem_log_v_Debug "gem_build_OnInstall(): Failed to copy a mingw library file to ${gem_fullpath_install}/bin."; return 1; fi
+		if ! cp /c/msys64/mingw64/bin/libwinpthread-1.dll "${gem_fullpath_install}/bin"; then gem_log_v_Debug "gem_build_OnInstall(): Failed to copy a mingw library file to ${gem_fullpath_install}/bin."; return 1; fi
 	fi
+	return 0
 }
 
-function gem_build_v_OnCommandLine_Install { gem_build_OnCommandLine_Install ;}
+function gem_build_v_OnCommandLine_Install { gem_build_OnCommandLine_Install ; return $? ; }
 function gem_build_OnCommandLine_Install
 {
 	if [[ ${gem_build_script_type} == "cmake" ]]; then
@@ -1776,35 +1830,42 @@ function gem_build_OnCommandLine_Install
 	elif [[ ${gem_build_script_type} == "meson" ]]; then
 		gem_cmd_line_install="ninja -C . install"
 	fi
+	return 0
 }
 
 # =============================================================================
 #                                     Uninstall
 # =============================================================================
-function gem_build_v_Cmd_Uninstall { gem_build_Cmd_Uninstall ;}
+function gem_build_v_Cmd_Uninstall { gem_build_Cmd_Uninstall ; return $? ; }
 function gem_build_Cmd_Uninstall
 {
-	gem_build_validate_BuildPath
+	if ! gem_build_validate_BuildPath; then gem_log_v_Debug "gem_build_Cmd_Uninstall(): gem_build_validate_BuildPath() failed."; return 1; fi
 
-	gem_script_cd ${gem_fullpath_build}
+	if ! gem_script_cd "${gem_fullpath_build}"; then gem_log_v_Debug "gem_build_Cmd_Uninstall(): gem_script_cd() failed."; return 1; fi
 
-	gem_build_v_OnUninstall
-	gem_build_v_CheckLogForErrors ${gem_filename_log_uninstall}
+	if ! gem_build_v_OnUninstall; then gem_log_v_Debug "gem_build_Cmd_Uninstall(): gem_build_v_OnUninstall() failed."; return 1; fi
+
+	local gem_string_report
+	if ! gem_string_report=$(gem_build_v_CheckLogForErrors "${gem_filename_log_uninstall}"); then gem_log_v_Debug "gem_build_Cmd_Uninstall(): gem_build_v_CheckLogForErrors() failed."; return 1; fi
+	if [[ -n ${gem_string_report} ]]; then gem_log_v_Debug "${gem_string_report}"; fi
+
+	return 0
 }
 
-function gem_build_v_OnUninstall { gem_build_OnUninstall ;}
+function gem_build_v_OnUninstall { gem_build_OnUninstall ; return $? ; }
 function gem_build_OnUninstall
 {
-	gem_build_OnCommandLine_Uninstall
+	if ! gem_build_OnCommandLine_Uninstall; then gem_log_v_Debug "gem_build_OnUninstall(): gem_build_OnCommandLine_Uninstall() failed."; return 1; fi
 
 	if [[ ${gem_option_cmdline_only} -eq 0 ]]; then
-		eval "${gem_cmd_line_uninstall} ${gem_redirect_suffix_uninstall}"
+		if ! eval "${gem_cmd_line_uninstall} ${gem_redirect_suffix_uninstall}"; then gem_log_v_Debug "gem_build_OnUninstall(): Command failed: ${gem_cmd_line_uninstall} ${gem_redirect_suffix_uninstall}"; return 1; fi
 	else
-		gem_script_v_Msg_NotQuiet "${gem_cmd_line_uninstall}"
+		gem_log_v_Msg_NotQuiet "${gem_cmd_line_uninstall}"
 	fi
+	return 0
 }
 
-function gem_build_v_OnCommandLine_Uninstall { gem_build_OnCommandLine_Uninstall ;}
+function gem_build_v_OnCommandLine_Uninstall { gem_build_OnCommandLine_Uninstall ; return $? ; }
 function gem_build_OnCommandLine_Uninstall
 {
 	if [[ ${gem_build_script_type} == "cmake" ]]; then
@@ -1816,35 +1877,42 @@ function gem_build_OnCommandLine_Uninstall
 	elif [[ ${gem_build_script_type} == "meson" ]]; then
 		gem_cmd_line_uninstall="ninja -C . uninstall"
 	fi
+	return 0
 }
 
 # =============================================================================
 #                                      Clean
 # =============================================================================
-function gem_build_v_Cmd_Clean { gem_build_Cmd_Clean ;}
+function gem_build_v_Cmd_Clean { gem_build_Cmd_Clean ; return $? ; }
 function gem_build_Cmd_Clean
 {
-	gem_build_validate_BuildPath
+	if ! gem_build_validate_BuildPath; then gem_log_v_Debug "gem_build_Cmd_Clean(): gem_build_validate_BuildPath() failed."; return 1; fi
 
-	gem_script_cd ${gem_fullpath_build}
+	if ! gem_script_cd "${gem_fullpath_build}"; then gem_log_v_Debug "gem_build_Cmd_Clean(): gem_script_cd() failed."; return 1; fi
 
-	gem_build_v_OnClean
-	gem_build_v_CheckLogForErrors ${gem_filename_log_clean}
+	if ! gem_build_v_OnClean; then gem_log_v_Debug "gem_build_Cmd_Clean(): gem_build_v_OnClean() failed."; return 1; fi
+
+	local gem_string_report
+	if ! gem_string_report=$(gem_build_v_CheckLogForErrors "${gem_filename_log_clean}"); then gem_log_v_Debug "gem_build_Cmd_Clean(): gem_build_v_CheckLogForErrors() failed."; return 1; fi
+	if [[ -n ${gem_string_report} ]]; then gem_log_v_Debug "${gem_string_report}"; fi
+
+	return 0
 }
 
-function gem_build_v_OnClean { gem_build_OnClean ;}
+function gem_build_v_OnClean { gem_build_OnClean ; return $? ; }
 function gem_build_OnClean
 {
-	gem_build_OnCommandLine_Clean
+	if ! gem_build_OnCommandLine_Clean; then gem_log_v_Debug "gem_build_OnClean(): gem_build_OnCommandLine_Clean() failed."; return 1; fi
 
 	if [[ ${gem_option_cmdline_only} -eq 0 ]]; then
-		eval "${gem_cmd_line_clean} ${gem_redirect_suffix_clean}"
+		if ! eval "${gem_cmd_line_clean} ${gem_redirect_suffix_clean}"; then gem_log_v_Debug "gem_build_OnClean(): Command failed: ${gem_cmd_line_clean} ${gem_redirect_suffix_clean}"; return 1; fi
 	else
-		gem_script_v_Msg_NotQuiet "${gem_cmd_line_clean}"
+		gem_log_v_Msg_NotQuiet "${gem_cmd_line_clean}"
 	fi
+	return 0
 }
 
-function gem_build_v_OnCommandLine_Clean { gem_build_OnCommandLine_Clean ;}
+function gem_build_v_OnCommandLine_Clean { gem_build_OnCommandLine_Clean ; return $? ; }
 function gem_build_OnCommandLine_Clean
 {
 	if [[ ${gem_build_script_type} == "cmake" ]]; then
@@ -1856,71 +1924,75 @@ function gem_build_OnCommandLine_Clean
 	elif [[ ${gem_build_script_type} == "meson" ]]; then
 		gem_cmd_line_clean="ninja -C . clean"
 	fi
+	return 0
 }
 
 # =============================================================================
 #                                      Scrub
 # =============================================================================
-function gem_build_v_Cmd_Scrub { gem_build_Cmd_Scrub ;}
+function gem_build_v_Cmd_Scrub { gem_build_Cmd_Scrub ; return $? ; }
 function gem_build_Cmd_Scrub
 {
-	gem_build_validate_BuildPath
+	if ! gem_build_validate_BuildPath; then gem_log_v_Debug "gem_build_Cmd_Scrub(): gem_build_validate_BuildPath() failed."; return 1; fi
 
-	gem_script_cd ${gem_fullpath_build}
+	if ! gem_script_cd "${gem_fullpath_build}"; then gem_log_v_Debug "gem_build_Cmd_Scrub(): gem_script_cd() failed."; return 1; fi
 
-	gem_build_v_OnScrub
-	gem_build_v_CheckLogForErrors ${gem_filename_log_scrub}
+	if ! gem_build_v_OnScrub; then gem_log_v_Debug "gem_build_Cmd_Scrub(): gem_build_v_OnScrub() failed."; return 1; fi
+
+	local gem_string_report
+	if ! gem_string_report=$(gem_build_v_CheckLogForErrors "${gem_filename_log_scrub}"); then gem_log_v_Debug "gem_build_Cmd_Scrub(): gem_build_v_CheckLogForErrors() failed."; return 1; fi
+	if [[ -n ${gem_string_report} ]]; then gem_log_v_Debug "${gem_string_report}"; fi
+
+	return 0
 }
 
-function gem_build_v_OnScrub { gem_build_OnScrub ;}
+function gem_build_v_OnScrub { gem_build_OnScrub ; return $? ; }
 function gem_build_OnScrub
 {
-	gem_build_OnCommandLine_Scrub
+	if ! gem_build_OnCommandLine_Scrub; then gem_log_v_Debug "gem_build_OnScrub(): gem_build_OnCommandLine_Scrub() failed."; return 1; fi
 
 	if [[ ${gem_option_cmdline_only} -eq 0 ]]; then
-		eval "${gem_cmd_line_scrub} ${gem_redirect_suffix_scrub}"
+		if ! eval "${gem_cmd_line_scrub} ${gem_redirect_suffix_scrub}"; then gem_log_v_Debug "gem_build_OnClean(): Command failed: ${gem_cmd_line_scrub} ${gem_redirect_suffix_scrub}"; return 1; fi
 	else
-		gem_script_v_Msg_NotQuiet "${gem_cmd_line_scrub}"
+		gem_log_v_Msg_NotQuiet "${gem_cmd_line_scrub}"
 	fi
+	return 0
 }
 
-function gem_build_v_OnCommandLine_Scrub { gem_build_OnCommandLine_Scrub ;}
+function gem_build_v_OnCommandLine_Scrub { gem_build_OnCommandLine_Scrub ; return $? ; }
 function gem_build_OnCommandLine_Scrub
 {
-	gem_build_v_Cmd_Uninstall
+	if ! gem_build_v_Cmd_Uninstall; then gem_log_v_Debug "gem_build_OnCommandLine_Scrub(): gem_build_v_Cmd_Uninstall() failed."; return 1; fi
 
-	if [[ -d ${gem_fullpath_build} ]]; then
-		gem_script_rm -rf ${gem_fullpath_build}
-	fi
+	if [[ -d ${gem_fullpath_build} ]] && ! gem_script_rm -rf "${gem_fullpath_build}"; then gem_log_v_Debug "gem_build_OnCommandLine_Scrub(): Failed to remove the build directory."; return 1; fi
+	return 0
 }
 
 # =============================================================================
 #                                      CPack
 # =============================================================================
-function gem_build_v_Cmd_CPack { gem_build_Cmd_CPack ;}
+function gem_build_v_Cmd_CPack { gem_build_Cmd_CPack ; return $? ; }
 function gem_build_Cmd_CPack
 {
-	gem_build_validate_BuildPath
+	if [[ ${gem_build_script_type} != "cmake" ]]; then gem_log_v_Alert "gem_build_Cmd_CPack: CPack is only available while building using CMake."; return 1; fi
 
-	gem_script_cd ${gem_fullpath_build}
+	if ! gem_build_validate_BuildPath; then gem_log_v_Debug "gem_build_Cmd_CPack(): gem_build_validate_BuildPath() failed."; return 1; fi
 
-	if [[ ${gem_build_script_type} == "cmake" ]]; then
-		cpack --config CPackConfig.cmake
-	else
-		gem_script_v_Error "gem_build_Cmd_CPack: CPack is only available while building using CMake."
-	fi
+	if ! gem_script_cd "${gem_fullpath_build}"; then gem_log_v_Debug "gem_build_Cmd_CPack(): gem_script_cd() failed."; return 1; fi
+
+	cpack --config CPackConfig.cmake; return $?
 }
 
 # =============================================================================
 #                                     Run
 # =============================================================================
 
-function gem_build_v_Cmd_Run_local { gem_build_Cmd_Run_local ;}
+function gem_build_v_Cmd_Run_local { gem_build_Cmd_Run_local ; return $? ; }
 function gem_build_Cmd_Run_local
 {
-	gem_build_validate_BuildPath
+	if ! gem_build_validate_BuildPath; then gem_log_v_Debug "gem_build_Cmd_Run_local(): gem_build_validate_BuildPath() failed."; return 1; fi
 
-	gem_script_cd ${gem_fullpath_build}
+	if ! gem_script_cd "${gem_fullpath_build}"; then gem_log_v_Debug "gem_build_Cmd_Run_local(): gem_script_cd() failed."; return 1; fi
 
 	# Build path to the executable.
 	gem_fullpath_exe=${gem_fullpath_build}/bin
@@ -1932,25 +2004,23 @@ function gem_build_Cmd_Run_local
 	if [[ ${gem_triple} == "x86_64-w64-mingw32" || ${gem_triple} == "x86_64-pc-windows-msvc" || ${gem_triple} == "x86_64-pc-cygwin" ]]; then
 		gem_fullpath_exe=${gem_fullpath_exe}.exe
 	fi
-	if [[ ! -f ${gem_fullpath_exe} ]]; then
-		gem_script_v_Error "gem_build_Cmd_Run_local: Can't find built executable: ${gem_fullpath_exe}"
-	fi
-	gem_script_v_Msg "--------------------------------------------------------------------------------"
+	if [[ ! -f ${gem_fullpath_exe} ]]; then gem_log_v_Alert "gem_build_Cmd_Run_local: Can't find built executable: ${gem_fullpath_exe}"; return 1; fi
+	gem_log_v_Msg "--------------------------------------------------------------------------------"
 	${gem_fullpath_exe}
-	gem_script_v_Msg "--------------------------------------------------------------------------------"
+	gem_log_v_Msg "--------------------------------------------------------------------------------"
+
+	return 0
 }
 
-function gem_build_v_Cmd_Run_android { gem_build_Cmd_Run_android ;}
+function gem_build_v_Cmd_Run_android { gem_build_Cmd_Run_android ; return $? ; }
 function gem_build_Cmd_Run_android
 {
-	gem_build_validate_BuildPath
+	if ! gem_build_validate_BuildPath; then gem_log_v_Debug "gem_build_Cmd_Run_android(): gem_build_validate_BuildPath() failed."; return 1; fi
 
-	gem_script_cd ${gem_fullpath_build}
+	if ! gem_script_cd "${gem_fullpath_build}"; then gem_log_v_Debug "gem_build_Cmd_Run_android(): gem_script_cd() failed."; return 1; fi
 
 	gem_fullpath_exe=${gem_fullpath_build}/bin/${gem_project_name}
-	if [[ ! -f ${gem_fullpath_exe} ]]; then
-		gem_script_v_Error "gem_build_Cmd_Run_android: Can't find built executable: ${gem_fullpath_exe}"
-	fi
+	if [[ ! -f ${gem_fullpath_exe} ]]; then gem_log_v_Alert "gem_build_Cmd_Run_android: Can't find built executable: ${gem_fullpath_exe}"; return 1; fi
 
 #	${gem_adb_exe} kill-server
 #	${gem_adb_exe} start-server
@@ -1960,48 +2030,78 @@ function gem_build_Cmd_Run_android
 	gem_device_shell_cmd="${gem_adb_exe} push ${gem_fullpath_exe} ${gem_device_path_dest_tmp}"
 	${gem_device_shell_cmd} 1>/dev/null
 	gem_result=$?
-	if [[ ${gem_result} -ne 0 ]]; then
-		gem_script_v_Error "gem_build_Cmd_Run_android: adb push failed.  Returned: ${gem_result}"
-	fi
+	if [[ ${gem_result} -ne 0 ]]; then gem_log_v_Alert "gem_build_Cmd_Run_android: adb push failed.  Returned: ${gem_result}"; return 1; fi
 	
 	gem_device_fullpath_exe=${gem_device_path_dest_tmp}/${gem_project_name}
 	gem_device_shell_cmd="${gem_adb_exe} shell ${gem_device_fullpath_exe}"
-	gem_script_v_Msg "--------------------------------------------------------------------------------"
+	gem_log_v_Msg "--------------------------------------------------------------------------------"
 	${gem_device_shell_cmd}
 	gem_result=$?
-	gem_script_v_Msg "--------------------------------------------------------------------------------"
-	if [[ ${gem_result} -ne 0 ]]; then
-		gem_script_v_Msg "gem_build_Cmd_Run_android: Device shell command failed.  Command was:\n${gem_device_shell_cmd}"
-	fi
+	gem_log_v_Msg "--------------------------------------------------------------------------------"
+	if [[ ${gem_result} -ne 0 ]]; then gem_log_v_Msg "gem_build_Cmd_Run_android: Device shell command failed.  Command was:\n${gem_device_shell_cmd}"; return 1; fi
+	return 0
 }
 
-# gem_build_v_OnExit()- Provide a means for clients to output results.
-function gem_build_v_OnExit { gem_build_OnExit "$@";}
-function gem_build_OnExit
+# ==============================================================================
+# gem_script_v_Init()- 
+#
+# ==============================================================================
+function gem_script_v_Init { gem_build_Init "$@"; return $? ; }
+function gem_build_Init
 {
-	noop=0
+	gem_script_Init "$@"
+	return $?
+}
+# ==============================================================================
+# gem_script_v_Clean()- 
+#
+# ==============================================================================
+function gem_script_v_Clean { gem_build_Clean; return $?; }
+function gem_build_Clean
+{
+	gem_script_Clean
+	return $?
 }
 
 
 # =============================================================================
-#                                       gem_build_v_Main
+# gem_build_OnArg
+#
+# Handles a single argument and echos the number of arguments.
 # =============================================================================
 
 # gem_build_v_OnArg()- Returns the number of arguments processed.
-function gem_script_v_OnArg { gem_build_OnArg "$@";}
+function gem_build_v_OnArg
+{
+	local gem_return=0
+	local num_args_handled_here=0
+
+	local arg=${1}
+	case ${arg} in
+	*)	local globals;
+		globals=$(gem_script_OnArg "${arg}"); gem_result_OnArg=$?; gem_script_GlobalsLoad "${globals}"
+	esac
+	((gem_script_OnArg_num_handled += num_args_handled_here))
+	gem_script_GlobalsSave
+	return ${gem_result_OnArg}
+}
+
 function gem_build_OnArg
 {
+	local gem_return=0
+	local num_args_handled_here=1
+
 	local arg=${1}
 	case ${arg} in
 		-android-api)
 			gem_android_api_level=${2}
-			return 2 ;;
+			num_args_handled_here=2 ;;
 		-b)			gem_option_build=1 ;;
 		-c)			gem_option_clean=1 ;;
 		-ch)		gem_option_configure_help=1 ;;
 		-cmdline)	gem_option_cmdline_only=1 ; gem_script_option_quiet_mode=1 ;;
 		-d)			gem_option_download=1 ;;
-		-help|-h)	gem_script_v_ExitHelp ;;
+		-help|-h)	gem_script_v_PrintHelp "";;
 		-host)
 			case ${2} in
 				linux)
@@ -2011,26 +2111,28 @@ function gem_build_OnArg
 				mingw)
 					gem_triple=x86_64-w64-mingw32 ;;
 				msvc)
-					x86_64-pc-windows-msvc ;;
+					gem_triple=x86_64-pc-windows-msvc ;;
 				android)
 					gem_triple=aarch64-linux-android ;;
 #					gem_triple=armv7a-linux-androideabi ;;
 				x86_64-pc-linux-gnu|x86_64-pc-cygwin|x86_64-w64-mingw32|x86_64-pc-windows-msvc|x86_64-linux-android|armv7a-linux-androideabi|aarch64-linux-android)
 					gem_triple=${2} ;;
-				*)	gem_script_v_Error "Invalid build host: ${2}"
+				*)	gem_log_v_Msg "Invalid build host: ${2}"
+					gem_return=1;
 			esac
-			return 2 ;;
+			num_args_handled_here=2 ;;
 		-i)	gem_option_install=1 ;;
 		-install)
 			gem_fullpath_install=${2}
-			return 2 ;;
+			num_args_handled_here=2 ;;
 		-libtype)
 			case ${2} in
 				static|shared)
 					gem_lib_type=${2} ;;
-				*)	gem_script_v_Error "Invalid library type: ${2}"
+				*)	gem_log_v_Msg "Invalid library type: ${2}"
+					gem_return=1;
 			esac
-			return 2 ;;
+			num_args_handled_here=2 ;;
 		-m)	gem_option_configure=1 ;;
 		-p)	gem_option_pack=1      ;;
 		-r)	gem_option_run=1       ;;
@@ -2044,196 +2146,230 @@ function gem_build_OnArg
 					gem_build_type=release ;;
 				relwithdebinfo)
 					gem_build_type=relwithdebinfo ;;
-				*)	gem_script_v_Error "Invalid build configuration: ${2}"
+				*)	gem_script_v_Log "Invalid build configuration: ${2}"
+					gem_return=1;
 			esac
-			return 2 ;;
+			num_args_handled_here=2 ;;
 		-u)	gem_option_uninstall=1 ;;
-	*)	gem_script_OnArg "$@" ;	return $?
+	*)	num_args_handled_here=0
+		local globals;
+		globals=$(gem_script_OnArg "$@"); gem_return=$?; gem_script_GlobalsLoad "${globals}"
 	esac
-	return 1	# We handle 1 argument by default.  Other cases will return
-}				# the number of arguments handled.
+	((gem_script_OnArg_num_handled += num_args_handled_here))
+	gem_script_GlobalsSave
+	return ${gem_return}
+}
 
-function gem_script_v_Main { gem_build_Main "$@";}
+function gem_script_v_Main { gem_build_Main "$@"; return $? ; }
 function gem_build_Main
 {
 	gem_time_start=$(( 10#$(date +%s) ))
 
+	if ! gem_script_v_Init "$@"; then gem_script_Msg "gem_build_Main(): gem_script_v_Init() failed."; return 1; fi
+
     # Validate environment variables are set.
     if [[ ${gem_fullpath_gem}x == "x" ]]; then
-        gem_script_Error "gem_fullpath_gem, the location of the gem directory is not defined."
+        gem_script_Msg "gem_build_Main(): Environment variable gem_fullpath_gem, the location of the gem directory is not defined."
+		return 1
     fi
 
-	gem_use_clang=0			# Else gcc.
-	gem_is_cplusplus=0
-	gem_c_standard="-std=c11"		# c90, c99, c11, c17, c2x, gnu90, gnu99, gnu11
-	gem_cxx_standard="-std=c++11"	# c++98, c++03, c++14, c++17, gnu++98, gnu++11, gnu++14, gnu++17
-	gem_stdlib="-stdlib=libc++"
+	gem_script_GlobalsDeclare "\
+gem_android_api_level,\
+gem_option_build,\
+gem_option_clean,\
+gem_option_configure_help,\
+gem_option_cmdline_only,\
+gem_option_download,\
+gem_triple,\
+gem_option_install,\
+gem_fullpath_install,\
+gem_lib_type,\
+gem_option_configure,\
+gem_option_pack,\
+gem_option_run,\
+gem_option_redirect_output,\
+gem_option_scrub,\
+gem_build_type,\
+gem_option_uninstall"
 
-#	gem_build_script_type="autotools"
-#	gem_build_script_type="meson"
-#	gem_build_script_type="cmake"
-	gem_build_script_type="<undefined>"
+	export gem_use_clang=0			# Else gcc.
+	export gem_is_cplusplus=0
+	export gem_c_standard="-std=c11"		# c90, c99, c11, c17, c2x, gnu90, gnu99, gnu11
+	export gem_cxx_standard="-std=c++11"	# c++98, c++03, c++14, c++17, gnu++98, gnu++11, gnu++14, gnu++17
+	export gem_stdlib="-stdlib=libc++"
+
+#	export gem_build_script_type="autotools"
+#	export gem_build_script_type="meson"
+#	export gem_build_script_type="cmake"
+	export gem_build_script_type="<undefined>"
 
 	# Directories
-	gem_fullpath_local=${gem_fullpath_gem}/local
+	export gem_fullpath_local=${gem_fullpath_gem}/local
 	# gem_fullpath_install is set further below in function gem_build_v_BuildFilePaths().
 
-	gem_os=$(uname -s)
+	export gem_os;
+	if ! gem_os=$(uname -s); then gem_log_v_Debug "gem_build_Main(): uname() failed."; return 1; fi
 
 	# Common Defaults
 	if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW shell on Windows.
-		gem_triple=x86_64-w64-mingw32
-#		gem_triple=x86_64-pc-windows-msvc
+		export gem_triple=x86_64-w64-mingw32
+#		export gem_triple=x86_64-pc-windows-msvc
 	elif [[ ${gem_os} == "CYGWIN"* ]]; then	# MinGW shell on Windows.
-		gem_triple=x86_64-pc-cygwin
-#		gem_triple=x86_64-w64-mingw32
+		export gem_triple=x86_64-pc-cygwin
+#		export gem_triple=x86_64-w64-mingw32
 	elif [[ ${gem_os} == "Linux"* ]]; then	# Linux shell.
-		gem_triple=x86_64-pc-linux-gnu
-#		gem_triple=x86_64-w64-mingw32
-#		gem_triple=aarch64-linux-android
+		export gem_triple=x86_64-pc-linux-gnu
+#		export gem_triple=x86_64-w64-mingw32
+#		export gem_triple=aarch64-linux-android
 	fi
 
-	gem_flags_c="${CFLAGS}"
-	gem_flags_cpp="${CPPFLAGS}"
-	gem_flags_cxx="${CXXFLAGS}"
-	gem_flags_ld="${LDFLAGS}"
+	export gem_flags_c="${CFLAGS}"
+	export gem_flags_cpp="${CPPFLAGS}"
+	export gem_flags_cxx="${CXXFLAGS}"
+	export gem_flags_ld="${LDFLAGS}"
 
 	# NOTE: ${gem_build_type} is passed to CMake. If you want to change these,
 	# you'll have to map your new values to these expected values when you run
 	# CMake.
-	gem_build_type=release
-#	gem_build_type=debug
-#	gem_build_type=relwithdebinfo
+	export gem_build_type=release
+#	export gem_build_type=debug
+#	export gem_build_type=relwithdebinfo
 
-	gem_lib_type=shared
-#	gem_lib_type=static
+	export gem_lib_type=shared
+#	export gem_lib_type=static
 
-	gem_num_jobs=4
+	export gem_num_jobs=4
 
-	# Android Defaults
-	# *FIX: The ndk version needs to be passed to cmake.  We're currently
-	# parsing it from ANDROID_NDK, which I'm not even sure if we're using,
-	# otherwise.
-	gem_android_ndk_version=21
-	gem_android_api_level=28
+	# Android Defaults *FIX: The ndk version needs to be passed to cmake.  We're
+	# currently parsing it from ANDROID_NDK, which I'm not even sure if we're
+	# using, otherwise.
+	export gem_android_ndk_version=21
+	export gem_android_api_level=28
 
-	gem_adb_exe=${gem_fullpath_android_sdk}/platform-tools/adb
+	export gem_adb_exe=${gem_fullpath_android_sdk}/platform-tools/adb
 
 	# Application Defaults
-	gem_project_name="<undefined>"
+	export gem_project_name="<undefined>"
 
 	# Initialize variables
-	gem_str_not_implemented="Operation for host \"${gem_triple}\" on OS \"${gem_os}\" is not yet implemented."
+	export gem_str_not_implemented="Operation for host \"${gem_triple}\" on OS \"${gem_os}\" is not yet implemented."
 
-	gem_cmake_params=
+	export gem_cmake_params=
 
-	gem_option_build=0
-	gem_option_clean=0
-	gem_option_cmdline_only=0
-	gem_option_configure=0
-	gem_option_configure_help=0
-	gem_option_download=0
-	gem_option_install=0
-	gem_option_pack=0
-	gem_option_redirect_output=0
-	gem_option_run=0
-	gem_option_scrub=0
-	gem_option_uninstall=0
+	export gem_option_build=0
+	export gem_option_clean=0
+	export gem_option_cmdline_only=0
+	export gem_option_configure=0
+	export gem_option_configure_help=0
+	export gem_option_download=0
+	export gem_option_install=0
+	export gem_option_pack=0
+	export gem_option_redirect_output=0
+	export gem_option_run=0
+	export gem_option_scrub=0
+	export gem_option_uninstall=0
 
-	gem_cmake_generator="<undefined>"
+	export gem_cmake_generator="<undefined>"
 
 	# Set gem_platform_build.  *FIX: Move this!
+	export gem_platform_build
 	if [[ ${gem_os} == "Linux" ]]; then
 		# $(uname -m)-redhat-linux	# Fedora uses this prefix in /usr/bin/.
 		gem_platform_build=$(uname -m)-pc-linux-gnu	# This is reported by configure scripts.
+
 	elif  [[ ${gem_os} == "CYGWIN"* ]]; then	# Running in Cygwin Windows
 		gem_platform_build=$(uname -m)-pc-cygwin
+
 	elif [[ ${gem_os} == "MINGW64"* ]]; then
 		gem_platform_build=$(uname -m)-w64-mingw32	# Fedora uses this prefix in /usr/bin/.
 	else
-		gem_script_v_Error ${gem_str_not_implemented}
+		gem_log_v_Msg "${gem_str_not_implemented}"
+		return 1
 	fi
 
-	gem_script_Main "$@"	# Process all the arguments
+	# Process all the arguments
+	if ! gem_script_Main "$@"; then gem_log_v_Msg "ERROR: gem_script_Main() failed."; return 1; fi
 
 	# Determine if we're cross compiling.
-	gem_isCrossCompiling=0
-	if  [[ (${gem_os} == "MINGW64"* && ${gem_triple} != "x86_64-w64-mingw32") || (${gem_os} == "Linux" && ${gem_triple} != "x86_64-pc-linux-gnu") || (${gem_os} == "CYGWIN"* && ${gem_triple} != "x86_64-pc-cygwin") ]]; then
+	export gem_isCrossCompiling=0
+	if  [[ (${gem_os} == "MINGW64"* && ${gem_triple} != "x86_64-w64-mingw32")  ||
+	       (${gem_os} == "Linux"    && ${gem_triple} != "x86_64-pc-linux-gnu") ||
+		   (${gem_os} == "CYGWIN"*  && ${gem_triple} != "x86_64-pc-cygwin")    ]]; then
 		gem_isCrossCompiling=1
 	fi
 
-	gem_build_v_SetDefaults
-	if [[ ${gem_build_script_type} != "autotools" && ${gem_build_script_type} != "cmake" && ${gem_build_script_type} != "meson" ]]; then
-		gem_script_v_Error "gem_build_script_type must be set to autotools, cmake, or meson."
+	if ! gem_build_v_SetDefaults; then gem_log_v_Msg "ERROR: gem_build_v_SetDefaults failed."; return 1; fi
+	
+	if [[   ${gem_build_script_type} != "autotools" &&
+			${gem_build_script_type} != "cmake"     &&
+			${gem_build_script_type} != "meson"     ]]; then
+		gem_log_v_Msg "ERROR: gem_build_script_type must be set to autotools, cmake, or meson."
+		return 1
 	fi
 
-	if [[ ${gem_triple} == *"android"* ]]; then
-		gem_build_validate_NDKDir
-	fi
-	gem_build_v_InitToolchain_${gem_triple}
-	gem_build_FindCompilerTools
-	gem_build_FindCompilerHeaders
-	gem_build_FindCompilerLibraries
-	gem_build_v_SetBuildType_${gem_build_type}
-	gem_build_v_SelectCMakeGenerator
-	gem_build_validate_Compatibility
-	gem_build_v_BuildFilePaths
-	gem_build_v_SetFlags
-	gem_build_v_UpdateWinePath	# for running Windows executables on Linux.
+	if [[ ${gem_triple} == *"android"* ]] && ! gem_build_validate_NDKDir; then gem_log_v_Msg "ERROR: gem_build_validate_NDKDir failed."; return 1; fi
+
+	if ! gem_build_v_InitToolchain_${gem_triple};    then gem_log_v_Msg "ERROR: gem_build_v_InitToolchain_${gem_triple} failed."; return 1; fi
+	if ! gem_build_FindCompilerTools;                then gem_log_v_Msg "ERROR: gem_build_FindCompilerTools failed."; return 1; fi
+	if ! gem_build_FindCompilerHeaders;              then gem_log_v_Msg "ERROR: gem_build_FindCompilerHeaders failed."; return 1; fi
+	if ! gem_build_FindCompilerLibraries;            then gem_log_v_Msg "ERROR: gem_build_FindCompilerLibraries failed."; return 1; fi
+	if ! gem_build_v_SetBuildType_${gem_build_type}; then gem_log_v_Msg "ERROR: gem_build_v_SetBuildType_${gem_build_type} failed."; return 1; fi
+	if ! gem_build_v_SelectCMakeGenerator;           then gem_log_v_Msg "ERROR: gem_build_v_SelectCMakeGenerator failed."; return 1; fi
+	if ! gem_build_validate_Compatibility;           then gem_log_v_Msg "ERROR: gem_build_validate_Compatibility failed."; return 1; fi
+	if ! gem_build_v_BuildFilePaths;                 then gem_log_v_Msg "ERROR: gem_build_v_BuildFilePaths failed." return 1; fi
+	if ! gem_build_v_SetFlags;                       then gem_log_v_Msg "ERROR: gem_build_v_SetFlags failed."; return 1; fi
+	# For running Windows executables on Linux.
+	if ! gem_build_v_UpdateWinePath;                 then gem_log_v_Msg "ERROR: gem_build_v_UpdateWinePath failed."; return 1; fi
 
 	if [[ ${gem_option_redirect_output} -ne 0 ]]; then
-		gem_filename_log_build=${gem_fullpath_build}/gem_log_build.txt
-		gem_filename_log_clean=${gem_fullpath_build}/gem_log_clean.txt
-		gem_filename_log_configure=${gem_fullpath_build}/gem_log_configure.txt
-		gem_filename_log_install=${gem_fullpath_build}/gem_log_install.txt
-		gem_filename_log_uninstall=${gem_fullpath_build}/gem_log_uninstall.txt
-		gem_filename_log_scrub=${gem_fullpath_build}/gem_log_scrub.txt
-		gem_redirect_suffix_build=" 2>&1 | tee ${gem_filename_log_build}"
-		gem_redirect_suffix_clean=" 2>&1 | tee ${gem_filename_log_clean}"
-		gem_redirect_suffix_configure=" 2>&1 | tee ${gem_filename_log_configure}"
-		gem_redirect_suffix_install=" 2>&1 | tee ${gem_filename_log_install}"
-		gem_redirect_suffix_uninstall=" 2>&1 | tee ${gem_filename_log_uninstall}"
-		gem_redirect_suffix_scrub=" 2>&1 | tee ${gem_filename_log_scrub}"
+		export gem_filename_log_build=${gem_fullpath_build}/gem_log_build.txt
+		export gem_filename_log_clean=${gem_fullpath_build}/gem_log_clean.txt
+		export gem_filename_log_configure=${gem_fullpath_build}/gem_log_configure.txt
+		export gem_filename_log_install=${gem_fullpath_build}/gem_log_install.txt
+		export gem_filename_log_uninstall=${gem_fullpath_build}/gem_log_uninstall.txt
+		export gem_filename_log_scrub=${gem_fullpath_build}/gem_log_scrub.txt
+		export gem_redirect_suffix_build=" 2>&1 | tee ${gem_filename_log_build}"
+		export gem_redirect_suffix_clean=" 2>&1 | tee ${gem_filename_log_clean}"
+		export gem_redirect_suffix_configure=" 2>&1 | tee ${gem_filename_log_configure}"
+		export gem_redirect_suffix_install=" 2>&1 | tee ${gem_filename_log_install}"
+		export gem_redirect_suffix_uninstall=" 2>&1 | tee ${gem_filename_log_uninstall}"
+		export gem_redirect_suffix_scrub=" 2>&1 | tee ${gem_filename_log_scrub}"
 	fi
 
 	# Execute the commands.
-	if [[ ${gem_option_download} -ne 0 ]]; then
-		gem_build_v_DownloadSource
-	fi
-	if [[ ${gem_option_clean} -ne 0 ]]; then
-		gem_build_v_Cmd_Clean
-	fi
-	if [[ ${gem_option_scrub} -ne 0 ]]; then
-		gem_build_v_Cmd_Scrub
-	fi
-	if [[ ${gem_option_configure} -ne 0 ]]; then
-		gem_build_v_Cmd_Configure
-	fi
-	if [[ ${gem_option_configure_help} -ne 0 ]]; then
-		gem_build_v_Cmd_ConfigureHelp
-	fi
-	if [[ ${gem_option_build} -ne 0 ]]; then
-		gem_build_v_Cmd_Build
-	fi
+	if [[ ${gem_option_download} -ne 0 ]] && ! gem_build_v_DownloadSource; then gem_log_v_Msg "ERROR: gem_build_Main()- Download source failed."; return 1; fi
+
+	if [[ ${gem_option_clean} -ne 0 ]] && ! gem_build_v_Cmd_Clean; then gem_log_v_Msg "ERROR: gem_build_Main()- Clean failed."; return 1; fi
+
+	if [[ ${gem_option_scrub} -ne 0 ]] && ! gem_build_v_Cmd_Scrub; then gem_log_v_Msg "ERROR: gem_build_Main()- Scrub failed."; return 1; fi
+
+	if [[ ${gem_option_configure} -ne 0 ]] && ! gem_build_v_Cmd_Configure; then gem_log_v_Msg "ERROR: gem_build_Main()- Configuration failed."; return 1; fi
+
+	if [[ ${gem_option_configure_help} -ne 0 ]] && ! gem_build_v_Cmd_ConfigureHelp; then gem_log_v_Msg "ERROR: gem_build_Main()- Display configuration help (gem_build_v_Cmd_ConfigureHelp()) failed."; return 1; fi
+
+	if [[ ${gem_option_build} -ne 0 ]] && ! gem_build_v_Cmd_Build; then gem_log_v_Msg "ERROR: gem_build_Main()- gem_build_v_Cmd_Build() failed."; return 1; fi
+
 	if [[ ${gem_option_run} -ne 0 ]]; then
+		local gem_result
 		if [[ ${gem_triple} == *"android"* ]]; then
-			gem_build_v_Cmd_Run_android
+			gem_result=gem_build_v_Cmd_Run_android
 		else
-			gem_build_v_Cmd_Run_local
+			gem_result=gem_build_v_Cmd_Run_local
 		fi
-	fi
-	if [[ ${gem_option_install} -ne 0 ]]; then
-		gem_build_v_Cmd_Install
-	fi
-	if [[ ${gem_option_uninstall} -ne 0 ]]; then
-		gem_build_v_Cmd_Uninstall
-	fi
-	if [[ ${gem_option_pack} -ne 0 ]]; then
-		gem_build_v_Cmd_CPack
+		if [[ ${gem_result} -ne 0 ]]; then gem_log_v_Msg "ERROR: In gem_build_Main(): Failed to run the project."; return 1; fi
 	fi
 
-	gem_build_v_OnExit
+	if [[ ${gem_option_install} -ne 0 ]] && ! gem_build_v_Cmd_Install; then gem_log_v_Msg "ERROR: gem_build_Main()- Install failed."; return 1; fi
 
-	gem_time_ellapsed=$(( $(( 10#$(date +%s) )) - ${gem_time_start} ))
-	gem_script_v_Msg "Execution time: $(( ${gem_time_ellapsed}/60 )) min, $(( ${gem_time_ellapsed}%60 )) sec."
+	if [[ ${gem_option_uninstall} -ne 0 ]] && ! gem_build_v_Cmd_Uninstall; then gem_log_v_Msg "ERROR: gem_build_Main()- Uninstall failed."; return 1; fi
+
+	if [[ ${gem_option_pack} -ne 0 ]] && ! gem_build_v_Cmd_CPack; then gem_log_v_Msg "ERROR: gem_build_Main()- Packaging failed."; return 1; fi
+
+	if ! gem_script_v_Clean; then gem_script_Msg "gem_build_Main(): gem_script_v_Clean() failed."; return 1; fi
+
+	gem_time_ellapsed=$(( $(( 10#$(date +%s) )) - gem_time_start ))
+	gem_log_v_Msg "Execution time: $(( gem_time_ellapsed/60 )) min, $(( gem_time_ellapsed%60 )) sec."
+
+	return 0
 }
+

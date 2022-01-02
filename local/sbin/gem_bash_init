@@ -13,6 +13,9 @@
 # Configure Gem environment.
 # 
 
+[[ -n ${gem_bash_init_included} ]] && exit
+	gem_bash_init_included=1
+
 function gem_bash_init_Main()
 {
     # =========================================================================
