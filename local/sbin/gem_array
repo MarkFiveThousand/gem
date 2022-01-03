@@ -1,0 +1,387 @@
+#!/bin/bash
+#  ___________                           __________
+# /\   _______\                         /\   ______\
+# \ \  \______/_     ___   ____ ____ ___\ \  \_____/_     ___   ___ ___  ______   ____    ___
+#  \ \  \ /\__  \  /'___`\/\   V    V   \\ \_______  \  /'   `\/\  \\  \/\   __\/' ._`\ /'___`\
+#   \ \  \\/__\  \/\  ___/\ \  \/\  \/\  \\/_______\  \/\  \\  \ \  \\  \ \  \ /\  \__//\  ___/
+#    \ \__________\ \____\ \ \__\ \__\ \__\ /\_________\ \_____/\ \______\ \__\\ \____/\ \____\
+#     \/__________/\/____/  \/__/\/__/\/__/ \/_________/\/____/  \/______/\/__/ \/___/  \/____/
+
+
+# ==============================================================================
+# gem_array_Create()
+# 
+# $1: String identifier used to reference the newly created array.
+# $2: Optional number of elements to reserve
+#
+# Usage: gem_array_Create myIdentifier
+# ==============================================================================
+function gem_array_Create
+{
+	# Validate the parameters.
+	if [[ $# -gt 2 ]]; then
+		gem_script_v_Log "gem_array_Create() only takes 1 or 2 argument, not $#.  Usage: gem_array_Create myIdentifier."
+		return 1
+	fi
+	if ! gem_script_String_IsIdentifier $1; then
+		gem_script_v_Log "gem_array_Create()- An identifier must be passed as argument 1.  Usage: gem_array_Create myIdentifier."
+		return 1
+	fi
+	if [[ $(eval "echo \"\${gem_array_$1_size}\"")x != "x" ]]; then
+		gem_script_v_Log "gem_array_Create()- Array '$1' already exists."
+		return 1
+	fi
+	if [[ $# -eq 2 ]] && ! gem_script_String_IsWholeNumber $2; then
+		gem_script_v_Log "gem_array_Create()- Optional array size \$2 must be a whole number.  Usage: gem_array_Create myIdentifier mySize."
+		return 1
+	fi
+
+	local size=$2
+	if [[ $# -eq 1 ]]; then
+		size=0
+	else
+		for ((i = 0; i < ${size}; i++)) do
+			eval "gem_array_$1_$i="
+		done
+	fi
+	eval "gem_array_$1_size=$size"
+	return 0
+}
+
+# ==============================================================================
+# gem_array_Destroy() - Releases resources associated with the array.
+# ==============================================================================
+function gem_array_Destroy
+{
+	if ! gem_array_Clear $1; then
+		gem_script_v_Log "gem_array_Destroy()- Failed to clear the array."
+		return 1
+	fi
+	unset echo "gem_array_$1_size"
+	return 0
+}
+
+# ==============================================================================
+# gem_array_GetSize()
+#
+# Echos the array size.
+# 
+# $1: Identifier the array was created with.
+#
+# Usage: size=$(gem_array_GetSize myIdentifier)
+# ==============================================================================
+function gem_array_GetSize
+{
+	# Validate the parameters.
+	if [[ $# -gt 1 ]]; then
+		gem_script_v_Log "gem_array_GetSize() only takes 1 argument, not $#.  Usage: size=$(gem_array_GetSize myIdentifier)."
+		return 1
+	fi
+	if ! gem_script_String_IsIdentifier $1; then
+		gem_script_v_Log "gem_array_GetSize()- An identifier must be passed as argument 1.  Usage: size=$(gem_array_GetSize myIdentifier)."
+		return 1
+	fi
+	if [[ $(eval "echo \"\${gem_array_$1_size}\"")x == "x" ]]; then
+		gem_script_v_Log "gem_array_GetSize()- Array '$1' does not exist."
+		return 1
+	fi
+
+	eval echo "\${gem_array_$1_size}"
+	return 0
+}
+
+# ==============================================================================
+# gem_array_SetAt()
+# 
+# $1: Identifier the array was created with.
+# $2: Index
+# $3: Value to assign
+#
+# Usage: gem_array_SetAt myIdentifier myIndex myValue
+# ==============================================================================
+function gem_array_SetAt
+{
+	# Validate the parameters.
+	if [[ $# -gt 3 ]]; then
+		gem_script_v_Log "gem_array_SetAt() only takes 3 arguments, not $#.  Usage: gem_array_SetAt myIdentifier myIndex myValue."
+		return 1
+	fi
+	if ! gem_script_String_IsIdentifier $1; then
+		gem_script_v_Log "gem_array_SetAt()- An identifier must be passed as argument 1.  Usage: gem_array_SetAt myIdentifier myIndex myValue."
+		return 1
+	fi
+	if [[ $(eval "echo \"\${gem_array_$1_size}\"")x == "x" ]]; then
+		gem_script_v_Log "gem_array_SetAt()- Array '$1' does not exist."
+		return 1
+	fi
+	if [[ $# -eq 2 ]] && ! gem_script_String_IsWholeNumber $2; then
+		gem_script_v_Log "gem_array_SetAt()- Array index \$2 must be a whole number.  Usage: gem_array_SetAt myIdentifier myIndex myValue."
+		return 1
+	fi
+	if [[ $3x == "x" ]]; then
+		gem_script_v_Log "gem_array_SetAt()- Required value argument 3 is missing.  Expected a value to be set.  E.g.: gem_array_SetAt myIdentifier myIndex myValue."
+		return 1
+	fi
+	local size=$(gem_array_GetSize $1)
+	if [[ $2 -lt 0 || $2 -ge $size ]]; then
+		gem_log_v_Alert "gem_array_SetAt(): Index $2 out of range.  Array size is $size."
+		return 1
+	fi
+
+	eval "gem_array_$1_$2=$3"
+	return 0
+}
+
+# ==============================================================================
+# gem_array_GetAt()
+# 
+# $1: Identifier the array was created with.
+# $2: Index
+#
+# Usage: elem=$(gem_array_GetAt myIdentifier myIndex)
+# ==============================================================================
+function gem_array_GetAt
+{
+		# Validate the parameters.
+	if [[ $# -gt 2 ]]; then
+		gem_script_v_Log "gem_array_GetAt() only takes 2 arguments, not $#.  Usage: gem_array_GetAt myIdentifier myIndex."
+		return 1
+	fi
+	if ! gem_script_String_IsIdentifier $1; then
+		gem_script_v_Log "gem_array_GetAt()- An identifier must be passed as argument 1.  Usage: gem_array_GetAt myIdentifier myIndex."
+		return 1
+	fi
+	if [[ $(eval "echo \"\${gem_array_$1_size}\"")x == "x" ]]; then
+		gem_script_v_Log "gem_array_GetAt()- Array '$1' does not exist."
+		return 1
+	fi
+	if [[ $# -eq 2 ]] && ! gem_script_String_IsWholeNumber $2; then
+		gem_script_v_Log "gem_array_GetAt()- Array index \$2 must be a whole number.  Usage: gem_array_GetAt myIdentifier myIndex."
+		return 1
+	fi
+	local size=$(gem_array_GetSize $1)
+	if [[ $2 -lt 0 || $2 -ge $size ]]; then
+		gem_log_v_Alert "gem_array_GetAt(): Index $2 out of range.  Array is size $size"
+		return 1
+	fi
+
+	eval echo "\${gem_array_$1_$2}"
+	return 0
+}
+
+# ==============================================================================
+# gem_array_Print()
+#
+# Echos the array contents.
+# 
+# $1: Identifier the array was created with.
+# ==============================================================================
+function gem_array_Print
+{
+	# Validate the parameters.
+	if [[ $# -gt 1 ]]; then
+		gem_script_v_Log "gem_array_Print() only takes 1 argument, not $#."
+		return 1
+	fi
+	if ! gem_script_String_IsIdentifier $1; then
+		gem_script_v_Log "gem_array_Print()- An identifier must be passed as argument 1.  E.g.: gem_array_Print myIdentifier."
+		return 1
+	fi
+	if [[ $(eval "echo \"\${gem_array_$1_size}\"")x == "x" ]]; then
+		gem_script_v_Log "gem_array_Print()- Array '$1' does not exist."
+		return 1
+	fi
+
+	local size=$(gem_array_GetSize $1)
+	if [[ ${size} == 0 ]]; then
+		echo "Array '$1' is empty."
+	else
+		for ((i=0; i<size; i++)) do
+			echo "$1[$i] = $(gem_array_GetAt $1 $i)"
+		done
+	fi
+	return 0
+}
+
+# ==============================================================================
+# gem_array_PushBack()
+#
+# Append a value to teh end of the array.
+# 
+# $1: Identifier the array was created with.
+# $2: Value to push
+#
+# Usage: gem_array_PushBack myIdentifier myValue.
+# ==============================================================================
+function gem_array_PushBack
+{
+	# Validate the parameters.
+	if [[ $# -gt 2 ]]; then
+		gem_script_v_Log "gem_array_PushBack() only takes 2 arguments, not $#.  Usage: gem_array_PushBack myIdentifier myValue."
+		return 1
+	fi
+	if ! gem_script_String_IsIdentifier $1; then
+		gem_script_v_Log "gem_array_PushBack()- An identifier must be passed as argument 1.  Usage: gem_array_PushBack myIdentifier myValue."
+		return 1
+	fi
+	if [[ $(eval "echo \"\${gem_array_$1_size}\"")x == "x" ]]; then
+		gem_script_v_Log "gem_array_PushBack()- Array '$1' does not exist."
+		return 1
+	fi
+	if [[ $2x == "x" ]]; then
+		gem_script_v_Log "gem_array_PushBack()- Required argument 2 is missing.  Expected a value to be set.  E.g.: gem_array_PushBack myIdentifier myValue."
+		return 1
+	fi
+
+	local index=$(gem_array_GetSize $1)
+	eval "gem_array_$1_$index=$2"
+	eval "((gem_array_$1_size++))"
+	return 0
+}
+
+# ==============================================================================
+# gem_array_PopBack()
+#
+# Removes the last element from the array.  Does not return the value.  Use
+# gem_array_PeekBack to retrieve the value prior to popping it.
+# 
+# $1: Identifier the array was created with.
+#
+# Usage: gem_array_PopBack myIdentifier
+# ==============================================================================
+function gem_array_PopBack
+{
+	# Validate the parameters.
+	if [[ $# -gt 1 ]]; then
+		gem_script_v_Log "gem_array_PopBack() only takes 1 argument, not $#.  Usage: gem_array_PopBack myIdentifier."
+		return 1
+	fi
+	if ! gem_script_String_IsIdentifier $1; then
+		gem_script_v_Log "gem_array_PopBack()- An identifier must be passed as argument 1.  Usage: gem_array_PopBack myIdentifier myValue."
+		return 1
+	fi
+	if [[ $(eval "echo \"\${gem_array_$1_size}\"")x == "x" ]]; then
+		gem_script_v_Log "gem_array_PopBack()- Array '$1' does not exist."
+		return 1
+	fi
+
+	local size=$(gem_array_GetSize $1)
+	if [[ $size -eq 0 ]]; then
+		gem_log_v_Alert "gem_array_Pop(): Unable to pop from empty array."
+		return 1
+	fi
+	eval "((gem_array_$1_size--))"
+	unset echo "gem_array_$1_$size"
+	return 0
+}
+
+# ==============================================================================
+# gem_array_PeekBack()
+#
+# $1: Identifier the array was created with.
+#
+# Usage: value=$(gem_array_PeekBack myIdentifier)
+# ==============================================================================
+function gem_array_PeekBack
+{
+	# Validate the parameters.
+	if [[ $# -gt 1 ]]; then
+		gem_script_v_Log "gem_array_PeekBack() only takes 1 argument, not $#.  Usage: value=$(gem_array_PeekBack myIdentifier)."
+		return 1
+	fi
+	if ! gem_script_String_IsIdentifier $1; then
+		gem_script_v_Log "gem_array_PeekBack()- An identifier must be passed as argument 1.  Usage: value=$(gem_array_PeekBack myIdentifier)."
+		return 1
+	fi
+	if [[ $(eval "echo \"\${gem_array_$1_size}\"")x == "x" ]]; then
+		gem_script_v_Log "gem_array_PeekBack()- Array '$1' does not exist."
+		return 1
+	fi
+	local size=$(gem_array_GetSize $1)
+	if [[ ${size} -eq 0 ]]; then
+		gem_log_v_Alert "gem_array_PeekBack(): Unable to peek at empty array"
+		return 1
+	fi
+
+	eval echo "\${gem_array_$1_$((size-1))}"
+	return 0
+}
+
+# ==============================================================================
+# gem_array_Clear()
+#
+# Removes all elements, leaving the array empty.
+#
+# $1: Identifier the array was created with.
+#
+# Usage: gem_array_Clear myIdentifier
+# ==============================================================================
+function gem_array_Clear
+{
+	# Validate the parameters.
+	if [[ $# -gt 1 ]]; then
+		gem_script_v_Log "gem_array_Clear() only takes 1 argument, not $#.  Usage: gem_array_Clear myIdentifier."
+		return 1
+	fi
+	if ! gem_script_String_IsIdentifier $1; then
+		gem_script_v_Log "gem_array_Clear()- An identifier must be passed as argument 1.  Usage: gem_array_Clear myIdentifier."
+		return 1
+	fi
+	if [[ $(eval "echo \"\${gem_array_$1_size}\"")x == "x" ]]; then
+		gem_script_v_Log "gem_array_Clear()- Array '$1' does not exist."
+		return 1
+	fi
+
+	local size=$(gem_array_GetSize $1)
+	for ((i = 0; i < ${size}; i++)) do
+		unset echo "gem_array_$1_$i"
+	done
+	eval "gem_array_$1_size=0"
+	return 0
+}
+
+# ==============================================================================
+# gem_array_Find()
+#
+# Echos the index where 'myValue' is found in the array, or else -1 if it is not
+# found.
+#
+# $1: Identifier the array was created with.
+# $2: myValue
+#
+# Usage: gem_array_Find myIdentifier myValue
+# ==============================================================================
+function gem_array_Find
+{
+	# Validate the parameters.
+	if [[ $# -gt 2 ]]; then
+		gem_script_v_Log "gem_array_Find() only takes 2 argument2, not $#.  Usage: gem_array_Find myIdentifier myValue."
+		return 1
+	fi
+	if ! gem_script_String_IsIdentifier $1; then
+		gem_script_v_Log "gem_array_Find()- An identifier must be passed as argument 1.  Usage: gem_array_Find myIdentifier myValue."
+		return 1
+	fi
+	if [[ $(eval "echo \"\${gem_array_$1_size}\"")x == "x" ]]; then
+		gem_script_v_Log "gem_array_Find()- Array '$1' does not exist."
+		return 1
+	fi
+	if [[ $2x == "x" ]]; then
+		gem_script_v_Log "C()- Required value argument 2 is missing.  Expected a value to be set.  E.g.: V myIdentifier myIndex myValue."
+		return 1
+	fi
+
+	local gem_result=-1
+	local size=$(gem_array_GetSize $1)
+	for ((i=0; i < ${size}; i++)) do
+		echo "\$i=$i"
+#		echo "$1[$i]=$(eval echo "\$gem_array_$1_$i") ?= $2"
+#		if [[ $(eval echo "\$gem_array_$1_$i") == $2 ]]; then
+#			gem_result=$i
+#			break
+#		fi
+	done
+#	echo $gem_result
+	return 0
+}
+

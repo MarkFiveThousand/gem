@@ -20,6 +20,7 @@ local_x86_64-pc-cygwin/
 local_aarch64-linux-android_*
 
 local/sbin/.vscode/
+local/sbin/__pycache__
 local/sbin/gem_android_buildtoolchain
 local/sbin/gem_build.orig
 
