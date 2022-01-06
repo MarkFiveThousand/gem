@@ -16,6 +16,71 @@ should be removed.
 Uncategorized
 -------------------------------------------------------------------------------
 
+* In gem_cmd_init get gem_os=windows and gem_uname_machine=x86_64 from Python
+
+* Everywhere you're saving and restoring IFS, instead do unset IFS.
+
+* Move this document to the gem todo document.
+
+* Change all instances of $1 to ${1}, etc.
+
+* Every time a derrived script calls a gem_script-level function, the entire
+script will be rerun again as a subshell.  Is that correct?  We need to test
+when this happens.  We may need to detect whether the script is the parent
+versus a subshell.
+
+What are the implications?  We ran into problems while initializing the log.  At
+initialization time it deletes the prior log.  When a second shell was opened
+the log from the first portion fo the run got deleted.  We worked around this by
+stamping the log with the process number.  Each subshell has a unique process
+number.
+
+* Change to the relational operator symbols.
+
+Source: http://www.yourownlinux.com/2016/12/bash-arithmetic-logical-relational-bitwise-operators.html
+        https://tldp.org/LDP/abs/html/dblparens.html
+
+1. == or -eq - Equals to. Result is True if two operands are equal, else False.
+2. != or -ne - Not equal. Result is True if two operands are not equal, else False.
+3. < or -lt - Less than. Result is True if Operand1 is less than Operand 2, else False.
+4. <= or -le - Less or equal. Result is True if Operand1 is less or equal to Operand2.
+5. > or -gt - Greater than. Result is True if Operand1 is greater than Operand 2, else False.
+6. >= or -ge - Greater or equal. Result is True if Operand1 is greater or equal to Operand2.
+
+* Fix the problems caused by passing a bad parameter to gem_build_zlib.
+
+* Search for usage of eval.  I.e.:
+  local isMuted=$(eval "echo \$gem_log_echoMute_stack_$((gem_log_echoMute_stackSize-1))")
+
+  and follow with check of $?.
+
+* Support libraries report status to the client application, and therefore should
+never output messages directly to the user.  gem_script, gem_build_find, and
+gem_build_validate are considered support libraries.  Therefore, they are to
+only output using gem_log_v_Debug().  It is up to the client app to decide if or
+how they want to display a message.
+
+* gem_build and its derrived scripts are performing tasks requested by the client
+user.  As such, they may output to the user using all the Msg(), Alert(), and
+Debug() variants.
+
+* Change loops to be in this form:
+
+for ((_Dbg_i=0; _Dbg_i<${#_Dbg_script_args[@]}-1; _Dbg_i++)) ; do
+
+* Change arithmetic operations to be in this form:
+
+((_Dbg_i++))
+
+* Change gem_log_v_Msg() to gem_log_v_Debug() where appropriate.
+
+Search for "ERROR:"
+
+
+* Found this in gem_log.  It looks like it isn't going to work.  Test it.  We
+  probably need to use eval()./
+
+  unset echo "gem_log_Logmute_stack_$1_$gem_log_Logmute_stackSize"
 
 
 -------------------------------------------------------------------------------

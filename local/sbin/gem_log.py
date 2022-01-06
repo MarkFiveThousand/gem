@@ -1,73 +1,78 @@
-import sys, os
-from termcolor import colored, cprint
+""" gem_log """
+
+# pylint: indent-string
+# pylint: disable=C0326
+# pylint: disable=C0103
+
+import sys
+import os
+
+try:
+	from termcolor import cprint
+
+except ModuleNotFoundError as err:
+	print(f"Error: {err}, {type(err)}")
+	print()
+	print("Please install the termcolor module using the following command:")
+	print()
+	print("pip install termcolor")
+	print()
+	raise
+
+gem_fullpath_gem = "c:/msys64/home/mhodges/gem" if os.name == "nt" else "~/gem"
 
 class Log:
 	"""Simple log class."""
 
-	# =========================================================================
-	# __init__()- Initialize the log object.
-	# =========================================================================
 	def __init__(self):
-		self.isInitialized = False
-		self.Init()
+		""" Initialize the log object."""
+		self.is_initialized = False
+		self.init()
+		return None
 
-	# ==============================================================================
-	# self.Init()- Init must be called from the main shell, and not from
-	# a subshell, as would likely occur during command substitution.  The reason is
-	# that global variables would only be initizlied in the sub shell and not for
-	# the calling shell.  This causes problems since some operations are only
-	# supposed to occur once per run (E.g.  deleting the log file.)
-	# ==============================================================================
-	def Init (self):
+	def init(self):
+		"""
+		init()- init must be called from the main shell, and not from a
+		subshell, as would likely occur during command substitution.  The reason
+		is that global variables would only be initizlied in the sub shell and
+		not for the calling shell.  This causes problems since some operations
+		are only supposed to occur once per run (E.g.  deleting the log file.)
+		"""
 		try:
-			if self.isInitialized:
+			if self.is_initialized:
 				return
 
-			self.isInitialized = False
-			self.path_log = "/home/mhodges/gem/local/src/python_test_0/python_test_0_log.html"
+			self.is_initialized = False
+			self.path_log = os.path.abspath(f"{gem_fullpath_gem}\
+				/local/src/python_test_0/python_test_0_log.html")
 			self.fileIsHtml = True
-			self.eol = "\n" if self.fileIsHtml == False else "<br/>\n"
+			self.eol = "\n" if not self.fileIsHtml else "<br/>\n"
 
 			if os.path.isfile(self.path_log):
 				os.remove(self.path_log)
 
 			if self.fileIsHtml:
-				self.InitLogHtml()
+				self.init_log_html()
 
-			self.isInitialized = True
+			self.is_initialized = True
 
 		except BaseException as err:
-			print(f"Unexpected {err=}, {type(err)=}")
+			print(f"Unexpected {err}, {type(err)}")
 			raise
+		return None
 
-	# ==============================================================================
-	# Clean()- 
-	# ==============================================================================
-	def Clean (self):
+	def clean (self):
+		""" Shutdown and clean up the log system. """
 		try:
 			pass
 
 		except BaseException as err:
-			print(f"Unexpected {err=}, {type(err)=}")
+			print(f"Unexpected {err}, {type(err)}")
 			raise
+		return None
 
-	# ==============================================================================
-	# Callstack()- Outputs the current callstack.
-	#
-	# Usage: Callstack
-	# ==============================================================================
-	def Callstack (self):
-		try:
-			pass
-
-		except BaseException as err:
-			print(f"Unexpected {err=}, {type(err)=}")
-			raise
-
-	# ==============================================================================
-	# InitLogHtml()- 
-	# ==============================================================================
-	def InitLogHtml (self):
+	def init_log_html (self):
+		""" Write the beginning of the html log file. """
 		try:
 			with open(self.path_log, "w") as f:
 				print("<html><body><style>", file=f)
@@ -83,123 +88,120 @@ class Log:
 				print(".magenta {color: #d670d6;}", file=f)
 				print(".cyan {color: #29b8db;}", file=f)
 				print(".white {color: #e5e5e5;}", file=f)
-				print("</style><body class=\"bg font\">", file=f)
-
+				print("</style><body class='bg font'>", file=f)
 
 		except BaseException as err:
-			print(f"Unexpected {err=}, {type(err)=}")
+			print(f"Unexpected {err}, {type(err)}")
 			raise
+		return None
 
 
-	# ==============================================================================
-	# v_StringToStdout()- Outputs the given arguments to stdout.  The
-	# arguments are treated as a single string.
-	#
-	# Termcolor reference: https://pypi.org/project/termcolor/
-	# ==============================================================================
-	def StringToStdout (self, str, color="white", attrs=""):
+	def string_to_stdout (self, strng, color="white", attrs=""):
+		"""
+		Outputs the given arguments to stdout.  The arguments are treated as a
+		single string.
+
+		Termcolor reference: https://pypi.org/project/termcolor/
+		"""
 		try:
-			self.Init()
+			self.init()
 			if attrs == "":
-				cprint(str, color)
+				cprint(strng, color)
 			else:
-				cprint(str, color=color, attrs=attrs)
+				cprint(strng, color=color, attrs=attrs)
 
 		except BaseException as err:
-			print(f"Unexpected {err=}, {type(err)=}")
+			print(f"Unexpected {err}, {type(err)}")
 			raise
+		return None
 
-	# ==============================================================================
-	# v_StringToStdout()- Outputs the given arguments to stdout.  The
-	# arguments are treated as a single string.
-	#
-	# Termcolor reference: https://pypi.org/project/termcolor/
-	# ==============================================================================
-	def StringToStderr (self, str):
+	def string_to_stderr (self, strng):
+		"""
+		Outputs the given arguments to stdout.  The arguments are treated as a
+		single string.
+
+		Termcolor reference: https://pypi.org/project/termcolor/
+		"""
 		try:
-			self.Init()
-			cprint(str, "red", attrs=["bold"], file=sys.stderr)
+			self.init()
+			cprint(strng, "red", attrs=["bold"], file=sys.stderr)
 
 		except BaseException as err:
-			print(f"Unexpected {err=}, {type(err)=}")
+			print(f"Unexpected {err}, {type(err)}")
 			raise
+		return None
 
-	# ==============================================================================
-	# v_StringToFile()- Outputs the given arguments to the log file.  The
-	# arguments are treated as a single string.
-	# ==============================================================================
-	def StringToFile (self, str, color="white", attrs=""):
+	def string_to_file (self, strng, color="white", attrs=""):
+		"""
+		Outputs the given arguments to the log file.  The arguments are treated
+		as a single string.
+		"""
 		try:
-			self.Init()
+			self.init()
 
-			self.StringToStdout (str, color, attrs)
+			self.string_to_stdout (strng, color, attrs)
 
 
 			with open(self.path_log, "a") as f:
 				bold="bold" if "bold" in attrs else ""
-				print(f"<span class=\"{color} {bold}\">{str}</span><br/>", file=f)
+				print(f"<span class='{color} {bold}'>{strng}</span><br/>", file=f)
 
 		except BaseException as err:
-			print(f"Unexpected {err=}, {type(err)=}")
+			print(f"Unexpected {err}, {type(err)}")
 			raise
+		return None
 
-	# ==============================================================================
-	# Msg()- Outputs the given arguments to stdout.  The arguments are
-	# treated as a single string.
-	# ==============================================================================
-	def Msg (self, str):
+	def msg (self, strng):
+		""" Outputs the given string to stdout. """
 		try:
-			self.Init()
-			self.StringToStdout(str, "white");
-			self.StringToFile(str);
+			self.init()
+			self.string_to_stdout(strng, "white")
+			self.string_to_file(strng)
 
 		except BaseException as err:
-			print(f"Unexpected {err=}, {type(err)=}")
+			print(f"Unexpected {err}, {type(err)}")
 			raise
+		return None
 
-	# ==============================================================================
-	# v_Debug()- 
-	# ==============================================================================
-	def Debug (self, str):
+	def debug (self, strng):
+		""" Outputs the given string to stderr. """
 		try:
-			self.Init()
-			self.StringToStderr(str);
-			self.StringToFile(str);
+			self.init()
+			self.string_to_stderr(strng)
+			self.string_to_file(strng)
 
 		except BaseException as err:
-			print(f"Unexpected {err=}, {type(err)=}")
+			print(f"Unexpected {err}, {type(err)}")
 			raise
+		return None
 
-	# ==============================================================================
-	# v_Alert()- 
-	# ==============================================================================
-	def Alert (self, str):
+	def alert(self, strng):
+		""" Outputs the given string highlighted to stdout. """
 		try:
-			self.Init()
-			self.StringToStdout(str, "green");
-			self.StringToFile(str);
+			self.init()
+			self.string_to_stdout(strng, "green")
+			self.string_to_file(strng)
 
 		except BaseException as err:
-			print(f"Unexpected {err=}, {type(err)=}")
+			print(f"Unexpected {err}, {type(err)}")
 			raise
+		return None
 
 log = Log()
-log.StringToFile("grey",    "grey")
-log.StringToFile("red",     "red")
-log.StringToFile("green",   "green")
-log.StringToFile("yellow",  "yellow")
-log.StringToFile("blue",    "blue")
-log.StringToFile("magenta", "magenta")
-log.StringToFile("cyan",    "cyan")
-log.StringToFile("white",   "white")
+log.string_to_file("grey",    "grey")
+log.string_to_file("red",     "red")
+log.string_to_file("green",   "green")
+log.string_to_file("yellow",  "yellow")
+log.string_to_file("blue",    "blue")
+log.string_to_file("magenta", "magenta")
+log.string_to_file("cyan",    "cyan")
+log.string_to_file("white",   "white")
 
-log.StringToFile("grey",    "grey",    ["bold"])
-log.StringToFile("red",     "red",     ["bold"])
-log.StringToFile("green",   "green",   ["bold"])
-log.StringToFile("yellow",  "yellow",  ["bold"])
-log.StringToFile("blue",    "blue",    ["bold"])
-log.StringToFile("magenta", "magenta", ["bold"])
-log.StringToFile("cyan",    "cyan",    ["bold"])
-log.StringToFile("white",   "white",   ["bold"])
-
-
+log.string_to_file("grey",    "grey",    ["bold"])
+log.string_to_file("red",     "red",     ["bold"])
+log.string_to_file("green",   "green",   ["bold"])
+log.string_to_file("yellow",  "yellow",  ["bold"])
+log.string_to_file("blue",    "blue",    ["bold"])
+log.string_to_file("magenta", "magenta", ["bold"])
+log.string_to_file("cyan",    "cyan",    ["bold"])
+log.string_to_file("white",   "white",   ["bold"])
