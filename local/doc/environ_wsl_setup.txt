@@ -621,15 +621,17 @@ git remote add origin git@github.com:MarkFiveThousand/gem
 git config master.remote origin
 git config master.merge refs/heads/master
 
-git config --global pull.rebase true
-# Setting this to true means that git pull is always equivalent to git pull
-# --rebase (unless branch.<branchname>.rebase is explicitly set to false). This
-# can also be set per repository or globally.
+git config --global pull.rebase false
+# Setting this to true means that git pull is always equivalent to git pull #
+--rebase (unless branch.<branchname>.rebase is explicitly set to false). This #
+can also be set per repository or globally.  General guidance has been to use
+rebase for a single user and regular merge for multiple users.
 
 git config --global fetch.prune true
 git config --global diff.colorMoved zebra
 
-# Others to consider.  Read up on these:
+# Skip these, for now.  Read up on them.  It's not clear we necessarilly want to
+# use them.
 git config –global rebase.autostash
 git config –global rebase.autoSquash
 git config –global push.default simple
