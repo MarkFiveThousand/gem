@@ -568,7 +568,7 @@ git remote rm origin
 git remote add origin git@github.com:MarkFiveThousand/gem
 git config master.remote origin
 git config master.merge refs/heads/master
-
+git config pull.rebase false
 
 # Should you wish to change your details later on, you can manually edit
 # the ~/.gitconfig file for global settings, or edit .git/config to change

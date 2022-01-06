@@ -1,0 +1,147 @@
+#!/bin/bash
+#  ___________                           __________
+# /\   _______\                         /\   ______\
+# \ \  \______/_     ___   ____ ____ ___\ \  \_____/_     ___   ___ ___  ______    ___    ___
+#  \ \  \ /\__  \  /'___`\/\   V    V   \\ \_______  \  /'   `\/\  \\  \/\   __\/' ._`\ /'___`\
+#   \ \  \\/__\  \/\  ___/\ \  \/\  \/\  \\/_______\  \/\  \\  \ \  \\  \ \  \ /\  \__//\  ___/
+#    \ \__________\ \____\ \ \__\ \__\ \__\ /\_________\ \_____/\ \______\ \__\\ \____/\ \____\
+#     \/__________/\/____/  \/__/\/__/\/__/ \/_________/\/____/  \/______/\/__/ \/___/  \/____/
+
+. gem_script
+. gem_oop
+. gem_stack
+. gem_build_validate
+. gem_build
+
+function gem_build_v_SetDefaults
+{
+	gem_build_SetDefaults;
+
+	# Need gnu extensions for compiling assembly code.
+#	gem_c_standard="-std=gnu11"	# c90, c99, c11, gnu90, gnu99, gnu11
+	gem_cxx_standard="-std=gnu++11"	# c++98, c++03, c++14, c++17, c++2a, gnu++98, gnu++11, gnu++14, gnu++17
+
+	gem_use_clang=0
+
+	gem_is_cplusplus=0
+
+	gem_build_script_type="cmake"
+#	gem_build_script_type="autotools"
+#	gem_build_script_type="meson"
+
+	gem_build_type=release
+#	gem_build_type=debug
+
+	gem_lib_type=shared			# gem_lib_type is not fully implemented.
+#	gem_lib_type=static
+#	gem_lib_type=both
+
+	# Set default build host.
+	if [[ ${gem_os} == "MINGW64"* ]]; then	# MinGW shell on Windows.
+		gem_host=mingw
+#		gem_host=msvc
+	elif [[ ${gem_os} == "CYGWIN"* ]]; then		# Cygwin shell on Windows.
+		gem_host=cygwin
+#		gem_host=mingw
+	elif [[ ${gem_os} == "Linux"* ]]; then	# Linux shell.
+		gem_host=linux
+#		gem_host=mingw
+#		gem_host=android_arm64_v8a
+	fi
+}
+
+function gem_build_v_SetFlags
+{
+	gem_build_SetFlags
+
+	gem_flags_configure="${gem_flags_configure}"
+	gem_flags_c="${gem_flags_c}"
+	gem_flags_cpp="${gem_flags_cpp}"
+	gem_flags_cxx="${gem_flags_cxx}"
+	gem_flags_ld="${gem_flags_ld}"
+}
+
+function gem_build_v_DownloadSource
+{
+	if [[ -d ./doxygen ]]; then
+		gem_script_v_Error "Doxygen source tree already exists in ./doxygen.  Defying order to download."
+	fi
+	if [[ -d ./src ]]; then
+		gem_script_v_Error "The source tree already exists.  Defying order to download."
+	fi
+
+	git clone https://github.com/doxygen/doxygen.git
+
+	mv ./doxygen ./src
+}
+
+function gem_build_v_OnCommandLine_Configure_CMake
+{
+	gem_cmake_params="-Dbuild_wizard=ON"
+
+	gem_build_OnCommandLine_Configure_CMake
+
+	gem_cmd_line_configure="${gem_cmd_line_configure/ -DCMAKE_SYSROOT=\/mingw64 /}"
+}
+
+function gem_build_v_OnConfigure
+{
+	gem_build_v_DebugDumpVars
+	gem_build_OnConfigure
+}
+
+function gem_build_v_OnCommandLine_Build
+{
+	gem_build_OnCommandLine_Build
+}
+
+function gem_build_v_OnBuild
+{
+	gem_build_v_DebugDumpVars
+	gem_build_OnBuild
+}
+
+function gem_build_v_OnInstall
+{
+	gem_build_OnInstall
+}
+
+function gem_build_v_OnUninstall
+{
+	gem_build_OnUninstall
+}
+
+function gem_build_v_OnClean
+{
+	gem_build_OnClean
+}
+
+function gem_build_v_OnExit
+{
+	gem_build_OnExit;
+
+	echo "Is CMakeError.log still showing:"
+	echo
+	echo "    ignoring nonexistent directory D:/a/_temp/msys/msys64/mingw64/include"
+	echo "    ignoring nonexistent directory D:/a/_temp/msys/msys64/mingw64/x86_64-w64-mingw32/include"
+	echo "    ignoring nonexistent directory /mingw64/include"
+	echo
+}
+
+# =============================================================================
+#                                       gem_Main
+# =============================================================================
+function gem_script_v_OnArg
+{
+	arg=$(echo ${1} | tr '[A-Z]' '[a-z]')	# Lowercase args.
+	case ${arg} in
+		*)	gem_build_OnArg "$@" ;	return $?
+	esac
+}
+
+
+function gem_script_v_Main
+{
+	gem_build_Main "$@"
+}
+gem_script_v_Main $@
