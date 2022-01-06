@@ -1,0 +1,478 @@
+#!/bin/bash
+
+# =============================================================================
+# Overview
+# 
+# This script builds the code base for the project.  This script *must* be run
+# in the parent of the src/ folder.  See ExitHelp() below for usage information.
+#
+# $TARGET_PLATFORM is what the code will run on.
+# =============================================================================
+
+# This appears to be very useful for Android:
+# https://github.com/dogo/AndroidFFmpeg/blob/master/build_android.sh
+
+SCRIPT_NUM_ARGS=$#
+SCRIPT_ARGS=$@
+
+TARGET_PLATFORM="undefined"
+TARGET_HOST="undefined"
+
+OS=`uname -s | tr '[A-Z]' '[a-z]'`
+
+# http://ftp.gnu.org/pub/gnu/libiconv/
+SOURCE_VERSION_NUMBER=1.15	# May need to update path around line 262.
+SOURCE_VERSION=libiconv-${SOURCE_VERSION_NUMBER}
+
+function ExitMsg()
+{
+	if [[ ! -z $1 ]]; then
+		printf "\n%s\n\n" "$1"
+	fi
+	exit 1
+}
+
+function ExitHelp()
+{
+	if [[ ! -z $1 ]]; then
+		printf "\n%s\n\n" "$1"
+	fi
+	printf "=============================================================================\n"
+	printf "IMPORTANT: This script must be located in the parent of the source tree.\n"
+	printf "\n"
+	printf "FILE STRUCTURE:\n"
+	printf "\n"
+	printf "    EXAMPLE:\n"
+	printf "        my_project/       Parent of source tree.  buildtool script here.\n"
+	printf "            bin/          Install location\n"
+	printf "            build/        Object files\n"
+	printf "            lib/          Library files\n"
+	printf "            src/          Source tree\n"
+	printf "\n"
+	printf "USAGE:\n"
+	printf "    Arguments:\n"
+	printf "        configure\n"
+	printf "        build\n"
+	printf "        clean\n"
+	printf "        install\n"
+	printf "        android\n"
+	printf "        mingw\n"
+	printf "        linux\n"
+	printf "        debug\n"
+	printf "        release\n"
+	printf "\n"
+	printf "EXAMPLE USAGE:\n"
+	printf "\n"
+	printf "    buildtool configure\n"
+	printf "    buildtool debug build android\n"
+	printf "    buildtool release clean\n"
+	printf "\n"
+	printf "=============================================================================\n"
+	exit 1
+}
+
+function PrintVars()
+{
+	printf "CFLAGS      = ${CFLAGS}\n"
+	printf "CPPFLAGS    = ${CPPFLAGS}\n"
+	printf "CXXFLAGS    = ${CXXFLAGS}\n"
+	printf "LDFLAGS     = ${LDFLAGS}\n"
+	printf "PATH_BUILD  = ${PATH_BUILD}\n"
+	printf "PATH_ROOT   = ${PATH_ROOT}\n"
+	printf "PATH_SYSROOT    = ${PATH_SYSROOT}\n"
+	printf "TARGET_HOST     = ${TARGET_HOST}\n"
+	printf "TARGET_PLATFORM = ${TARGET_PLATFORM}\n"
+	if [ ${TARGET_PLATFORM} == "Android" ]; then
+		printf "ANDROID_NATIVE_API_LEVEL   = ${ANDROID_NATIVE_API_LEVEL}\n"
+		printf "ADDITIONAL_CONFIGURE_FLAGS = ${ADDITIONAL_CONFIGURE_FLAGS}\n"
+		printf "ARCH                       = ${ARCH}\n"
+		printf "CPU                = ${CPU}\n"
+		printf "CROSS_COMPILE      = ${CROSS_COMPILE}\n"
+		printf "HOST               = ${HOST}\n"
+		printf "OPTIMIZE_CFLAGS    = ${OPTIMIZE_CFLAGS}\n"
+		printf "OS                 = ${OS}\n"
+	fi
+	printf "\n\n"
+}
+
+
+
+
+# =============================================================================
+#                                 Utilities
+# =============================================================================
+function EnumSourceFiles
+{
+	# Strip trailing /
+	srcDir=${1%/}
+	if [[ ! -d "$srcDir" ]]; then
+		printf "WARNING: EnumSourceFiles() source directory does not exist:\n"
+		printf "         $srcDir\n"
+		return 0
+	fi
+
+	# Process files in $srcDir*
+	printf "EnumSourceFiles() adding the following files to the android project:\n"
+	srcFileList=$(find $srcDir -mindepth 1 -maxdepth 1 -type f)
+	for srcFileName in $srcFileList
+	do
+		fileName=${srcFileName##*/}
+		srcFile=${srcDir}/$fileName
+
+		# Do we want this file?
+		if [[ $srcFile == *".c"* ]]; then
+			printf "        Adding: $srcFile\n"
+			# Add the file
+			SourceFileList=${SourceFileList}'\t'${srcFile}' \\\n'
+		fi
+	done
+
+	# Iterate over the sub directories in $srcDir.
+	srcDirList=$(find $srcDir -mindepth 1 -maxdepth 1 -type d)
+	for srcDir in $srcDirList
+	do
+		# Enter a sub directory.
+		pushd $srcDir > /dev/null
+		EnumSourceFiles $srcDir
+		popd > /dev/null
+	done
+}
+
+# CopyDirs() copies all the files in $SRC_DIR and its subtrees to $DST_DIR.
+# We must iterate over the individual files and sub directories manually so
+# that we can process each file.  For source files we must add each one to
+# Android.mk to get built.  Also, we want to selectively omit files for non-
+# android platforms.  Directories to be omitted can be identified by their
+# paths containing "linux" or "mingw".  We also need to process assets in the
+# same way.
+function CopyDirs()
+{
+	# Strip trailing /
+	srcDir=${1%/}
+	dstDir=${2%/}
+	dstDirRoot=$dstDir
+
+	if [[ ! -d "$srcDir" ]]; then
+		printf "WARNING: CopyDirs() source directory does not exist:\n"
+		printf "         $srcDir\n"
+		return
+	fi
+	if [[ ! -d "$dstDir" ]]; then
+		mkdir -p $dstDir
+		printf "Creating: $dstDir\n"
+	fi
+
+	# Process files in $srcDir
+	srcFileList=$(find $srcDir -mindepth 1 -maxdepth 1 -type f)
+	for srcFileName in $srcFileList
+	do
+		fileName=${srcFileName##*/}
+		srcFile=${srcDir}/$fileName
+		dstFile=${dstDir}/$fileName
+		cp $srcFile $dstFile
+		SRC_LIST=${SRC_LIST}$'\t'${srcFile}$' \\\n'
+	done
+
+	# Iterate over the subdirectories in $srcDir.
+	srcDirList=$(find $srcDir -mindepth 1 -maxdepth 1 -type d)
+	for srcDir in $srcDirList
+	do
+		# Enter a sub directory.
+		pushd $srcDir > /dev/null
+		leafDir=${srcDir##*/}
+		dstDir=${dstDir}/$leafDir
+
+		CopyDirs $srcDir $dstDir	# Recurse into and process the sub directory.
+
+		# Pop the sub directory
+		dstDir=${dstDir%${dstDir##*/}}
+		dstDir=${dstDir%/}
+		popd > /dev/null
+	done
+}
+
+
+# =============================================================================
+#                                      configure
+# =============================================================================
+function ANDROID_SELECT_arm_v5
+{
+	BUILD_NAME=arm_v5
+	TARGET_HOST=arm-linux-androideabi
+	HOST=arm
+	ARCH=arm
+	CPU=armv5
+	OPTIMIZE_CFLAGS="-marm -march=$CPU"
+	ADDITIONAL_CONFIGURE_FLAGS=
+	PATH_TOOLCHAIN=${ANDROID_NDK}/toolchains/${TARGET_HOST}-4.9/prebuilt/$OS-x86_64/bin
+}
+
+function ANDROID_SELECT_x86
+{
+	BUILD_NAME=x86
+	TARGET_HOST=i686-linux-android
+	HOST=x86
+	ARCH=x86
+	OPTIMIZE_CFLAGS="-m32"
+	ADDITIONAL_CONFIGURE_FLAGS=--disable-asm
+	PATH_TOOLCHAIN=${ANDROID_NDK}/toolchains/x86-4.9/prebuilt/$OS-x86_64/bin
+}
+
+function ANDROID_SELECT_mips
+{
+	BUILD_NAME=mips
+	TARGET_HOST=mipsel-linux-android
+	HOST=mips
+	ARCH=mips
+	OPTIMIZE_CFLAGS=
+	ADDITIONAL_CONFIGURE_FLAGS="--disable-mipsfpu --disable-asm"
+	PATH_TOOLCHAIN=${ANDROID_NDK}/toolchains/${TARGET_HOST}-4.9/prebuilt/$OS-x86_64/bin
+}
+
+function ANDROID_SELECT_v7vfpv3
+{
+	BUILD_NAME=v7vfpv3
+	TARGET_HOST=arm-linux-androideabi
+	HOST=arm
+	ARCH=arm
+	CPU=armv7-a
+	OPTIMIZE_CFLAGS="-mfloat-abi=softfp -mfpu=vfpv3-d16 -marm -march=$CPU "
+	ADDITIONAL_CONFIGURE_FLAGS=
+	PATH_TOOLCHAIN=${ANDROID_NDK}/toolchains/${TARGET_HOST}-4.9/prebuilt/$OS-x86_64/bin
+}
+
+function ANDROID_SELECT_arm_v7_plus_neon   # (neon also include vfpv3-32)
+{
+	BUILD_NAME=arm_v7_plus_neon
+	TARGET_HOST=arm-linux-androideabi
+	HOST=arm
+	ARCH=arm
+	CPU=armv7-a
+	OPTIMIZE_CFLAGS="-mfloat-abi=softfp -mfpu=neon -marm -march=$CPU -mtune=cortex-a8 -mthumb -D__thumb__"
+	ADDITIONAL_CONFIGURE_FLAGS=--enable-neon
+	PATH_TOOLCHAIN=${ANDROID_NDK}/toolchains/${TARGET_HOST}-4.9/prebuilt/$OS-x86_64/bin
+}
+
+function ANDROID_SELECT_arm64_v8a
+{
+	BUILD_NAME=arm64_v8a
+	TARGET_HOST=aarch64-linux-android
+	HOST=aarch64
+	ARCH=arm64
+	CPU=arm64
+	OPTIMIZE_CFLAGS=
+	ADDITIONAL_CONFIGURE_FLAGS=
+	PATH_TOOLCHAIN=${ANDROID_NDK}/toolchains/${TARGET_HOST}-4.9/prebuilt/$OS-x86_64/bin
+}
+
+function cmd_configure()
+{
+	# The tar file unzips to the build directory.
+	if [ ! -f ${SOURCE_VERSION}.tar.gz ]; then
+		wget -c http://ftp.gnu.org/pub/gnu/libiconv/libiconv-${SOURCE_VERSION_NUMBER}.tar.gz
+	fi
+	if [ ! -d ${PATH_BUILD}/${SOURCE_VERSION} ]; then
+		mkdir -p ${PATH_BUILD}
+		tar xzf ${SOURCE_VERSION}.tar.gz -C ${PATH_BUILD}
+	fi
+	cd ${PATH_BUILD}/${SOURCE_VERSION}
+
+	# Correct for library being put into a lib64 directory instead of the correct
+	# lib directory.  Source: https://ghc.haskell.org/trac/ghc/ticket/9620
+	mv Makefile.in Makefile.in.orig
+	sed 's:@toolexeclibdir@:$(libdir):g' < Makefile.in.orig > Makefile.in
+
+	./configure \
+		--prefix=${PATH_INSTALL} \
+		--host=${TARGET_HOST} \
+		--with-sysroot=${PATH_SYSROOT} \
+		--enable-relocatable \
+		--enable-static \
+		--disable-rpath \
+		$ADDITIONAL_CONFIGURE_FLAGS
+
+}
+
+
+
+# =============================================================================
+#                                      build
+# =============================================================================
+
+function cmd_build()
+{
+	if [[ ! -d ${PATH_BUILD} ]]; then
+		ExitMsg "ERROR: You must run configure before building."
+	fi
+	cd ${PATH_BUILD}/${SOURCE_VERSION}
+	make -j8
+}
+
+# =============================================================================
+#                                      install
+# =============================================================================
+function cmd_install()
+{
+	cd ${PATH_BUILD}/${SOURCE_VERSION}
+	make install
+}
+
+# =============================================================================
+#                                      clean
+# =============================================================================
+function cmd_clean()
+{
+	cd ${PATH_BUILD}/${SOURCE_VERSION}
+	make clean
+}
+
+# =============================================================================
+#                                       Main
+# =============================================================================
+function Main()
+{
+	if [[ -z $GEM_DIR_LOCAL ]]; then
+		ExitMsg "ERROR: This script requires that \$GEM_DIR_LOCAL be set"
+	fi
+
+	for arg in $SCRIPT_ARGS
+	do
+		case "$arg" in
+		android|ANDROID|Android)
+
+			ANDROID_NATIVE_API_LEVEL=21
+			# The following must precceed initialization of PATH_SYSROOT.
+#			ANDROID_SELECT_arm_v5
+#			ANDROID_SELECT_x86
+#			ANDROID_SELECT_mips
+#			ANDROID_SELECT_v7vfpv3
+#			ANDROID_SELECT_arm_v7_plus_neon
+			ANDROID_SELECT_arm64_v8a
+
+			
+			TARGET_PLATFORM="Android"
+			# PATH_TOOLCHAIN & TARGET_HOST determined by selected architecture.  See above.
+			PATH_SYSROOT=${ANDROID_NDK}/platforms/android-${ANDROID_NATIVE_API_LEVEL}/arch-$ARCH
+
+			# Note: Someone is using --disable-rpath.  Do we want to use this?
+			# Source: http://zwyuan.github.io/2016/07/17/cross-compile-glib-for-android/
+			export CFLAGS="${CFLAGS} $OPTIMIZE_CFLAGS --sysroot=${PATH_SYSROOT}"
+			export CPPFLAGS="${CFLAGS} ${CPPFLAGS}"
+			export CXXFLAGS="${CFLAGS} ${CXXFLAGS}"
+			export LDFLAGS="${LDFLAGS} --sysroot=${PATH_SYSROOT} -L${PATH_SYSROOT}/usr/lib"
+			export CC=${PATH_TOOLCHAIN}/${TARGET_HOST}-gcc
+			export CXX=${PATH_TOOLCHAIN}/${TARGET_HOST}-g++
+			export LD=${PATH_TOOLCHAIN}/${TARGET_HOST}-ld
+			export AR=${PATH_TOOLCHAIN}/${TARGET_HOST}-ar
+			export AS=${PATH_TOOLCHAIN}/${TARGET_HOST}-as
+			export NM=${PATH_TOOLCHAIN}/${TARGET_HOST}-nm
+			export STRIP=${PATH_TOOLCHAIN}/${TARGET_HOST}-strip
+			export RANLIB=${PATH_TOOLCHAIN}/${TARGET_HOST}-ranlib
+			export OBJDUMP=${PATH_TOOLCHAIN}/${TARGET_HOST}-objdump
+			;;
+		mingw|Mingw|MINGW|MinGW)
+			TARGET_PLATFORM="MinGW"
+			PATH_TOOLCHAIN=/usr/bin
+			TARGET_HOST=x86_64-w64-mingw32
+			PATH_SYSROOT=/usr/x86_64-w64-mingw32/sys-root
+
+			export CFLAGS="${CFLAGS} --sysroot=${PATH_SYSROOT}"
+			export CPPFLAGS="${CFLAGS}"
+			export CXXFLAGS="${CFLAGS}"
+			export LDFLAGS="${LDFLAGS} --sysroot=${PATH_SYSROOT}"
+
+			export CC=${PATH_TOOLCHAIN}/${TARGET_HOST}-gcc
+			export CXX=${PATH_TOOLCHAIN}/${TARGET_HOST}-g++
+			export LD=${PATH_TOOLCHAIN}/${TARGET_HOST}-ld
+			export AR=${PATH_TOOLCHAIN}/${TARGET_HOST}-ar
+			export AS=${PATH_TOOLCHAIN}/${TARGET_HOST}-as
+			export NM=${PATH_TOOLCHAIN}/${TARGET_HOST}-nm
+			export STRIP=${PATH_TOOLCHAIN}/${TARGET_HOST}-strip
+			export RANLIB=${PATH_TOOLCHAIN}/${TARGET_HOST}-ranlib
+			export DLLTOOL=${PATH_TOOLCHAIN}/${TARGET_HOST}-dlltool
+			export OBJDUMP=${PATH_TOOLCHAIN}/${TARGET_HOST}-objdump
+			export RESCOMP=${PATH_TOOLCHAIN}/${TARGET_HOST}-windres
+			;;
+		linux|LINUX|Linux)
+			TARGET_PLATFORM="Linux"
+			TARGET_HOST=x86_64-redhat-linux
+			PATH_SYSROOT="/usr/bin"
+
+			export CFLAGS="${CFLAGS}"
+			export CPPFLAGS="${CFLAGS}"
+			export CXXFLAGS="${CFLAGS}"
+			export LDFLAGS="${LDFLAGS}"
+			;;
+		build)
+			cmd=cmd_build
+			;;
+		install)
+			cmd=cmd_install
+			;;
+		clean)
+			cmd=cmd_clean
+			;;
+		configure)
+			cmd=cmd_configure
+			;;
+		debug|DEBUG|Debug)
+			BUILD_TYPE=Debug
+			;;
+		release|RELEASE|Release)
+			BUILD_TYPE=Release
+			;;
+		relwithdebinfo|RELWITHDEBINFO|RelWithDebInfo)
+			BUILD_TYPE=RelWithDebInfo
+			;;
+		minsizerel|MINSIZEREL|MinSizeRel)
+			BUILD_TYPE=MinSizeRel
+			;;
+		*)
+			ExitHelp "ERROR: Unrecognised parameter: $arg"
+			return
+			;;
+		esac
+	done
+
+	# Validate user-supplied parameters.
+    if [[ -z $BUILD_TYPE ||
+			($BUILD_TYPE != "Debug" &&
+			 $BUILD_TYPE != "Release" &&
+			 $BUILD_TYPE != "RelWithDebInfo" &&
+			 $BUILD_TYPE != "MinSizeRel") ]]; then
+        ExitHelp "ERROR: You must include a BUILD_TYPE: Debug, Release, RelWithDebInfo, MinSizeRel."
+    fi
+	if [[ $TARGET_PLATFORM == "undefined" ]]; then
+		ExitHelp "ERROR: A target platform must be specified."
+	fi
+
+	# Define build directories.
+	if [[ $TARGET_PLATFORM == "Android" ]]; then	# Build Android path.
+		ANDROID_API_ABI=${BUILD_NAME}/
+	fi
+	PATH_ROOT=$(pwd)
+	PATH_CONFIG_SUFFIX=${TARGET_PLATFORM}/${ANDROID_API_ABI}${BUILD_TYPE}
+	PATH_CONFIG=${PATH_ROOT}/${PATH_CONFIG_SUFFIX}
+	PATH_BUILD=${PATH_CONFIG}/build
+	PATH_INSTALL=${GEM_DIR_LOCAL}/${PATH_CONFIG_SUFFIX}
+
+	export PKG_CONFIG_PATH=${PATH_INSTALL}/lib/pkgconfig
+
+	# ----------------------------------------------------------------------------
+	# Define platform- and configuration-independant build flags that apply to this package.
+	export CFLAGS="${CFLAGS}"
+	export CPPFLAGS="${CPPFLAGS}"
+	export CXXFLAGS="${CXXFLAGS}"
+	export LDFLAGS="${LDFLAGS}"
+
+
+
+	PrintVars
+
+	if [[ -z $cmd ]]; then
+		ExitHelp "ERROR: An command must be specified.\n"
+	fi
+	$cmd	# Invoke the command.
+}
+Main
+

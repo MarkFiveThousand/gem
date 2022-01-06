@@ -1,0 +1,12 @@
+
+https://www.google.com/search?q=doxygen+javascript+example&rlz=1C1CHBF_enUS775US775&oq=doxygen+javscript&aqs=chrome.2.69i57j0i13i457j0i13i30l2j0i8i13i30l3j0i13i30.11855j0j4&sourceid=chrome&ie=UTF-8
+
+https://coherent-labs.com/posts/documenting-javascript-with-doxygen/
+
+https://stackoverflow.com/questions/7320464/generate-javascript-documentation-with-doxygen
+
+https://download.dojotoolkit.org/release-0.4.3/dojo-0.4.3-src/testtools/tools/JsSrcFilter/src2doc.pl
+
+https://www.google.com/search?sxsrf=ALeKk01KfuY5Km9k16h8vGR2cNzoOS0u9A%3A1610170454486&source=hp&ei=VkD5X9-YG-Oz0PEPrJyPgAc&q=http%3A%2F%2Fjs2doxy.pl%2F&oq=http%3A%2F%2Fjs2doxy.pl%2F&gs_lcp=CgZwc3ktYWIQA1CwBliwBmDUCGgAcAB4AIABZ4gBZ5IBAzAuMZgBAKABAqABAaoBB2d3cy13aXo&sclient=psy-ab&ved=0ahUKEwjfm9yvkI7uAhXjGTQIHSzOA3AQ4dUDCAk&uact=5
+
+

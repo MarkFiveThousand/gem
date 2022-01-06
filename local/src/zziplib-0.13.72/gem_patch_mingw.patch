@@ -1,0 +1,13 @@
+160a161,172
+> #ifdef __MINGW32__
+> #  ifndef _zzip_lseek
+> #  define _zzip_lseek zzip_lseek
+> #  endif
+> #  ifndef _zzip_read
+> #  define _zzip_read zzip_read
+> #  endif
+> #  ifndef _zzip_write
+> #  define _zzip_write zzip_write
+> #  endif
+> #endif
+> 

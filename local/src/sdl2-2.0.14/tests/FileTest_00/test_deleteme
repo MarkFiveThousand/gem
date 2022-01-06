@@ -1,0 +1,4 @@
+PROJ_BUILD_FULLPATH=/home/mhodges/projects/sdl2_apps/FileTest_00/build/Android/Debug
+
+sed 's|APP_ABI := armeabi armeabi-v7a x86|APP_ABI := armeabi-v7a|g' ${PROJ_BUILD_FULLPATH}/jni/Application.mk > ${PROJ_BUILD_FULLPATH}/jni/Application.mk_new
+mv ${PROJ_BUILD_FULLPATH}/jni/Application.mk_new ${PROJ_BUILD_FULLPATH}/jni/Application.mk

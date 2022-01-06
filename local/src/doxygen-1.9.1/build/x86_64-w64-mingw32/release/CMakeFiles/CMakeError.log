@@ -1,0 +1,23 @@
+Performing C++ SOURCE FILE Test ICONV_COMPILES failed with the following output:
+Change Dir: C:/msys64/home/mhodges/gem/local/src/doxygen-1.9.1/build/x86_64-w64-mingw32/release/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/msys64/usr/bin/make.exe cmTC_81606/fast 
+/usr/bin/make -f CMakeFiles/cmTC_81606.dir/build.make CMakeFiles/cmTC_81606.dir/build
+make[1]: Entering directory '/home/mhodges/gem/local/src/doxygen-1.9.1/build/x86_64-w64-mingw32/release/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_81606.dir/src.cxx.obj
+C:/msys64/mingw64/bin/x86_64-w64-mingw32-g++.exe    -DICONV_COMPILES   -o CMakeFiles/cmTC_81606.dir/src.cxx.obj -c C:/msys64/home/mhodges/gem/local/src/doxygen-1.9.1/build/x86_64-w64-mingw32/release/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_81606.exe
+"C:/Program Files/CMake/bin/cmake.exe" -E remove -f CMakeFiles/cmTC_81606.dir/objects.a
+C:/msys64/mingw64/bin/x86_64-w64-mingw32-gcc-ar.exe cr CMakeFiles/cmTC_81606.dir/objects.a @CMakeFiles/cmTC_81606.dir/objects1.rsp
+C:/msys64/mingw64/bin/x86_64-w64-mingw32-g++.exe  -DICONV_COMPILES    -Wl,--whole-archive CMakeFiles/cmTC_81606.dir/objects.a -Wl,--no-whole-archive  -o cmTC_81606.exe -Wl,--out-implib,libcmTC_81606.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles/cmTC_81606.dir/linklibs.rsp
+C:/msys64/mingw64/bin/../lib/gcc/x86_64-w64-mingw32/10.2.0/../../../../x86_64-w64-mingw32/bin/ld.exe: CMakeFiles/cmTC_81606.dir/objects.a(src.cxx.obj):src.cxx:(.text+0x2f): undefined reference to `libiconv'
+collect2.exe: error: ld returned 1 exit status
+make[1]: *** [CMakeFiles/cmTC_81606.dir/build.make:90: cmTC_81606.exe] Error 1
+make[1]: Leaving directory '/home/mhodges/gem/local/src/doxygen-1.9.1/build/x86_64-w64-mingw32/release/CMakeFiles/CMakeTmp'
+make: *** [Makefile:121: cmTC_81606/fast] Error 2
+
+Source file was:
+#include <iconv.h>
+     int main() {
+        iconv(iconv_t(-1), 0, 0, 0, 0);
+     }
