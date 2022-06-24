@@ -2,7 +2,13 @@
 URGENT!
 -------------------------------------------------------------------------------
 
-All environments must be run with their respective default $PATH setings.  In
+Auto-create the gem/home/$user directory and copy stuff over.
+
+Why is filename completion now preferring commands found in the path over the
+current directory.  Ah ha!  It seems our scripts don't have the executable bit
+set when passed through git.  Why?
+
+All environments must be run with their respective default $PATH settings.  In
 gem_bash_init we *must not* override $PATH.  This means Cygwin and MSys will
 have the Windows directory in their paths.  In each environ.*.txt file, under
 the section referring to obtaining write access to Git we define the function
@@ -24,7 +30,7 @@ Uncategorized
 
 * Change all instances of $1 to ${1}, etc.
 
-* Every time a derrived script calls a gem_script-level function, the entire
+* Every time a derived script calls a gem_script-level function, the entire
 script will be rerun again as a subshell.  Is that correct?  We need to test
 when this happens.  We may need to detect whether the script is the parent
 versus a subshell.
@@ -60,7 +66,7 @@ gem_build_validate are considered support libraries.  Therefore, they are to
 only output using gem_log_v_Debug().  It is up to the client app to decide if or
 how they want to display a message.
 
-* gem_build and its derrived scripts are performing tasks requested by the client
+* gem_build and its derived scripts are performing tasks requested by the client
 user.  As such, they may output to the user using all the Msg(), Alert(), and
 Debug() variants.
 
@@ -112,7 +118,7 @@ gem_build
   fail if it doesn't exist.
 
 * The gem_build _Cmd_Run family of functions must validate the build directory
-  and the existance of the executable.
+  and the existence of the executable.
 
 * Help Should not trip any errors.
 
@@ -153,7 +159,7 @@ gem_option_configure=1 will just be set twice.  Please verify this.
 Extend the functionality of gem_option_quiet_mode to affect autotools, meson,
 and cmake builds scripts.
 
-The gem_v_DownloadSource seems pretty stable in derrived build scripts.
+The gem_v_DownloadSource seems pretty stable in derived build scripts.
 Consider whether it's time to move the implementation into the gem_build base
 script.
 
@@ -166,7 +172,7 @@ script.
 gem_Msg should automatically output "MESSAGE: ", and gem_Error should output
 "ERROR: ", etc.
 
-* The download of the source package should be perfomred during configure, so
+* The download of the source package should be performed during configure, so
   that we're not generating messages concerning downloading during build and
   install time.
 
@@ -190,7 +196,7 @@ gem_Msg should automatically output "MESSAGE: ", and gem_Error should output
 * gem_bash_init shouldn't add the android paths to $PATH.  That should be done
   in gem_build, or perhaps in the gem_bash_init in the gem/home directory.  The
   gem_build script should verify that is has been set appropriately.   Is
-  gem_bash_init adding anything else that would better be loclated in gem_build?
+  gem_bash_init adding anything else that would better be located in gem_build?
 
 
 
@@ -224,7 +230,7 @@ gem_Msg should automatically output "MESSAGE: ", and gem_Error should output
   defined in gem_script calls gem_v_ExitMsg()?  Does the including script
   continue executing or terminate?
 
-* Change all occurances of mkdir->gem_script_mkdir, cd->gem_script_cd, and
+* Change all occurrences of mkdir->gem_script_mkdir, cd->gem_script_cd, and
   cp->gem_script_cp.  Are there any others?
 
 * Across the build files, change "ERROR: func: " to "ERROR: func()".
@@ -232,7 +238,7 @@ gem_Msg should automatically output "MESSAGE: ", and gem_Error should output
 * gem_script_mkdir, gem_script_cd, gem_script_cp, etc. should support relative
   paths, but still verify they are operating within .../gem/.
 
-* Move gem_os from gem_build to gem_script.  Repleace all occurances of
+* Move gem_os from gem_build to gem_script.  Replace all occurrences of
   $(uname -s) with gem_os.
 
 * Migrate all the build scripts to python.
@@ -252,6 +258,8 @@ gem_Msg should automatically output "MESSAGE: ", and gem_Error should output
 Gem Environment
 -------------------------------------------------------------------------------
 
+Use gem_fullpath_gem to make gem fully relocatable.
+
 The code for redirecting a file to the clipboard should be moved from
 gem/local/doc/environ_*_setup.txt to gem_script.
 
@@ -269,14 +277,14 @@ Rename gem_bash_init to gem_init_bash in ~/gem and /gem/home/$USER/local/sbin.
 Update all references in the documentation.
 
 gem_fullpath_gem has finally been defined in .bashrc.
-* Change all occurances of GEM_FULLPATH_GEM, GEM_LOCAL, and GEM_FULLPATH_LOCAL
+* Change all occurrences of GEM_FULLPATH_GEM, GEM_LOCAL, and GEM_FULLPATH_LOCAL
   that may exist.
 * Remove all references to hard-coded paths to ~/gem/.
 
 Change all references to $(uname -s), and similar calls, to refer to the
 variables in gem_bash_init.
 
-Clean up gem/local/doc.  Only the relavant ones should be there.
+Clean up gem/local/doc.  Only the relevant ones should be there.
 
 Can we remove all references to GEM_OS_HOST_BUILD?  It's used in CMakeFile.txt
 files.  Anywhere else.
@@ -327,7 +335,7 @@ https://www.google.com/search?source=hp&ei=-LMhXYypO5jVtAa9wKOoBA&q=x+server+for
 Get the alias to VSCode working under wsl.  How to differentiate
 between fedora and wsl?
 
-Make the wsl .bashrc files check for the existance of and invoke gem_bash_init
+Make the wsl .bashrc files check for the existence of and invoke gem_bash_init
 as is done in msys2.
 
 Where are the instructions for pinning the icons to the task bar using the
@@ -345,7 +353,7 @@ Get gem_mount working again in Python.
 
 Update references to gem_bash_init, gem_mountall, gem_umountall, etc. in
 msys.txt and Fedora_30.txt.  Do a full text search for mountall and umountall
-to make sure we've found all occurances.
+to make sure we've found all occurrences.
 
 Move gem/mnt/ and  gem/local/sbin/gem_mount* to gem/local/home/$USER/.
 
@@ -379,7 +387,7 @@ bash and python files, too?
 Update environment set up instructions to *not* overwrite .bashrc.  We should
 only set $gem_fullpath_gem and source gem_bash_init.
 
-Give environment setup scripts a consistant name.
+Give environment setup scripts a consistent name.
 
 Rename gem_bash_init to gem_init_bash in ~/gem and /gem/home/$USER/local/sbin.
 Update all references in the documentation.
@@ -402,7 +410,7 @@ gem/home/mhodges/local/sbin/gem_bash_init, also present in msys.txt.
 Web Server
 -------------------------------------------------------------------------------
 
-Install lastest mediawiki.
+Install latest mediawiki.
 
 
 
@@ -412,7 +420,7 @@ Git
 -------------------------------------------------------------------------------
 
 Set $EDITOR, in gem_bash_init, to reference vscode.  Change all references to
-npp to refernce $EDITOR.  We should not require vscode.
+npp to reference $EDITOR.  We should not require vscode.
 
 Reset gem repo on GiuHub.
 
@@ -428,7 +436,7 @@ git config--global mergetool.kdiff3.path "C:/Program Files/kdiff3/kdiff3.exe "
 -------------------------------------------------------------------------------
 Meson
 -------------------------------------------------------------------------------
-Requires Windows Python.  Chockes with msys2 Python.  We need to remove msys2
+Requires Windows Python.  Chokes with msys2 Python.  We need to remove msys2
 Python (better to install it prior to anything else.)  I'm still working on
 this.  msys2.txt may have more recent documentation.
 
@@ -466,15 +474,5 @@ zlib.pc:
     Requires:
     Libs: -L${libdir} -L${sharedlibdir} -lz
     Cflags: -I${includedir}
-
-
--------------------------------------------------------------------------------
-Fedora Box
--------------------------------------------------------------------------------
-
-Buy a KVM switch.
-
-
-
 
 
